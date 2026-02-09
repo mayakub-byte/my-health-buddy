@@ -1,6 +1,7 @@
 // Call Supabase Edge Function to analyze meal image with Claude Vision.
 // API key is kept server-side (CLAUDE_API_KEY in Supabase Edge Function secrets).
 
+import { resizeImage } from './claude-vision';
 import type { MealAnalysisResponse } from '../types/meal-analysis';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -43,6 +44,8 @@ export async function analyzeMealImage(
 }
 
 export async function imageFileToBase64(file: File): Promise<{ base64: string; mediaType: string }> {
+  const resizedBlob = await resizeImage(file);
+  const resizedFile = new File([resizedBlob], file.name, { type: 'image/jpeg' });
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -52,7 +55,7 @@ export async function imageFileToBase64(file: File): Promise<{ base64: string; m
       resolve({ base64: base64 || '', mediaType });
     };
     reader.onerror = reject;
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(resizedFile);
   });
 }
 

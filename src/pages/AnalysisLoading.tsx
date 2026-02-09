@@ -160,17 +160,28 @@ export default function AnalysisLoading() {
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
-      {/* Header: disabled back arrow + title */}
+      {/* Header: back arrow (clickable on error, disabled during analysis) */}
       <header className="flex items-center gap-3 px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
-        <button
-          type="button"
-          disabled
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-300 cursor-not-allowed"
-          aria-label="Back (disabled during analysis)"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="text-lg font-bold text-neutral-800">Analyzing Your Meal</h1>
+        {apiError ? (
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+            aria-label="Back to dashboard"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-300 cursor-not-allowed"
+            aria-label="Back (disabled during analysis)"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
+        <h1 className="text-lg font-bold text-neutral-800">{apiError ? 'Something went wrong' : 'Analyzing Your Meal'}</h1>
       </header>
 
       <main className="flex-1 flex flex-col items-center px-4 py-8">
@@ -205,9 +216,16 @@ export default function AnalysisLoading() {
                 <button
                   type="button"
                   onClick={() => navigate('/scan/portion', { state: { imageFile: state.imageFile, imagePreview: state.imagePreview ?? imagePreview, manualText: state.manualText, selectedMemberId: state.selectedMemberId, portionSize: state.portionSize, servings: state.servings } })}
-                  className="px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
+                  className="px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold mb-2"
                 >
                   Try Again
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="px-6 py-3 rounded-xl border border-neutral-300 text-neutral-700 font-semibold hover:bg-neutral-50"
+                >
+                  Back to Dashboard
                 </button>
               </>
             ) : (

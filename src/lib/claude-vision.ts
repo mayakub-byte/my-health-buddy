@@ -10,6 +10,42 @@ import type { IdentifiedDish, TeluguDish, NutritionInfo } from '../types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Resize image to avoid "Claude API error: 400" on mobile (payload too large)
+export async function resizeImage(file: File, maxSize: number = 1024): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const canvas = document.createElement('canvas');
+      let { width, height } = img;
+      if (width > maxSize || height > maxSize) {
+        if (width > height) {
+          height = Math.round((height * maxSize) / width);
+          width = maxSize;
+        } else {
+          width = Math.round((width * maxSize) / height);
+          height = maxSize;
+        }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error('Resize failed')),
+        'image/jpeg',
+        0.8
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Image load failed'));
+    };
+    img.src = url;
+  });
+}
+
 // Convert image file to base64
 async function imageToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -25,16 +61,6 @@ async function imageToBase64(file: File): Promise<string> {
   });
 }
 
-// Get media type from file
-function getMediaType(file: File): string {
-  const type = file.type;
-  if (type === 'image/jpeg' || type === 'image/jpg') return 'image/jpeg';
-  if (type === 'image/png') return 'image/png';
-  if (type === 'image/webp') return 'image/webp';
-  if (type === 'image/gif') return 'image/gif';
-  return 'image/jpeg'; // Default
-}
-
 // Call Supabase Edge Function to analyze image
 export async function analyzeImageWithClaude(file: File): Promise<{
   dishes: Array<{
@@ -47,8 +73,10 @@ export async function analyzeImageWithClaude(file: File): Promise<{
   is_telugu_meal: boolean;
 }> {
   try {
-    const base64Image = await imageToBase64(file);
-    const mediaType = getMediaType(file);
+    const resizedBlob = await resizeImage(file);
+    const resizedFile = new File([resizedBlob], file.name, { type: 'image/jpeg' });
+    const base64Image = await imageToBase64(resizedFile);
+    const mediaType = 'image/jpeg';
 
     const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
     console.log('Calling Edge Function:', edgeFunctionUrl);
