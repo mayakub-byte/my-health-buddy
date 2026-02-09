@@ -7,6 +7,7 @@
 export interface Family {
   id: string;
   name: string;
+  user_id?: string;
   primary_user_email?: string;
   created_at: string;
   updated_at: string;

@@ -83,7 +83,13 @@ serve(async (req) => {
 
     const data = await response.json();
     const textContent = data.content.find((c: any) => c.type === 'text');
-    const parsed = JSON.parse(textContent.text);
+    if (!textContent?.text) throw new Error('No text in Claude response');
+    let jsonText = textContent.text.trim();
+    // Remove markdown code fences if present
+    if (jsonText.startsWith('```')) {
+      jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+    }
+    const parsed = JSON.parse(jsonText);
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

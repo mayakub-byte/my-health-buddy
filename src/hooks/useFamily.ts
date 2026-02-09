@@ -15,40 +15,62 @@ export function useFamily() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load family data on mount
+  // Load family data on mount and when auth state changes (e.g. after login on new device)
   useEffect(() => {
     loadFamily();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      loadFamily();
+    });
+    return () => subscription.unsubscribe();
   }, []);
 
   const loadFamily = async () => {
     try {
       setLoading(true);
-      
-      // Check localStorage for saved family ID
-      const savedFamilyId = localStorage.getItem(FAMILY_STORAGE_KEY);
-      
-      if (savedFamilyId) {
-        // Fetch family from Supabase
+
+      let familyId: string | null = localStorage.getItem(FAMILY_STORAGE_KEY);
+
+      if (familyId) {
+        // Fetch family from Supabase by saved ID
         const { data: familyData, error: familyError } = await supabase
           .from('families')
           .select('*')
-          .eq('id', savedFamilyId)
+          .eq('id', familyId)
           .single();
 
-        if (familyError) throw familyError;
-        
-        if (familyData) {
+        if (!familyError && familyData) {
           setFamily(familyData);
-          
-          // Fetch family members
           const { data: membersData, error: membersError } = await supabase
             .from('family_members')
             .select('*')
-            .eq('family_id', savedFamilyId)
+            .eq('family_id', familyId)
             .order('is_primary', { ascending: false });
+          if (!membersError) setMembers(membersData || []);
+          return;
+        }
+      }
 
-          if (membersError) throw membersError;
-          setMembers(membersData || []);
+      // No valid localStorage: if user is signed in, find family by user_id
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      if (userId) {
+        const { data: familyData, error: familyError } = await supabase
+          .from('families')
+          .select('*')
+          .eq('user_id', userId)
+          .limit(1)
+          .maybeSingle();
+
+        if (!familyError && familyData) {
+          const fid = familyData.id;
+          localStorage.setItem(FAMILY_STORAGE_KEY, fid);
+          setFamily(familyData);
+          const { data: membersData, error: membersError } = await supabase
+            .from('family_members')
+            .select('*')
+            .eq('family_id', fid)
+            .order('is_primary', { ascending: false });
+          if (!membersError) setMembers(membersData || []);
         }
       }
     } catch (err) {
@@ -68,10 +90,12 @@ export function useFamily() {
       setLoading(true);
       setError(null);
 
-      // Create family
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not signed in');
+
       const { data: newFamily, error: familyError } = await supabase
         .from('families')
-        .insert({ name: familyName })
+        .insert({ name: familyName, user_id: user.id })
         .select()
         .single();
 
