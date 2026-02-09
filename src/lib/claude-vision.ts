@@ -50,8 +50,11 @@ export async function analyzeImageWithClaude(file: File): Promise<{
     const base64Image = await imageToBase64(file);
     const mediaType = getMediaType(file);
 
+    const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
+    console.log('Calling Edge Function:', edgeFunctionUrl);
+
     // Call Supabase Edge Function
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/dynamic-processor`, {
+    const response = await fetch(edgeFunctionUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -63,18 +66,30 @@ export async function analyzeImageWithClaude(file: File): Promise<{
       }),
     });
 
+    console.log('Edge Function response status:', response.status);
+
     if (!response.ok) {
-      const error = await response.json();
-      console.error('Edge Function error:', error);
-      throw new Error(error.error || 'Failed to analyze image');
+      const errorBody = await response.text();
+      let parsed: { error?: string } = {};
+      try {
+        parsed = JSON.parse(errorBody);
+      } catch {
+        parsed = { error: errorBody || `HTTP ${response.status}` };
+      }
+      console.error('Edge Function error:', { status: response.status, body: errorBody, parsed });
+      throw new Error(parsed.error || `Failed to analyze image (${response.status})`);
     }
 
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error analyzing image:', error);
-    // Fall back to mock data on error
-    return getMockResponse();
+    const details = {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    };
+    console.error('Error analyzing image – full details:', details);
+    throw new Error('Meal analysis failed: ' + (error instanceof Error ? error.message : String(error)));
   }
 }
 
@@ -225,19 +240,6 @@ function estimateNutrition(name: string, portion: string): NutritionInfo {
   }
 
   return scaleNutrition(base, portionMultiplier);
-}
-
-// Mock response for testing without API
-function getMockResponse() {
-  return {
-    dishes: [
-      { name: 'Rice', name_telugu: 'అన్నం', portion: 'medium', confidence: 0.95 },
-      { name: 'Pappu', name_telugu: 'పప్పు', portion: 'medium', confidence: 0.88 },
-      { name: 'Bendakaya Vepudu', name_telugu: 'బెండకాయ వేపుడు', portion: 'small', confidence: 0.82 },
-    ],
-    meal_summary: 'A traditional Telugu meal with rice, dal, and okra stir-fry',
-    is_telugu_meal: true,
-  };
 }
 
 // Main function to analyze a meal photo

@@ -8,11 +8,10 @@ import { useState, useEffect } from 'react';
 // Pages
 import Landing from './pages/Landing';
 import Login from './pages/Login';
-import Welcome from './pages/Welcome';
+import Signup from './pages/Signup';
 import Onboarding from './pages/Onboarding';
 import FamilySetup from './pages/FamilySetup';
 import MealInput from './pages/MealInput';
-import Home from './pages/Home';
 import Upload from './pages/Upload';
 import Results from './pages/Results';
 import FamilyGuidanceResult from './pages/FamilyGuidanceResult';
@@ -56,7 +55,7 @@ function App() {
             element={isOnboarded ? <Navigate to="/dashboard" /> : <Landing />} 
           />
           <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Navigate to="/onboarding" />} />
+          <Route path="/signup" element={<Signup />} />
           <Route 
             path="/onboarding" 
             element={<Onboarding onComplete={() => setIsOnboarded(true)} />} 

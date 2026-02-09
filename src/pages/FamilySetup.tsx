@@ -139,7 +139,6 @@ export default function FamilySetup() {
             <MemberCard
               key={index}
               member={member}
-              index={index}
               onUpdate={(updates) => updateMember(index, updates)}
               onToggleHealth={(condition) => toggleHealth(index, condition)}
               onRemove={() => removeMember(index)}
@@ -177,14 +176,12 @@ export default function FamilySetup() {
 
 function MemberCard({
   member,
-  index,
   onUpdate,
   onToggleHealth,
   onRemove,
   canRemove,
 }: {
   member: FamilyMemberForm;
-  index: number;
   onUpdate: (u: Partial<FamilyMemberForm>) => void;
   onToggleHealth: (c: HealthCondition) => void;
   onRemove: () => void;

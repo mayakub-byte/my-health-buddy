@@ -3,10 +3,12 @@
 // Shown while AI analyzes the food
 // ============================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
+import { analyzeMealImage, imageFileToBase64, blobUrlToBase64 } from '../lib/analyze-meal-api';
+import type { MealAnalysisResponse } from '../types/meal-analysis';
 import type { PhotoConfirmState } from './PhotoConfirmation';
 import type { PortionSize } from './PortionSelection';
 
@@ -34,6 +36,10 @@ export default function AnalysisLoading() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
+  const [analysisResult, setAnalysisResult] = useState<MealAnalysisResponse | null>(null);
+  const analysisStarted = useRef(false);
+  const analysisResultRef = useRef<MealAnalysisResponse | null>(null);
+  analysisResultRef.current = analysisResult;
 
   const imagePreview = state.imagePreview ?? filePreview;
   const hasImage = !!imagePreview || !!state.imageFile;
@@ -54,7 +60,48 @@ export default function AnalysisLoading() {
     }
   }, [hasImage, state.imageFile, state.imagePreview, navigate]);
 
-  // Progress bar: 0 → 100 over 8 seconds, then navigate
+  // Call Claude Vision API when image is available
+  useEffect(() => {
+    if (!hasImage || analysisStarted.current) return;
+    analysisStarted.current = true;
+    let cancelled = false;
+    (async () => {
+      try {
+        let base64: string;
+        let mediaType = 'image/jpeg';
+        if (state.imageFile) {
+          const out = await imageFileToBase64(state.imageFile);
+          base64 = out.base64;
+          mediaType = out.mediaType;
+        } else if (imagePreview && typeof imagePreview === 'string') {
+          if (imagePreview.startsWith('data:')) {
+            const [header, data] = imagePreview.split(',');
+            base64 = data || '';
+            mediaType = header?.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+          } else {
+            const out = await blobUrlToBase64(imagePreview);
+            base64 = out.base64;
+            mediaType = out.mediaType;
+          }
+        } else {
+          return;
+        }
+        if (cancelled || !base64) return;
+        const result = await analyzeMealImage(base64, mediaType);
+        if (!cancelled) {
+          analysisResultRef.current = result;
+          setAnalysisResult(result);
+        }
+      } catch (err) {
+        console.error('Meal analysis API error:', err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [hasImage, state.imageFile, imagePreview]);
+
+  // Progress bar: 0 → 100 over 8 seconds, then navigate with analysis result
   useEffect(() => {
     if (!hasImage) return;
     const start = Date.now();
@@ -66,6 +113,7 @@ export default function AnalysisLoading() {
       setProgress(p);
       if (p >= 100) {
         clearInterval(interval);
+        const finalAnalysis = analysisResultRef.current;
         navigate('/results/analysis', {
           state: {
             imageFile: state.imageFile,
@@ -74,6 +122,7 @@ export default function AnalysisLoading() {
             selectedMemberId: state.selectedMemberId,
             portionSize: state.portionSize,
             servings: state.servings,
+            claudeAnalysis: finalAnalysis,
           },
         });
       }
@@ -82,7 +131,6 @@ export default function AnalysisLoading() {
       cancelled = true;
       clearInterval(interval);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasImage]);
 
   // Rotating steps every 2 seconds

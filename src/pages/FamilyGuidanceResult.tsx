@@ -10,6 +10,7 @@ import { useFamily } from '../hooks/useFamily';
 import { supabase } from '../lib/supabase';
 import type { AnalysisLoadingState } from './AnalysisLoading';
 import type { FamilyMember } from '../types';
+import type { MealAnalysisResponse } from '../types/meal-analysis';
 
 export interface HistoryResultState {
   fromHistory: true;
@@ -75,7 +76,7 @@ export default function FamilyGuidanceResult() {
   const [imagePreview, setImagePreview] = useState<string | null>(
     fromHistory && state.image_url ? state.image_url : (state.imagePreview ?? null)
   );
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; isSuccess?: boolean } | null>(null);
   const [saving, setSaving] = useState(false);
 
   const selectedMember =
@@ -83,27 +84,57 @@ export default function FamilyGuidanceResult() {
       ? members.find((m) => m.id === state.selectedMemberId)
       : members[0]) ?? null;
 
-  const foodName = fromHistory && state.food_name ? state.food_name : SAMPLE_FOOD_NAME;
-  const calories = fromHistory && state.calories != null ? state.calories : SAMPLE_CALORIES;
-  const macros = fromHistory && state.macros
-    ? { carbs: state.macros.carbs ?? 0, protein: state.macros.protein ?? 0, fat: state.macros.fat ?? 0 }
-    : SAMPLE_MACROS;
+  const claude = (state as { claudeAnalysis?: MealAnalysisResponse | null }).claudeAnalysis;
+
+  const foodName = claude?.food_name ?? (fromHistory && state.food_name ? state.food_name : SAMPLE_FOOD_NAME);
+  const calories = claude?.calories ?? (fromHistory && state.calories != null ? state.calories : SAMPLE_CALORIES);
+  const macros = claude?.macros
+    ? { carbs: claude.macros.carbs_g ?? 0, protein: claude.macros.protein_g ?? 0, fat: claude.macros.fat_g ?? 0, fiber: claude.macros.fiber_g ?? 0 }
+    : fromHistory && state.macros
+      ? { carbs: state.macros.carbs ?? 0, protein: state.macros.protein ?? 0, fat: state.macros.fat ?? 0, fiber: 0 }
+      : { ...SAMPLE_MACROS, fiber: 0 };
   const totalMacro = macros.carbs + macros.protein + macros.fat;
   const carbsPct = totalMacro ? (macros.carbs / totalMacro) * 100 : 33;
   const proteinPct = totalMacro ? (macros.protein / totalMacro) * 100 : 33;
   const fatPct = totalMacro ? (macros.fat / totalMacro) * 100 : 34;
-  const healthScore = fromHistory && state.health_score != null ? state.health_score : SAMPLE_HEALTH_SCORE;
+  const healthScores = claude?.health_scores;
+  const healthScore = healthScores?.general ?? (fromHistory && state.health_score != null ? state.health_score : SAMPLE_HEALTH_SCORE);
   const scoreColor = getScoreColor(healthScore);
-  const guidance = fromHistory && state.guidance
-    ? (() => {
-        const parts = state.guidance!
-          .split(/[.!]+/)
-          .map((s) => s.trim())
-          .filter(Boolean)
-          .map((s) => (s.endsWith('.') ? s : s + '.'));
-        return parts.length > 0 ? parts : [state.guidance!];
-      })()
-    : (selectedMember ? getGuidanceForMember(selectedMember) : []);
+  const glycemicIndex = claude?.glycemic_index;
+  const foodItems = claude?.food_items ?? [];
+  const micronutrients = claude?.micronutrients ?? [];
+  const detailedGuidance = claude?.detailed_guidance ?? [];
+  const ayurvedicNote = claude?.ayurvedic_note ?? '';
+  const bestPairedWith = claude?.best_paired_with ?? [];
+
+  const guidance = (() => {
+    if (fromHistory && state.guidance) {
+      const parts = state.guidance.split(/[.!]+/).map((s) => s.trim()).filter(Boolean).map((s) => (s.endsWith('.') ? s : s + '.'));
+      return parts.length > 0 ? parts : [state.guidance];
+    }
+    if (claude && selectedMember) {
+      const cond = selectedMember.health_conditions || [];
+      const lines: string[] = [];
+      for (const d of detailedGuidance) {
+        const c = d.condition?.toLowerCase() ?? '';
+        if (cond.some((x) => x.toLowerCase().includes(c) || c.includes(x.toLowerCase())) || d.condition === 'general') {
+          lines.push(d.explanation);
+          if (d.suggestions?.length) lines.push(...d.suggestions.map((s) => (s.endsWith('.') ? s : s + '.')));
+        }
+      }
+      if (lines.length) return lines;
+    }
+    return selectedMember ? getGuidanceForMember(selectedMember) : [];
+  })();
+
+  function getMemberScore(member: FamilyMember): number {
+    if (!healthScores) return healthScore;
+    const c = member.health_conditions || [];
+    if (c.includes('diabetes') || c.includes('pre_diabetic')) return healthScores.diabetic ?? healthScore;
+    if (c.includes('bp')) return healthScores.hypertension ?? healthScore;
+    if (c.includes('cholesterol')) return healthScores.cholesterol ?? healthScore;
+    return healthScores.general ?? healthScore;
+  }
 
   useEffect(() => {
     if (!hasState) {
@@ -128,50 +159,71 @@ export default function FamilyGuidanceResult() {
 
   const handleSaveToHistory = async () => {
     setSaving(true);
+    setToast(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not signed in');
+      if (!user) {
+        console.error('Save failed: no user from supabase.auth.getUser()');
+        setToast({ message: 'Not signed in. Please log in and try again.', isSuccess: false });
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
+      const user_id = user.id;
 
-      let imageUrl = '';
+      let image_url = '';
       if (state.imageFile) {
         try {
-          const path = `${user.id}/${Date.now()}.jpg`;
-          const { data } = await supabase.storage
+          const path = `${user_id}/${Date.now()}.jpg`;
+          const { data, error: uploadError } = await supabase.storage
             .from('meal-photos')
             .upload(path, state.imageFile, { cacheControl: '3600', upsert: false });
+          if (uploadError) {
+            console.error('Supabase storage upload error:', uploadError.message, uploadError);
+          }
           if (data?.path) {
             const { data: urlData } = supabase.storage.from('meal-photos').getPublicUrl(data.path);
-            imageUrl = urlData.publicUrl;
+            image_url = urlData.publicUrl;
           }
-        } catch {
-          imageUrl = '';
+        } catch (storageErr) {
+          console.error('Storage upload failed:', storageErr);
         }
       } else if (state.imagePreview?.startsWith('http')) {
-        imageUrl = state.imagePreview;
+        image_url = state.imagePreview;
       }
 
-      const { error } = await supabase.from('meal_history').insert({
-        user_id: user.id,
-        family_member_id: state.selectedMemberId ?? selectedMember?.id ?? null,
+      const family_member_id = state.selectedMemberId ?? selectedMember?.id ?? null;
+      const guidanceText = Array.isArray(guidance) ? guidance.join(' ') : (guidance ?? '');
+      const portion_size = state.portionSize ?? 'medium';
+
+      const row = {
+        user_id,
+        family_member_id,
         food_name: foodName,
-        image_url: imageUrl,
+        image_url: image_url || null,
         calories,
         macros: { carbs: macros.carbs, protein: macros.protein, fat: macros.fat },
         health_score: healthScore,
-        guidance: guidance.join(' '),
-        portion_size: state.portionSize ?? 'medium',
-      });
+        guidance: guidanceText || null,
+        portion_size,
+      };
 
-      if (error) throw error;
-      setToast('Saved to history!');
+      const { error } = await supabase.from('meal_history').insert(row);
+
+      if (error) {
+        console.error('Supabase meal_history insert error:', error.message, error.details, error);
+        setToast({ message: `Save failed: ${error.message}`, isSuccess: false });
+        setTimeout(() => setToast(null), 3000);
+        return;
+      }
+      setToast({ message: 'Meal saved!', isSuccess: true });
       setTimeout(() => {
         setToast(null);
         navigate('/dashboard', { replace: true });
       }, 1500);
     } catch (err) {
       console.error('Save failed:', err);
-      setToast('Failed to save. Try again.');
-      setTimeout(() => setToast(null), 2000);
+      setToast({ message: err instanceof Error ? err.message : 'Failed to save. Try again.', isSuccess: false });
+      setTimeout(() => setToast(null), 3000);
     } finally {
       setSaving(false);
     }
@@ -207,8 +259,32 @@ export default function FamilyGuidanceResult() {
 
         {/* Main result card */}
         <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 mb-5">
-          <h2 className="font-bold text-neutral-800 text-lg mb-1">{foodName}</h2>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <h2 className="font-bold text-neutral-800 text-lg">{foodName}</h2>
+            {glycemicIndex && (
+              <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
+                glycemicIndex === 'low' ? 'bg-green-100 text-green-700' :
+                glycemicIndex === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+              }`}>
+                GI: {glycemicIndex}
+              </span>
+            )}
+          </div>
           <p className="text-neutral-500 text-sm mb-4">{calories} kcal (est.)</p>
+
+          {/* Food items detected */}
+          {foodItems.length > 0 && (
+            <div className="mb-4">
+              <p className="text-xs font-medium text-neutral-500 mb-2">Detected items</p>
+              <ul className="flex flex-wrap gap-2">
+                {foodItems.map((item, i) => (
+                  <li key={i} className="px-2.5 py-1 rounded-lg bg-neutral-100 text-sm text-neutral-700">
+                    {item.name} {item.quantity ? `(${item.quantity})` : ''}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Macro bar: Carbs (green) / Protein (blue) / Fat (orange) */}
           <div className="flex h-3 rounded-full overflow-hidden bg-neutral-100 mb-2">
@@ -229,8 +305,26 @@ export default function FamilyGuidanceResult() {
             <span>Carbs {macros.carbs}g</span>
             <span>Protein {macros.protein}g</span>
             <span>Fat {macros.fat}g</span>
+            {'fiber' in macros && macros.fiber != null && macros.fiber > 0 && (
+              <span>Fiber {macros.fiber}g</span>
+            )}
           </div>
         </div>
+
+        {/* Micronutrients */}
+        {micronutrients.length > 0 && (
+          <section className="mb-5">
+            <p className="text-sm font-medium text-neutral-700 mb-2">Top micronutrients</p>
+            <ul className="bg-white rounded-xl border border-neutral-100 p-4 space-y-2">
+              {micronutrients.slice(0, 5).map((m, i) => (
+                <li key={i} className="flex justify-between text-sm">
+                  <span className="text-neutral-700">{m.name}</span>
+                  <span className="text-neutral-500">{m.amount} ({m.daily_value_percent}% DV)</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Family Health Score: circular gauge */}
         <section className="mb-5">
@@ -288,16 +382,43 @@ export default function FamilyGuidanceResult() {
           </section>
         )}
 
-        {/* Other family members: horizontal scroll of score circles */}
-        {members.length > 1 && (
+        {/* Condition-specific detailed guidance */}
+        {detailedGuidance.length > 0 && (
+          <section className="mb-5">
+            <p className="text-sm font-semibold text-neutral-800 mb-2">Condition-specific guidance</p>
+            <div className="space-y-3">
+              {detailedGuidance.map((d, i) => (
+                <div key={i} className="bg-white rounded-xl border border-neutral-100 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-medium text-neutral-800 capitalize">{d.condition}</span>
+                    <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
+                      getScoreColor(d.score) === 'green' ? 'bg-green-100 text-green-700' :
+                      getScoreColor(d.score) === 'orange' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
+                    }`}>
+                      {d.score}
+                    </span>
+                  </div>
+                  <p className="text-sm text-neutral-600 mb-2">{d.explanation}</p>
+                  {d.suggestions?.length > 0 && (
+                    <ul className="list-disc list-inside text-sm text-neutral-600 space-y-0.5">
+                      {d.suggestions.map((s, j) => (
+                        <li key={j}>{s}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Other family members: horizontal scroll of score circles (condition-specific when Claude) */}
+        {(members.length > 1 || members.length === 1) && (
           <section className="mb-6">
             <p className="text-sm font-medium text-neutral-700 mb-2">Family scores</p>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {members.map((m) => {
-                const score =
-                  m.id === selectedMember?.id
-                    ? healthScore
-                    : Math.min(100, Math.max(0, healthScore + ((m.name.length % 3) - 1) * 8));
+                const score = healthScores ? getMemberScore(m) : (m.id === selectedMember?.id ? healthScore : Math.min(100, Math.max(0, healthScore + ((m.name.length % 3) - 1) * 8)));
                 const color = getScoreColor(score);
                 return (
                   <div
@@ -325,6 +446,30 @@ export default function FamilyGuidanceResult() {
           </section>
         )}
 
+        {/* Ayurvedic note */}
+        {ayurvedicNote && (
+          <section className="mb-5">
+            <p className="text-sm font-semibold text-neutral-800 mb-2">Ayurvedic note</p>
+            <p className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-900">
+              {ayurvedicNote}
+            </p>
+          </section>
+        )}
+
+        {/* Best paired with */}
+        {bestPairedWith.length > 0 && (
+          <section className="mb-5">
+            <p className="text-sm font-semibold text-neutral-800 mb-2">Complete your meal</p>
+            <ul className="flex flex-wrap gap-2">
+              {bestPairedWith.map((s, i) => (
+                <li key={i} className="px-3 py-1.5 rounded-full bg-green-50 text-green-800 text-sm">
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {/* Buttons */}
         <div className="flex flex-col gap-3">
           <Link
@@ -348,10 +493,12 @@ export default function FamilyGuidanceResult() {
       {/* Toast */}
       {toast && (
         <div
-          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg animate-fade-in z-50"
+          className={`fixed bottom-24 left-4 right-4 mx-auto max-w-sm text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg animate-fade-in z-50 ${
+            toast.isSuccess ? 'bg-green-600' : 'bg-neutral-800'
+          }`}
           role="status"
         >
-          {toast}
+          {toast.message}
         </div>
       )}
 
