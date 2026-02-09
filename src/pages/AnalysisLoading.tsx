@@ -37,6 +37,7 @@ export default function AnalysisLoading() {
   const [progress, setProgress] = useState(0);
   const [stepIndex, setStepIndex] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<MealAnalysisResponse | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const analysisStarted = useRef(false);
   const analysisResultRef = useRef<MealAnalysisResponse | null>(null);
   analysisResultRef.current = analysisResult;
@@ -94,6 +95,9 @@ export default function AnalysisLoading() {
         }
       } catch (err) {
         console.error('Meal analysis API error:', err);
+        if (!cancelled) {
+          setApiError(err instanceof Error ? err.message : 'Analysis failed. Please try again.');
+        }
       }
     })();
     return () => {
@@ -101,7 +105,7 @@ export default function AnalysisLoading() {
     };
   }, [hasImage, state.imageFile, imagePreview]);
 
-  // Progress bar: 0 → 100 over 8 seconds, then navigate with analysis result
+  // Progress bar: 0 → 100 over 8 seconds; navigate ONLY when progress is 100% AND analysisResult exists
   useEffect(() => {
     if (!hasImage) return;
     const start = Date.now();
@@ -112,26 +116,28 @@ export default function AnalysisLoading() {
       const p = Math.min(100, (elapsed / PROGRESS_DURATION_MS) * 100);
       setProgress(p);
       if (p >= 100) {
-        clearInterval(interval);
         const finalAnalysis = analysisResultRef.current;
-        navigate('/results/analysis', {
-          state: {
-            imageFile: state.imageFile,
-            imagePreview: state.imagePreview ?? imagePreview,
-            manualText: state.manualText,
-            selectedMemberId: state.selectedMemberId,
-            portionSize: state.portionSize,
-            servings: state.servings,
-            claudeAnalysis: finalAnalysis,
-          },
-        });
+        if (finalAnalysis) {
+          clearInterval(interval);
+          navigate('/results/analysis', {
+            state: {
+              imageFile: state.imageFile,
+              imagePreview: state.imagePreview ?? imagePreview,
+              manualText: state.manualText,
+              selectedMemberId: state.selectedMemberId,
+              portionSize: state.portionSize,
+              servings: state.servings,
+              claudeAnalysis: finalAnalysis,
+            },
+          });
+        }
       }
     }, 50);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [hasImage]);
+  }, [hasImage, state.imageFile, state.imagePreview, state.manualText, state.selectedMemberId, state.portionSize, state.servings, imagePreview, navigate]);
 
   // Rotating steps every 2 seconds
   useEffect(() => {
@@ -148,6 +154,9 @@ export default function AnalysisLoading() {
 
   const previewUrl = imagePreview;
   const step = ANALYSIS_STEPS[stepIndex];
+  const waitingForApi = progress >= 100 && !analysisResult && !apiError;
+  const stepText = apiError ? 'Something went wrong.' : waitingForApi ? 'Almost done...' : step.text;
+  const stepEmoji = apiError ? '⚠️' : waitingForApi ? '⏳' : step.emoji;
 
   return (
     <div className="min-h-screen bg-neutral-50 flex flex-col">
@@ -186,15 +195,30 @@ export default function AnalysisLoading() {
             </div>
           </div>
 
-          {/* Rotating analysis step */}
+          {/* Rotating analysis step or error */}
           <div className="mt-6 min-h-[3rem] flex flex-col items-center justify-center">
-            <p
-              key={stepIndex}
-              className="text-neutral-700 font-medium text-center animate-fade-step"
-            >
-              <span className="mr-2" aria-hidden>{step.emoji}</span>
-              {step.text}
-            </p>
+            {apiError ? (
+              <>
+                <p className="text-red-600 font-medium text-center mb-4">
+                  {apiError}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => navigate('/scan/portion', { state: { imageFile: state.imageFile, imagePreview: state.imagePreview ?? imagePreview, manualText: state.manualText, selectedMemberId: state.selectedMemberId, portionSize: state.portionSize, servings: state.servings } })}
+                  className="px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
+                >
+                  Try Again
+                </button>
+              </>
+            ) : (
+              <p
+                key={waitingForApi ? 'waiting' : stepIndex}
+                className="text-neutral-700 font-medium text-center animate-fade-step"
+              >
+                <span className="mr-2" aria-hidden>{stepEmoji}</span>
+                {stepText}
+              </p>
+            )}
           </div>
         </div>
 

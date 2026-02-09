@@ -25,12 +25,6 @@ export interface HistoryResultState {
   created_at?: string;
 }
 
-// Sample result data (replace with real AI response when wired)
-const SAMPLE_FOOD_NAME = 'Rice with Dal & Vegetables';
-const SAMPLE_CALORIES = 420;
-const SAMPLE_MACROS = { carbs: 52, protein: 14, fat: 12 }; // grams
-const SAMPLE_HEALTH_SCORE = 78;
-
 function getScoreColor(score: number): string {
   if (score < 40) return 'red';
   if (score < 70) return 'orange';
@@ -85,21 +79,23 @@ export default function FamilyGuidanceResult() {
       : members[0]) ?? null;
 
   const claude = (state as { claudeAnalysis?: MealAnalysisResponse | null }).claudeAnalysis;
+  const hasRealData = claude != null || fromHistory;
 
-  const foodName = claude?.food_name ?? (fromHistory && state.food_name ? state.food_name : SAMPLE_FOOD_NAME);
-  const calories = claude?.calories ?? (fromHistory && state.calories != null ? state.calories : SAMPLE_CALORIES);
+  const foodName = claude?.food_name ?? (fromHistory ? state.food_name : undefined);
+  const calories = claude?.calories ?? (fromHistory && state.calories != null ? state.calories : undefined);
   const macros = claude?.macros
     ? { carbs: claude.macros.carbs_g ?? 0, protein: claude.macros.protein_g ?? 0, fat: claude.macros.fat_g ?? 0, fiber: claude.macros.fiber_g ?? 0 }
     : fromHistory && state.macros
       ? { carbs: state.macros.carbs ?? 0, protein: state.macros.protein ?? 0, fat: state.macros.fat ?? 0, fiber: 0 }
-      : { ...SAMPLE_MACROS, fiber: 0 };
-  const totalMacro = macros.carbs + macros.protein + macros.fat;
-  const carbsPct = totalMacro ? (macros.carbs / totalMacro) * 100 : 33;
-  const proteinPct = totalMacro ? (macros.protein / totalMacro) * 100 : 33;
-  const fatPct = totalMacro ? (macros.fat / totalMacro) * 100 : 34;
+      : null;
+  const macrosSafe = macros ?? { carbs: 0, protein: 0, fat: 0, fiber: 0 };
+  const totalMacro = macrosSafe.carbs + macrosSafe.protein + macrosSafe.fat;
+  const carbsPct = totalMacro ? (macrosSafe.carbs / totalMacro) * 100 : 33;
+  const proteinPct = totalMacro ? (macrosSafe.protein / totalMacro) * 100 : 33;
+  const fatPct = totalMacro ? (macrosSafe.fat / totalMacro) * 100 : 34;
   const healthScores = claude?.health_scores;
-  const healthScore = healthScores?.general ?? (fromHistory && state.health_score != null ? state.health_score : SAMPLE_HEALTH_SCORE);
-  const scoreColor = getScoreColor(healthScore);
+  const healthScore = healthScores?.general ?? (fromHistory && state.health_score != null ? state.health_score : undefined);
+  const scoreColor = getScoreColor(healthScore ?? 0);
   const glycemicIndex = claude?.glycemic_index;
   const foodItems = claude?.food_items ?? [];
   const micronutrients = claude?.micronutrients ?? [];
@@ -128,12 +124,13 @@ export default function FamilyGuidanceResult() {
   })();
 
   function getMemberScore(member: FamilyMember): number {
-    if (!healthScores) return healthScore;
+    const fallback = healthScore ?? 0;
+    if (!healthScores) return fallback;
     const c = member.health_conditions || [];
-    if (c.includes('diabetes') || c.includes('pre_diabetic')) return healthScores.diabetic ?? healthScore;
-    if (c.includes('bp')) return healthScores.hypertension ?? healthScore;
-    if (c.includes('cholesterol')) return healthScores.cholesterol ?? healthScore;
-    return healthScores.general ?? healthScore;
+    if (c.includes('diabetes') || c.includes('pre_diabetic')) return healthScores.diabetic ?? fallback;
+    if (c.includes('bp')) return healthScores.hypertension ?? fallback;
+    if (c.includes('cholesterol')) return healthScores.cholesterol ?? fallback;
+    return healthScores.general ?? fallback;
   }
 
   useEffect(() => {
@@ -155,6 +152,35 @@ export default function FamilyGuidanceResult() {
 
   if (!hasState) {
     return null;
+  }
+
+  if (!hasRealData) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex flex-col pb-8">
+        <header className="flex items-center gap-3 px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
+          <Link
+            to="/dashboard"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+            aria-label="Back to dashboard"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-lg font-bold text-neutral-800">Meal Analysis</h1>
+        </header>
+        <main className="flex-1 px-4 py-6 flex flex-col items-center justify-center">
+          <p className="text-neutral-700 font-medium text-center mb-6">
+            Analysis failed. Please try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
+          >
+            Back to Dashboard
+          </button>
+        </main>
+      </div>
+    );
   }
 
   const handleSaveToHistory = async () => {
@@ -198,11 +224,11 @@ export default function FamilyGuidanceResult() {
       const row = {
         user_id,
         family_member_id,
-        food_name: foodName,
+        food_name: foodName ?? 'Meal',
         image_url: image_url || null,
-        calories,
-        macros: { carbs: macros.carbs, protein: macros.protein, fat: macros.fat },
-        health_score: healthScore,
+        calories: calories ?? 0,
+        macros: { carbs: macrosSafe.carbs, protein: macrosSafe.protein, fat: macrosSafe.fat },
+        health_score: healthScore ?? 0,
         guidance: guidanceText || null,
         portion_size,
       };
@@ -260,7 +286,7 @@ export default function FamilyGuidanceResult() {
         {/* Main result card */}
         <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 mb-5">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <h2 className="font-bold text-neutral-800 text-lg">{foodName}</h2>
+            <h2 className="font-bold text-neutral-800 text-lg">{foodName ?? 'Meal'}</h2>
             {glycemicIndex && (
               <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
                 glycemicIndex === 'low' ? 'bg-green-100 text-green-700' :
@@ -270,7 +296,7 @@ export default function FamilyGuidanceResult() {
               </span>
             )}
           </div>
-          <p className="text-neutral-500 text-sm mb-4">{calories} kcal (est.)</p>
+          <p className="text-neutral-500 text-sm mb-4">{calories ?? 0} kcal (est.)</p>
 
           {/* Food items detected */}
           {foodItems.length > 0 && (
@@ -302,11 +328,11 @@ export default function FamilyGuidanceResult() {
             />
           </div>
           <div className="flex justify-between text-xs text-neutral-500">
-            <span>Carbs {macros.carbs}g</span>
-            <span>Protein {macros.protein}g</span>
-            <span>Fat {macros.fat}g</span>
-            {'fiber' in macros && macros.fiber != null && macros.fiber > 0 && (
-              <span>Fiber {macros.fiber}g</span>
+            <span>Carbs {macrosSafe.carbs}g</span>
+            <span>Protein {macrosSafe.protein}g</span>
+            <span>Fat {macrosSafe.fat}g</span>
+            {macrosSafe.fiber > 0 && (
+              <span>Fiber {macrosSafe.fiber}g</span>
             )}
           </div>
         </div>
@@ -353,13 +379,13 @@ export default function FamilyGuidanceResult() {
                         : '#22c55e'
                   }
                   strokeWidth="10"
-                  strokeDasharray={`${healthScore * 2.64} 264`}
+                  strokeDasharray={`${(healthScore ?? 0) * 2.64} 264`}
                   strokeLinecap="round"
                   className="transition-all duration-500"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-bold text-neutral-800">{healthScore}</span>
+                <span className="text-2xl font-bold text-neutral-800">{healthScore ?? 0}</span>
               </div>
             </div>
           </div>
@@ -418,7 +444,7 @@ export default function FamilyGuidanceResult() {
             <p className="text-sm font-medium text-neutral-700 mb-2">Family scores</p>
             <div className="flex gap-3 overflow-x-auto pb-2">
               {members.map((m) => {
-                const score = healthScores ? getMemberScore(m) : (m.id === selectedMember?.id ? healthScore : Math.min(100, Math.max(0, healthScore + ((m.name.length % 3) - 1) * 8)));
+                const score = healthScores ? getMemberScore(m) : (m.id === selectedMember?.id ? (healthScore ?? 0) : Math.min(100, Math.max(0, (healthScore ?? 0) + ((m.name.length % 3) - 1) * 8)));
                 const color = getScoreColor(score);
                 return (
                   <div
