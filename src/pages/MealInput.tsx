@@ -5,15 +5,106 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, X } from 'lucide-react';
+import { Camera, X, Mic } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import type { FamilyMember } from '../types';
 
-const COMMON_MEALS = {
-  Breakfast: ['Idli & Sambar', 'Dosa & Chutney', 'Upma', 'Pesarattu', 'Pongal'],
-  Lunch: ['Rice & Dal', 'Sambar Rice', 'Curd Rice', 'Pulihora', 'Veg Biryani'],
-  Dinner: ['Roti & Curry', 'Rice & Rasam', 'Chapati & Dal'],
-  Snacks: ['Vada', 'Samosa', 'Bajji', 'Punugulu'],
+// TypeScript declarations for Web Speech API
+interface SpeechRecognition extends EventTarget {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+}
+
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message: string;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: {
+      new (): SpeechRecognition;
+    };
+    webkitSpeechRecognition: {
+      new (): SpeechRecognition;
+    };
+  }
+}
+
+const TELUGU_MEALS = {
+  breakfast: [
+    { name: "Idli & Sambar", telugu: "ఇడ్లీ & సాంబార్", emoji: "🫓" },
+    { name: "Dosa & Chutney", telugu: "దోస & చట్నీ", emoji: "🥞" },
+    { name: "Pesarattu & Upma", telugu: "పెసరట్టు & ఉప్మా", emoji: "🫓" },
+    { name: "Upma", telugu: "ఉప్మా", emoji: "🍚" },
+    { name: "Pongal", telugu: "పొంగల్", emoji: "🍲" },
+    { name: "Poha", telugu: "పోహా", emoji: "🍚" },
+    { name: "Roti & Curry", telugu: "రోటీ & కూర", emoji: "🫓" },
+  ],
+  lunch: [
+    { name: "Rice & Dal", telugu: "అన్నం & పప్పు", emoji: "🍚" },
+    { name: "Sambar Rice", telugu: "సాంబార్ అన్నం", emoji: "🍛" },
+    { name: "Curd Rice", telugu: "పెరుగు అన్నం", emoji: "🍚" },
+    { name: "Pulihora", telugu: "పులిహోర", emoji: "🍋" },
+    { name: "Veg Biryani", telugu: "వెజ్ బిర్యానీ", emoji: "🍛" },
+    { name: "Chicken Biryani", telugu: "చికెన్ బిర్యానీ", emoji: "🍗" },
+    { name: "Chapati & Sabzi", telugu: "చపాతీ & కూర", emoji: "🫓" },
+  ],
+  dinner: [
+    { name: "Roti & Dal", telugu: "రోటీ & పప్పు", emoji: "🫓" },
+    { name: "Rice & Rasam", telugu: "అన్నం & రసం", emoji: "🍲" },
+    { name: "Chapati & Curry", telugu: "చపాతీ & కూర", emoji: "🫓" },
+    { name: "Khichdi", telugu: "కిచిడి", emoji: "🍚" },
+    { name: "Roti & Egg Curry", telugu: "రోటీ & ఎగ్ కర్రీ", emoji: "🥚" },
+  ],
+  snacks: [
+    { name: "Vada", telugu: "వడ", emoji: "🍩" },
+    { name: "Samosa", telugu: "సమోసా", emoji: "🥟" },
+    { name: "Bajji", telugu: "బజ్జి", emoji: "🍟" },
+    { name: "Punugulu", telugu: "పునుగులు", emoji: "🧆" },
+    { name: "Murukku", telugu: "మురుక్కు", emoji: "🥨" },
+  ]
+};
+
+type MealTime = 'breakfast' | 'lunch' | 'dinner' | 'snacks';
+
+// Get current meal time based on hour
+const getCurrentMealTime = (): MealTime => {
+  const hour = new Date().getHours();
+  if (hour < 11) return 'breakfast';
+  if (hour < 15) return 'lunch';
+  if (hour < 18) return 'snacks';
+  return 'dinner';
 };
 
 export default function MealInput() {
@@ -27,6 +118,9 @@ export default function MealInput() {
   const [manualText, setManualText] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [showMealModal, setShowMealModal] = useState(false);
+  const [selectedTab, setSelectedTab] = useState<MealTime>(getCurrentMealTime());
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
 
   useEffect(() => {
@@ -34,6 +128,13 @@ export default function MealInput() {
       setSelectedMemberId(members[0].id);
     }
   }, [members, selectedMemberId]);
+
+  // Reset tab to current meal time when modal opens
+  useEffect(() => {
+    if (showMealModal) {
+      setSelectedTab(getCurrentMealTime());
+    }
+  }, [showMealModal]);
 
   useEffect(() => {
     if (!toast) return;
@@ -66,14 +167,64 @@ export default function MealInput() {
   const handleSelectMeal = (mealName: string) => {
     setManualText(mealName);
     setShowMealModal(false);
-    // Auto-navigate to portion selection (skip photo confirmation if no photo)
-    navigate('/scan/portion', {
-      state: {
-        manualText: mealName,
-        selectedMemberId: selectedMemberId ?? undefined,
-      },
-    });
+    // User can then add photo or go straight to "LOG MEAL"
   };
+
+  const startVoice = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setToast('Voice input not supported in your browser');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-IN';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const transcript = event.results[0][0].transcript;
+      setManualText(transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      console.error('Speech recognition error:', event.error);
+      setToast('Voice input failed. Please try again.');
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    try {
+      recognition.start();
+      setIsListening(true);
+      recognitionRef.current = recognition;
+    } catch (err) {
+      console.error('Failed to start recognition:', err);
+      setToast('Failed to start voice input');
+      setIsListening(false);
+    }
+  };
+
+  const stopVoice = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    setIsListening(false);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -109,13 +260,33 @@ export default function MealInput() {
       </section>
 
       <main className="flex-1 px-5">
-        <input
-          type="text"
-          value={manualText}
-          onChange={(e) => setManualText(e.target.value)}
-          placeholder="Tell us about your culinary creation..."
-          className="input-field w-full rounded-full py-3.5"
-        />
+        <div className="relative">
+          <input
+            type="text"
+            value={manualText}
+            onChange={(e) => setManualText(e.target.value)}
+            placeholder="Tell us about your culinary creation..."
+            className="input-field w-full rounded-full py-3.5 pr-12"
+          />
+          {/* Voice Input Button */}
+          {(window.SpeechRecognition || window.webkitSpeechRecognition) && (
+            <button
+              type="button"
+              onClick={isListening ? stopVoice : startVoice}
+              className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
+                isListening
+                  ? 'bg-red-500 text-white animate-pulse'
+                  : 'bg-olive-500 text-white hover:bg-olive-600'
+              }`}
+              aria-label={isListening ? 'Stop recording' : 'Start voice input'}
+            >
+              <Mic className="w-5 h-5" />
+              {isListening && (
+                <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" />
+              )}
+            </button>
+          )}
+        </div>
 
         <div className="flex gap-3 mt-3">
           <button
@@ -167,7 +338,7 @@ export default function MealInput() {
         </div>
       )}
 
-      {/* Common Meals Bottom Sheet Modal */}
+      {/* Telugu Meals Bottom Sheet Modal */}
       {showMealModal && (
         <>
           <div
@@ -175,36 +346,57 @@ export default function MealInput() {
             onClick={() => setShowMealModal(false)}
             aria-hidden
           />
-          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-beige-50 rounded-t-3xl shadow-2xl z-50 max-h-[80vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-beige-50 border-b border-beige-300 px-5 py-4 flex items-center justify-between">
-              <h2 className="font-heading text-lg font-bold text-olive-800">Choose a Common Meal</h2>
+          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-beige-50 rounded-t-3xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto animate-slide-up">
+            <div className="sticky top-0 bg-beige-50 border-b border-beige-300 px-5 py-4 flex items-center justify-between z-10">
+              <h2 className="font-heading text-lg font-bold text-olive-800">Choose a Telugu Meal</h2>
               <button
                 type="button"
                 onClick={() => setShowMealModal(false)}
-                className="p-2 rounded-full hover:bg-beige-200 transition-colors"
+                className="p-2 rounded-full hover:bg-beige-200 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
                 aria-label="Close"
               >
                 <X className="w-5 h-5 text-neutral-600" />
               </button>
             </div>
-            <div className="p-5 space-y-6">
-              {Object.entries(COMMON_MEALS).map(([category, meals]) => (
-                <div key={category}>
-                  <h3 className="font-heading font-semibold text-olive-800 mb-3">{category}</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {meals.map((meal) => (
-                      <button
-                        key={meal}
-                        type="button"
-                        onClick={() => handleSelectMeal(meal)}
-                        className="card text-left p-3 hover:shadow-card-hover transition-shadow"
-                      >
-                        <span className="text-sm font-medium text-neutral-800">{meal}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+
+            {/* Tabs */}
+            <div className="sticky top-[73px] bg-beige-50 border-b border-beige-300 px-5 py-2 flex gap-2 overflow-x-auto z-10">
+              {(['breakfast', 'lunch', 'dinner', 'snacks'] as MealTime[]).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setSelectedTab(tab)}
+                  className={`flex-shrink-0 px-4 py-2 rounded-full font-medium text-sm transition-colors min-h-[48px] ${
+                    selectedTab === tab
+                      ? 'bg-olive-500 text-white'
+                      : 'bg-beige-100 text-neutral-600 hover:bg-beige-200'
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </button>
               ))}
+            </div>
+
+            {/* Meals Grid */}
+            <div className="p-5">
+              <div className="grid grid-cols-2 gap-3">
+                {TELUGU_MEALS[selectedTab].map((meal) => (
+                  <button
+                    key={meal.name}
+                    type="button"
+                    onClick={() => handleSelectMeal(meal.name)}
+                    className="card text-left p-4 hover:shadow-card-hover transition-shadow min-h-[48px]"
+                  >
+                    <div className="flex items-start gap-2">
+                      <span className="text-2xl flex-shrink-0">{meal.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-olive-800 mb-0.5">{meal.name}</p>
+                        <p className="text-xs text-neutral-600">{meal.telugu}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </>

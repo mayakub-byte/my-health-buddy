@@ -81,27 +81,72 @@ export default function FamilyGuidanceResult() {
   const claude = (state as { claudeAnalysis?: MealAnalysisResponse | null }).claudeAnalysis;
   const hasRealData = claude != null || fromHistory;
 
-  const foodName = claude?.food_name ?? (fromHistory ? state.food_name : undefined);
-  const calories = claude?.calories ?? (fromHistory && state.calories != null ? state.calories : undefined);
-  const macros = claude?.macros
-    ? { carbs: claude.macros.carbs_g ?? 0, protein: claude.macros.protein_g ?? 0, fat: claude.macros.fat_g ?? 0, fiber: claude.macros.fiber_g ?? 0 }
-    : fromHistory && state.macros
-      ? { carbs: state.macros.carbs ?? 0, protein: state.macros.protein ?? 0, fat: state.macros.fat ?? 0, fiber: 0 }
-      : null;
+  // New format fields (from updated prompt)
+  const mealName = claude?.meal_name ?? claude?.food_name ?? (fromHistory ? state.food_name : undefined);
+  const mealNameTelugu = claude?.meal_name_telugu;
+  const trafficLight = claude?.traffic_light;
+  const trafficLightReason = claude?.traffic_light_reason;
+  const quickVerdict = claude?.quick_verdict;
+  const beforeCookingTips = claude?.before_cooking_tips ?? [];
+  const perMemberGuidance = claude?.per_member_guidance;
+  const culturallyAppropriateSwaps = claude?.culturally_appropriate_swaps ?? [];
+  const ayurvedicNote = claude?.ayurvedic_note ?? '';
+
+  // Nutrition data (new format takes precedence)
+  const calories = claude?.total_calories ?? claude?.calories ?? (fromHistory && state.calories != null ? state.calories : undefined);
+  const macros = claude?.total_protein_g != null
+    ? {
+        carbs: claude.total_carbs_g ?? 0,
+        protein: claude.total_protein_g ?? 0,
+        fat: claude.total_fat_g ?? 0,
+        fiber: claude.total_fiber_g ?? 0,
+      }
+    : claude?.macros
+      ? { carbs: claude.macros.carbs_g ?? 0, protein: claude.macros.protein_g ?? 0, fat: claude.macros.fat_g ?? 0, fiber: claude.macros.fiber_g ?? 0 }
+      : fromHistory && state.macros
+        ? { carbs: state.macros.carbs ?? 0, protein: state.macros.protein ?? 0, fat: state.macros.fat ?? 0, fiber: 0 }
+        : null;
   const macrosSafe = macros ?? { carbs: 0, protein: 0, fat: 0, fiber: 0 };
-  const totalMacro = macrosSafe.carbs + macrosSafe.protein + macrosSafe.fat;
-  const carbsPct = totalMacro ? (macrosSafe.carbs / totalMacro) * 100 : 33;
-  const proteinPct = totalMacro ? (macrosSafe.protein / totalMacro) * 100 : 33;
-  const fatPct = totalMacro ? (macrosSafe.fat / totalMacro) * 100 : 34;
+
+  // Legacy fields (for backward compatibility)
   const healthScores = claude?.health_scores;
   const healthScore = healthScores?.general ?? (fromHistory && state.health_score != null ? state.health_score : undefined);
-  const scoreColor = getScoreColor(healthScore ?? 0);
-  const glycemicIndex = claude?.glycemic_index;
-  const foodItems = claude?.food_items ?? [];
-  const micronutrients = claude?.micronutrients ?? [];
   const detailedGuidance = claude?.detailed_guidance ?? [];
-  const ayurvedicNote = claude?.ayurvedic_note ?? '';
   const bestPairedWith = claude?.best_paired_with ?? [];
+
+  // Helper: Get guidance for a member based on their conditions
+  const getMemberGuidance = (member: FamilyMember) => {
+    if (!perMemberGuidance) return null;
+    const conditions = member.health_conditions || [];
+    const age = member.age ?? 0;
+
+    // Check condition-specific guidance
+    if (conditions.includes('diabetes') || conditions.includes('pre_diabetic')) {
+      return perMemberGuidance.diabetic;
+    }
+    if (conditions.includes('bp')) {
+      return perMemberGuidance.hypertension;
+    }
+    if (conditions.includes('weight_management')) {
+      return perMemberGuidance.weight_loss;
+    }
+    if (age >= 65) {
+      return perMemberGuidance.senior;
+    }
+    if (age < 18) {
+      return perMemberGuidance.child;
+    }
+    return perMemberGuidance.general_adult;
+  };
+
+  // Traffic light color mapping
+  const getTrafficLightColor = (light: string | undefined) => {
+    if (!light) return 'bg-neutral-300';
+    if (light === 'green') return 'bg-emerald-500';
+    if (light === 'yellow') return 'bg-amber-400';
+    if (light === 'red') return 'bg-red-500';
+    return 'bg-neutral-300';
+  };
 
   const guidance = (() => {
     if (fromHistory && state.guidance) {
@@ -123,15 +168,6 @@ export default function FamilyGuidanceResult() {
     return selectedMember ? getGuidanceForMember(selectedMember) : [];
   })();
 
-  function getMemberScore(member: FamilyMember): number {
-    const fallback = healthScore ?? 0;
-    if (!healthScores) return fallback;
-    const c = member.health_conditions || [];
-    if (c.includes('diabetes') || c.includes('pre_diabetic')) return healthScores.diabetic ?? fallback;
-    if (c.includes('bp')) return healthScores.hypertension ?? fallback;
-    if (c.includes('cholesterol')) return healthScores.cholesterol ?? fallback;
-    return healthScores.general ?? fallback;
-  }
 
   useEffect(() => {
     if (!hasState) {
@@ -222,7 +258,7 @@ export default function FamilyGuidanceResult() {
       const row = {
         user_id,
         family_member_id,
-        food_name: foodName ?? 'Meal',
+        food_name: mealName ?? 'Meal',
         image_url: image_url || null,
         calories: calories ?? 0,
         macros: { carbs: macrosSafe.carbs, protein: macrosSafe.protein, fat: macrosSafe.fat },
@@ -267,165 +303,129 @@ export default function FamilyGuidanceResult() {
       </header>
 
       <main className="flex-1 px-5 py-6 overflow-y-auto">
-        {imagePreview && (
-          <div className="flex justify-center mb-4">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-beige-300 bg-beige-100 shadow-card">
-              <img src={imagePreview} alt="Meal" className="w-full h-full object-cover" />
-            </div>
-          </div>
-        )}
+        {/* SECTION 1: Quick Verdict */}
+        <section className="mb-5">
+          <div className="card p-5 text-center">
+            {/* Traffic Light Circle */}
+            {trafficLight && (
+              <div className="flex justify-center mb-4">
+                <div className={`w-20 h-20 rounded-full ${getTrafficLightColor(trafficLight)} flex items-center justify-center shadow-lg`}>
+                  <span className="text-4xl">
+                    {trafficLight === 'green' ? '🟢' : trafficLight === 'yellow' ? '🟡' : '🔴'}
+                  </span>
+                </div>
+              </div>
+            )}
 
-        {/* Family member cards: avatar, name, status, suggestion */}
-        {members.length > 0 && (
-          <section className="mb-5">
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {members.map((m) => {
-                const score = healthScores ? getMemberScore(m) : (m.id === selectedMember?.id ? (healthScore ?? 0) : Math.min(100, Math.max(0, (healthScore ?? 0) + ((m.name?.length ?? 0) % 3 - 1) * 8)));
-                const status = score >= 70 ? 'Works well' : 'Small improvement';
-                const suggestions = m.id === selectedMember?.id ? guidance : getGuidanceForMember(m);
-                const suggestion = Array.isArray(suggestions) ? suggestions[0] : suggestions;
-                return (
-                  <div key={m.id} className="card flex-shrink-0 w-40 p-4 flex flex-col items-center text-center">
-                    <div
-                      className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mb-2"
-                      style={{ backgroundColor: m.avatar_color || '#4A5D3A' }}
-                    >
-                      {m.name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                    <p className="font-semibold text-olive-800 text-sm">{m.name}</p>
-                    <p className="text-xs text-neutral-600 mt-0.5">{status}</p>
-                    <p className="text-xs text-neutral-700 mt-2 line-clamp-2">{suggestion || '—'}</p>
-                    <span className="text-sm mt-1" aria-hidden>✨</span>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="text-center text-neutral-600 text-sm mt-3 italic">Every meal strengthens our bond.</p>
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              className="w-full mt-4 py-3.5 rounded-full btn-primary font-semibold flex items-center justify-center gap-2"
-            >
-              <span aria-hidden>🌱</span>
-              Grow Together
-            </button>
-          </section>
-        )}
+            {/* Quick Verdict */}
+            {quickVerdict && (
+              <p className="font-heading text-lg text-olive-800 mb-4">{quickVerdict}</p>
+            )}
 
-        {/* Main result card */}
-        <div className="card p-5 mb-5">
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <h2 className="font-bold text-neutral-800 text-lg">{foodName ?? 'Meal'}</h2>
-            {glycemicIndex && (
-              <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
-                glycemicIndex === 'low' ? 'bg-olive-100 text-olive-700' :
-                glycemicIndex === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
-              }`}>
-                GI: {glycemicIndex}
-              </span>
+            {/* Meal Photo + Name */}
+            <div className="flex items-center justify-center gap-3 mb-4">
+              {imagePreview && (
+                <div className="w-16 h-16 rounded-2xl overflow-hidden border border-beige-300 bg-beige-100 flex-shrink-0">
+                  <img src={imagePreview} alt="Meal" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <div className="text-left">
+                <h2 className="font-heading font-bold text-olive-800 text-lg">{mealName ?? 'Meal'}</h2>
+                {mealNameTelugu && (
+                  <p className="text-sm text-neutral-600 mt-0.5">{mealNameTelugu}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Nutrition Summary */}
+            <div className="flex justify-around gap-2 pt-3 border-t border-beige-200 text-sm">
+              <div>
+                <p className="text-neutral-500 text-xs">Calories</p>
+                <p className="font-semibold text-olive-800">{calories ?? 0}</p>
+              </div>
+              <div>
+                <p className="text-neutral-500 text-xs">Protein</p>
+                <p className="font-semibold text-olive-800">{macrosSafe.protein}g</p>
+              </div>
+              <div>
+                <p className="text-neutral-500 text-xs">Carbs</p>
+                <p className="font-semibold text-olive-800">{macrosSafe.carbs}g</p>
+              </div>
+              <div>
+                <p className="text-neutral-500 text-xs">Fat</p>
+                <p className="font-semibold text-olive-800">{macrosSafe.fat}g</p>
+              </div>
+            </div>
+
+            {/* Traffic Light Reason */}
+            {trafficLightReason && (
+              <p className="text-xs text-neutral-600 mt-3 italic">{trafficLightReason}</p>
             )}
           </div>
-          <p className="text-neutral-500 text-sm mb-4">{calories ?? 0} kcal (est.)</p>
+        </section>
 
-          {/* Food items detected */}
-          {foodItems.length > 0 && (
-            <div className="mb-4">
-              <p className="text-xs font-medium text-neutral-500 mb-2">Detected items</p>
-              <ul className="flex flex-wrap gap-2">
-                {foodItems.map((item, i) => (
-                  <li key={i} className="px-2.5 py-1 rounded-lg bg-neutral-100 text-sm text-neutral-700">
-                    {item.name} {item.quantity ? `(${item.quantity})` : ''}
+        {/* SECTION 2: Tips While You Cook */}
+        {beforeCookingTips.length > 0 && (
+          <section className="mb-5">
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl" aria-hidden>🌿</span>
+                <h3 className="font-heading font-semibold text-olive-800">Tips While You Cook</h3>
+              </div>
+              <ul className="space-y-2">
+                {beforeCookingTips.map((tip, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-neutral-700">
+                    <span className="text-olive-500 mt-0.5 flex-shrink-0">•</span>
+                    <span>{tip}</span>
                   </li>
                 ))}
               </ul>
             </div>
-          )}
-
-          {/* Macro bar: Carbs (green) / Protein (blue) / Fat (orange) */}
-          <div className="flex h-3 rounded-full overflow-hidden bg-beige-200 mb-2">
-            <div
-              className="h-full bg-olive-500 transition-all"
-              style={{ width: `${carbsPct}%` }}
-            />
-            <div
-              className="h-full bg-blue-500 transition-all"
-              style={{ width: `${proteinPct}%` }}
-            />
-            <div
-              className="h-full bg-orange-500 transition-all"
-              style={{ width: `${fatPct}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-neutral-500">
-            <span>Carbs {macrosSafe.carbs}g</span>
-            <span>Protein {macrosSafe.protein}g</span>
-            <span>Fat {macrosSafe.fat}g</span>
-            {macrosSafe.fiber > 0 && (
-              <span>Fiber {macrosSafe.fiber}g</span>
-            )}
-          </div>
-        </div>
-
-        {/* Micronutrients */}
-        {micronutrients.length > 0 && (
-          <section className="mb-5">
-            <p className="text-sm font-medium text-neutral-700 mb-2">Top micronutrients</p>
-            <ul className="card p-4 space-y-2">
-              {micronutrients.slice(0, 5).map((m, i) => (
-                <li key={i} className="flex justify-between text-sm">
-                  <span className="text-neutral-700">{m.name}</span>
-                  <span className="text-neutral-500">{m.amount} ({m.daily_value_percent}% DV)</span>
-                </li>
-              ))}
-            </ul>
           </section>
         )}
 
-        {/* Family Health Score: circular gauge */}
-        <section className="mb-5">
-          <p className="text-sm font-medium text-neutral-700 mb-3">Family Health Score</p>
-          <div className="flex justify-center">
-            <div className="relative w-40 h-40">
-              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  fill="none"
-                  stroke="#e5e5e5"
-                  strokeWidth="10"
-                />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="42"
-                  fill="none"
-                  stroke={
-                    scoreColor === 'red'
-                      ? '#ef4444'
-                      : scoreColor === 'orange'
-                        ? '#f97316'
-                        : '#4A5D3A'
-                  }
-                  strokeWidth="10"
-                  strokeDasharray={`${(healthScore ?? 0) * 2.64} 264`}
-                  strokeLinecap="round"
-                  className="transition-all duration-500"
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl font-bold text-neutral-800">{healthScore ?? 0}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Guidance for [member name] */}
-        {selectedMember && (
+        {/* SECTION 3: For Your Family */}
+        {perMemberGuidance && members.length > 0 && (
           <section className="mb-5">
-            <h3 className="text-sm font-semibold text-neutral-800 mb-2">
-              Guidance for {selectedMember.name}
-            </h3>
+            <h3 className="font-heading font-semibold text-olive-800 mb-3">For Your Family</h3>
+            <div className="space-y-3">
+              {members.map((member) => {
+                const guidance = getMemberGuidance(member);
+                if (!guidance) return null;
+                const memberTrafficLight = guidance.traffic_light || 'green';
+                return (
+                  <div key={member.id} className="card p-4">
+                    <div className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
+                        style={{ backgroundColor: member.avatar_color || '#4A5D3A' }}
+                      >
+                        {member.name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-semibold text-olive-800">{member.name}</p>
+                          {/* Traffic Light Dot */}
+                          <div className={`w-3 h-3 rounded-full ${getTrafficLightColor(memberTrafficLight)} flex-shrink-0`} />
+                        </div>
+                        <p className="text-sm text-neutral-700 mb-1">{guidance.tip}</p>
+                        {guidance.avoid && (
+                          <p className="text-xs text-red-600 mt-1">Avoid: {guidance.avoid}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Legacy: Fallback to old format if new format not available */}
+        {!perMemberGuidance && selectedMember && guidance.length > 0 && (
+          <section className="mb-5">
+            <h3 className="font-heading font-semibold text-olive-800 mb-3">Guidance for {selectedMember.name}</h3>
             <ul className="card p-4 space-y-2">
               {guidance.map((line, i) => (
                 <li key={i} className="flex gap-2 text-sm text-neutral-700">
@@ -437,10 +437,10 @@ export default function FamilyGuidanceResult() {
           </section>
         )}
 
-        {/* Condition-specific detailed guidance */}
-        {detailedGuidance.length > 0 && (
+        {/* Legacy: Condition-specific detailed guidance */}
+        {detailedGuidance.length > 0 && !perMemberGuidance && (
           <section className="mb-5">
-            <p className="text-sm font-semibold text-neutral-800 mb-2">Condition-specific guidance</p>
+            <p className="font-heading font-semibold text-olive-800 mb-3">Condition-specific guidance</p>
             <div className="space-y-3">
               {detailedGuidance.map((d, i) => (
                 <div key={i} className="card p-4">
@@ -467,36 +467,22 @@ export default function FamilyGuidanceResult() {
           </section>
         )}
 
-        {/* Other family members: horizontal scroll of score circles (condition-specific when Claude) */}
-        {(members.length > 1 || members.length === 1) && (
-          <section className="mb-6">
-            <p className="text-sm font-medium text-neutral-700 mb-2">Family scores</p>
-            <div className="flex gap-3 overflow-x-auto pb-2">
-              {members.map((m) => {
-                const score = healthScores ? getMemberScore(m) : (m.id === selectedMember?.id ? (healthScore ?? 0) : Math.min(100, Math.max(0, (healthScore ?? 0) + ((m.name.length % 3) - 1) * 8)));
-                const color = getScoreColor(score);
-                return (
-                  <div
-                    key={m.id}
-                    className="flex-shrink-0 flex flex-col items-center gap-1"
-                  >
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold border-2 ${
-                        color === 'red'
-                          ? 'bg-red-100 text-red-700 border-red-200'
-                          : color === 'orange'
-                            ? 'bg-orange-100 text-orange-700 border-orange-200'
-                            : 'bg-olive-100 text-olive-700 border-olive-200'
-                      }`}
-                    >
-                      {score}
-                    </div>
-                    <span className="text-xs text-neutral-600 max-w-[4rem] truncate">
-                      {m.name}
-                    </span>
-                  </div>
-                );
-              })}
+        {/* SECTION 4: Telugu Food Swaps */}
+        {culturallyAppropriateSwaps.length > 0 && (
+          <section className="mb-5">
+            <div className="card p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-2xl" aria-hidden>🔄</span>
+                <h3 className="font-heading font-semibold text-olive-800">Telugu Food Swaps</h3>
+              </div>
+              <ul className="space-y-2">
+                {culturallyAppropriateSwaps.map((swap, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-neutral-700">
+                    <span className="text-olive-500 mt-0.5 flex-shrink-0">•</span>
+                    <span>{swap}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
         )}
@@ -504,17 +490,17 @@ export default function FamilyGuidanceResult() {
         {/* Ayurvedic note */}
         {ayurvedicNote && (
           <section className="mb-5">
-            <p className="text-sm font-semibold text-neutral-800 mb-2">Ayurvedic note</p>
-            <p className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-sm text-amber-900">
-              {ayurvedicNote}
-            </p>
+            <div className="card p-4">
+              <p className="font-heading font-semibold text-olive-800 mb-2">Ayurvedic Note</p>
+              <p className="text-sm text-neutral-700">{ayurvedicNote}</p>
+            </div>
           </section>
         )}
 
-        {/* Best paired with */}
-        {bestPairedWith.length > 0 && (
+        {/* Legacy: Best paired with */}
+        {bestPairedWith.length > 0 && !culturallyAppropriateSwaps.length && (
           <section className="mb-5">
-            <p className="text-sm font-semibold text-neutral-800 mb-2">Complete your meal</p>
+            <p className="font-heading font-semibold text-olive-800 mb-2">Complete your meal</p>
             <ul className="flex flex-wrap gap-2">
               {bestPairedWith.map((s, i) => (
                 <li key={i} className="px-3 py-1.5 rounded-full bg-olive-50 text-olive-800 text-sm">
@@ -525,14 +511,8 @@ export default function FamilyGuidanceResult() {
           </section>
         )}
 
-        {/* Buttons */}
+        {/* SECTION 5: Action Buttons */}
         <div className="flex flex-col gap-3">
-          <Link
-            to="/dashboard"
-            className="w-full py-3.5 rounded-full border-2 border-beige-300 font-semibold text-neutral-700 hover:bg-beige-100 text-center transition-colors"
-          >
-            Scan Another Meal
-          </Link>
           {!fromHistory && (
             <button
               onClick={handleSaveToHistory}
@@ -542,6 +522,12 @@ export default function FamilyGuidanceResult() {
               {saving ? 'Saving…' : 'Save to History'}
             </button>
           )}
+          <Link
+            to="/dashboard"
+            className="w-full py-3.5 rounded-full border-2 border-olive-500 text-olive-600 font-semibold hover:bg-olive-50 text-center transition-colors"
+          >
+            Scan Another Meal
+          </Link>
         </div>
       </main>
 
