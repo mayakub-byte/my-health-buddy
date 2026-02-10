@@ -18,29 +18,33 @@ export async function analyzeMealImage(
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ image_base64: imageBase64, media_type: mediaType }),
+    body: JSON.stringify({ type: 'image', image_base64: imageBase64, media_type: mediaType }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error || 'Analysis failed');
   }
-  const data = await res.json() as { dishes: { name: string; name_telugu?: string; portion: string; confidence: number }[]; meal_summary: string; is_telugu_meal: boolean };
-  // Map Supabase Edge Function response to MealAnalysisResponse
-  const foodItems = (data.dishes || []).map((d) => ({ name: d.name, quantity: d.portion }));
-  const foodName = data.meal_summary || (data.dishes?.[0]?.name) || 'Meal';
-  const estimatedCal = data.dishes?.length ? 200 + data.dishes.length * 80 : 400;
-  return {
-    food_name: foodName,
-    food_items: foodItems,
-    calories: estimatedCal,
-    macros: { carbs_g: 40, protein_g: 12, fat_g: 10, fiber_g: 4 },
-    micronutrients: [],
-    glycemic_index: 'medium',
-    health_scores: { general: 75, diabetic: 72, hypertension: 74, cholesterol: 76 },
-    detailed_guidance: [],
-    ayurvedic_note: data.is_telugu_meal ? 'Traditional South Indian meal.' : '',
-    best_paired_with: [],
-  };
+  return await res.json() as MealAnalysisResponse;
+}
+
+export async function analyzeMealText(
+  mealDescription: string,
+  portionSize: 'small' | 'medium' | 'large' = 'medium'
+): Promise<MealAnalysisResponse> {
+  const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({ type: 'text', mealDescription, portion: portionSize }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error((err as { error?: string }).error || 'Analysis failed');
+  }
+  return await res.json() as MealAnalysisResponse;
 }
 
 export async function imageFileToBase64(file: File): Promise<{ base64: string; mediaType: string }> {

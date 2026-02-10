@@ -132,8 +132,62 @@ serve(async (req) => {
       throw new Error('CLAUDE_API_KEY not configured in secrets');
     }
 
-    const { image_base64, media_type } = await req.json();
+    const body = await req.json();
+    const { type, image_base64, media_type, mealDescription, portion } = body;
 
+    // Text-only analysis
+    if (type === 'text') {
+      if (!mealDescription) {
+        throw new Error('No meal description provided');
+      }
+
+      const textPrompt = `${FOOD_RECOGNITION_PROMPT}
+
+IMPORTANT: Analyze this meal based on the TEXT DESCRIPTION only (no image):
+Meal description: "${mealDescription}"
+Portion size: ${portion || 'medium'}
+
+Respond with the same JSON structure as image analysis. Use your knowledge of Telugu cuisine and nutrition to estimate calories, macros, and provide guidance.`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4096,
+          messages: [{
+            role: 'user',
+            content: textPrompt
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Claude API error:', response.status, errText);
+        throw new Error(`Claude API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const textContent = data.content.find((c: any) => c.type === 'text');
+      if (!textContent?.text) throw new Error('No text in Claude response');
+      let jsonText = textContent.text.trim();
+      // Remove markdown code fences if present
+      if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+      }
+      const parsed = JSON.parse(jsonText);
+
+      return new Response(JSON.stringify(parsed), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Image-based analysis (legacy support)
     if (!image_base64) {
       throw new Error('No image provided');
     }

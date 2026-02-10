@@ -7,7 +7,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
-import { analyzeMealImage, imageFileToBase64, blobUrlToBase64 } from '../lib/analyze-meal-api';
+import { analyzeMealImage, analyzeMealText, imageFileToBase64, blobUrlToBase64 } from '../lib/analyze-meal-api';
 import type { MealAnalysisResponse } from '../types/meal-analysis';
 import type { PhotoConfirmState } from './PhotoConfirmation';
 import type { PortionSize } from './PortionSelection';
@@ -17,6 +17,7 @@ const PROGRESS_DURATION_MS = 8000;
 export interface AnalysisLoadingState extends PhotoConfirmState {
   portionSize?: PortionSize;
   servings?: number;
+  mealType?: 'text' | 'photo';
 }
 
 export default function AnalysisLoading() {
@@ -35,13 +36,15 @@ export default function AnalysisLoading() {
 
   const imagePreview = state.imagePreview ?? filePreview;
   const hasImage = !!imagePreview || !!state.imageFile;
+  const isTextOnly = state.mealType === 'text' || (!hasImage && !!state.manualText);
 
   const selectedMember = state.selectedMemberId
     ? members.find((m) => m.id === state.selectedMemberId)
     : members[0];
 
   useEffect(() => {
-    if (!hasImage) {
+    // Allow text-only flow OR photo flow
+    if (!hasImage && !state.manualText) {
       navigate('/dashboard', { replace: true });
       return;
     }
@@ -50,39 +53,56 @@ export default function AnalysisLoading() {
       setFilePreview(url);
       return () => URL.revokeObjectURL(url);
     }
-  }, [hasImage, state.imageFile, state.imagePreview, navigate]);
+  }, [hasImage, state.imageFile, state.imagePreview, state.manualText, navigate]);
 
-  // Call Claude Vision API when image is available
+  // Call Claude API (Vision for photo, Text-only for text)
   useEffect(() => {
-    if (!hasImage || analysisStarted.current) return;
+    if (analysisStarted.current) return;
+    if (isTextOnly && !state.manualText) return;
+    if (!isTextOnly && !hasImage) return;
+    
     analysisStarted.current = true;
     let cancelled = false;
     (async () => {
       try {
-        let base64: string;
-        let mediaType = 'image/jpeg';
-        if (state.imageFile) {
-          const out = await imageFileToBase64(state.imageFile);
-          base64 = out.base64;
-          mediaType = out.mediaType;
-        } else if (imagePreview && typeof imagePreview === 'string') {
-          if (imagePreview.startsWith('data:')) {
-            const [header, data] = imagePreview.split(',');
-            base64 = data || '';
-            mediaType = header?.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
-          } else {
-            const out = await blobUrlToBase64(imagePreview);
-            base64 = out.base64;
-            mediaType = out.mediaType;
+        if (isTextOnly) {
+          // Text-only analysis
+          const mealDescription = state.manualText?.trim() || '';
+          const portionSize = state.portionSize || 'medium';
+          if (!mealDescription) return;
+          
+          const result = await analyzeMealText(mealDescription, portionSize);
+          if (!cancelled) {
+            analysisResultRef.current = result;
+            setAnalysisResult(result);
           }
         } else {
-          return;
-        }
-        if (cancelled || !base64) return;
-        const result = await analyzeMealImage(base64, mediaType);
-        if (!cancelled) {
-          analysisResultRef.current = result;
-          setAnalysisResult(result);
+          // Photo-based analysis
+          let base64: string;
+          let mediaType = 'image/jpeg';
+          if (state.imageFile) {
+            const out = await imageFileToBase64(state.imageFile);
+            base64 = out.base64;
+            mediaType = out.mediaType;
+          } else if (imagePreview && typeof imagePreview === 'string') {
+            if (imagePreview.startsWith('data:')) {
+              const [header, data] = imagePreview.split(',');
+              base64 = data || '';
+              mediaType = header?.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+            } else {
+              const out = await blobUrlToBase64(imagePreview);
+              base64 = out.base64;
+              mediaType = out.mediaType;
+            }
+          } else {
+            return;
+          }
+          if (cancelled || !base64) return;
+          const result = await analyzeMealImage(base64, mediaType);
+          if (!cancelled) {
+            analysisResultRef.current = result;
+            setAnalysisResult(result);
+          }
         }
       } catch (err) {
         console.error('Meal analysis API error:', err);
@@ -94,11 +114,11 @@ export default function AnalysisLoading() {
     return () => {
       cancelled = true;
     };
-  }, [hasImage, state.imageFile, imagePreview]);
+  }, [hasImage, isTextOnly, state.imageFile, state.manualText, state.portionSize, imagePreview]);
 
   // Progress bar: 0 → 100 over 8 seconds; navigate ONLY when progress is 100% AND analysisResult exists
   useEffect(() => {
-    if (!hasImage) return;
+    if (!hasImage && !state.manualText) return;
     const start = Date.now();
     let cancelled = false;
     const interval = setInterval(() => {
@@ -130,7 +150,7 @@ export default function AnalysisLoading() {
     };
   }, [hasImage, state.imageFile, state.imagePreview, state.manualText, state.selectedMemberId, state.portionSize, state.servings, imagePreview, navigate]);
 
-  if (!hasImage) {
+  if (!hasImage && !state.manualText) {
     return null;
   }
 

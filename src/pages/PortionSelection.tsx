@@ -4,11 +4,15 @@
 // ============================================
 
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import type { PhotoConfirmState } from './PhotoConfirmation';
 
 export type PortionSize = 'small' | 'medium' | 'large';
+
+export interface PortionSelectionState extends PhotoConfirmState {
+  mealType?: 'text' | 'photo';
+}
 
 const PORTION_OPTIONS: { value: PortionSize; label: string; sublabel: string; icon: string }[] = [
   { value: 'small', label: 'Small', sublabel: 'Just a light meal', icon: '🥣' },
@@ -22,17 +26,19 @@ const MAX_SERVINGS = 5;
 export default function PortionSelection() {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = (location.state ?? {}) as PhotoConfirmState;
+  const state = (location.state ?? {}) as PortionSelectionState;
   const [filePreview, setFilePreview] = useState<string | null>(null);
 
   const imagePreview = state.imagePreview ?? filePreview;
   const hasImage = !!imagePreview || !!state.imageFile;
+  const isTextOnly = state.mealType === 'text' || (!hasImage && !!state.manualText);
 
   const [portionSize, setPortionSize] = useState<PortionSize>('medium');
   const [servings, setServings] = useState(1);
 
   useEffect(() => {
-    if (!hasImage) {
+    // Allow text-only flow OR photo flow
+    if (!hasImage && !state.manualText) {
       navigate('/dashboard', { replace: true });
       return;
     }
@@ -41,7 +47,7 @@ export default function PortionSelection() {
       setFilePreview(url);
       return () => URL.revokeObjectURL(url);
     }
-  }, [hasImage, state.imageFile, state.imagePreview, navigate]);
+  }, [hasImage, state.imageFile, state.imagePreview, state.manualText, navigate]);
 
   const handleStartAnalysis = () => {
     navigate('/scan/loading', {
@@ -52,13 +58,15 @@ export default function PortionSelection() {
         selectedMemberId: state.selectedMemberId,
         portionSize,
         servings,
+        mealType: isTextOnly ? 'text' : 'photo',
       },
     });
   };
 
   const confirmState = { ...state, imagePreview: state.imagePreview ?? imagePreview };
+  const backRoute = isTextOnly ? '/dashboard' : '/scan/confirm';
 
-  if (!hasImage) {
+  if (!hasImage && !state.manualText) {
     return null;
   }
 
@@ -67,14 +75,14 @@ export default function PortionSelection() {
   return (
     <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
       <header className="flex items-center gap-3 px-5 pt-6 pb-4">
-        <Link
-          to="/scan/confirm"
-          state={confirmState}
+        <button
+          type="button"
+          onClick={() => navigate(backRoute, { state: isTextOnly ? undefined : confirmState })}
           className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5" />
-        </Link>
+        </button>
         <div className="flex-1">
           <h1 className="font-heading text-lg font-bold text-olive-800">How much are you feeling today?</h1>
           <p className="text-neutral-600 text-sm mt-0.5">Choose your preferred portion size.</p>
@@ -90,6 +98,15 @@ export default function PortionSelection() {
                 alt="Your meal"
                 className="w-full h-full object-cover"
               />
+            </div>
+          </div>
+        )}
+        
+        {isTextOnly && state.manualText && (
+          <div className="flex justify-center mb-6">
+            <div className="card p-4 max-w-xs">
+              <p className="text-sm text-neutral-600 mb-1">Meal description:</p>
+              <p className="font-heading font-semibold text-olive-800">{state.manualText}</p>
             </div>
           </div>
         )}

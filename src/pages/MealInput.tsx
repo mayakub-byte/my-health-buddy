@@ -154,14 +154,34 @@ export default function MealInput() {
 
   const handleAnalyze = () => {
     if (!imageFile && !manualText.trim()) return;
-    navigate('/scan/confirm', {
-      state: {
-        imageFile: imageFile ?? undefined,
-        imagePreview: imagePreview ?? undefined,
-        manualText: manualText.trim() || undefined,
-        selectedMemberId: selectedMemberId ?? undefined,
-      },
-    });
+    
+    const mealText = manualText.trim();
+    const hasImage = !!imageFile || !!imagePreview;
+    
+    // Text-only flow: skip photo confirmation, go directly to portion selection
+    if (!hasImage && mealText) {
+      navigate('/scan/portion', {
+        state: {
+          manualText: mealText,
+          selectedMemberId: selectedMemberId ?? undefined,
+          mealType: 'text' as const,
+        },
+      });
+      return;
+    }
+    
+    // Photo flow (with or without text): go to photo confirmation
+    if (hasImage) {
+      navigate('/scan/confirm', {
+        state: {
+          imageFile: imageFile ?? undefined,
+          imagePreview: imagePreview ?? undefined,
+          manualText: mealText || undefined,
+          selectedMemberId: selectedMemberId ?? undefined,
+          mealType: 'photo' as const,
+        },
+      });
+    }
   };
 
   const handleSelectMeal = (mealName: string) => {
