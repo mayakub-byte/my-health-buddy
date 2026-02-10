@@ -5,13 +5,14 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const APP_VERSION = '1.0.0';
 
 type Language = 'telugu' | 'english' | 'hindi';
 type Units = 'metric' | 'imperial';
+type DietaryPreference = 'veg_only' | 'veg_egg' | 'all';
 
 const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
   { value: 'english', label: 'English' },
@@ -23,6 +24,7 @@ const STORAGE_KEYS = {
   language: 'mhb_language',
   notifications: 'mhb_notifications',
   units: 'mhb_units',
+  dietary: 'mhb_dietary',
 } as const;
 
 export default function Settings() {
@@ -37,6 +39,11 @@ export default function Settings() {
   const [units, setUnits] = useState<Units>(() =>
     (localStorage.getItem(STORAGE_KEYS.units) as Units) || 'metric'
   );
+  const [dietary, setDietary] = useState<DietaryPreference>(() =>
+    (localStorage.getItem(STORAGE_KEYS.dietary) as DietaryPreference) || 'all'
+  );
+  const [showHelp, setShowHelp] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,6 +78,10 @@ export default function Settings() {
     localStorage.setItem(STORAGE_KEYS.units, units);
   }, [units]);
 
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.dietary, dietary);
+  }, [dietary]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/login', { replace: true });
@@ -102,19 +113,81 @@ export default function Settings() {
           </Link>
           <button
             type="button"
-            onClick={() => setToast('Coming soon!')}
-            className="block w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow"
+            onClick={() => setShowPreferences(!showPreferences)}
+            className="w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
           >
             Preferences
+            {showPreferences ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
           <button
             type="button"
-            onClick={() => setToast('Coming soon!')}
-            className="block w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow"
+            onClick={() => setShowHelp(!showHelp)}
+            className="w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
           >
             Help
+            {showHelp ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
+
+        {/* Preferences Section */}
+        {showPreferences && (
+          <section className="mt-4 card p-4">
+            <h3 className="font-heading font-semibold text-olive-800 mb-3">Dietary Preference</h3>
+            <div className="space-y-2">
+              {[
+                { value: 'veg_only' as DietaryPreference, label: 'Vegetarian Only' },
+                { value: 'veg_egg' as DietaryPreference, label: 'Vegetarian + Egg' },
+                { value: 'all' as DietaryPreference, label: 'All Foods' },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setDietary(opt.value)}
+                  className={`w-full px-4 py-2.5 rounded-full text-sm font-medium text-left transition-colors ${
+                    dietary === opt.value
+                      ? 'bg-olive-500 text-white'
+                      : 'bg-beige-100 text-neutral-600 hover:bg-beige-200'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Help Section */}
+        {showHelp && (
+          <section className="mt-4 card p-4">
+            <h3 className="font-heading font-semibold text-olive-800 mb-3">Frequently Asked Questions</h3>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-neutral-800 text-sm mb-1">How does meal scanning work?</h4>
+                <p className="text-xs text-neutral-600">
+                  Take a photo of your meal or describe it in text. Our AI analyzes the food items and provides personalized nutrition guidance for each family member based on their health conditions.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-neutral-800 text-sm mb-1">How are health scores calculated?</h4>
+                <p className="text-xs text-neutral-600">
+                  Health scores consider nutritional balance, portion size, and how well the meal aligns with each family member&apos;s specific health needs (diabetes, BP, cholesterol, etc.).
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-neutral-800 text-sm mb-1">Can I edit my family members?</h4>
+                <p className="text-xs text-neutral-600">
+                  Yes! Go to Settings &gt; Edit family to add, remove, or update family member details and health conditions.
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-neutral-800 text-sm mb-1">Who built this?</h4>
+                <p className="text-xs text-neutral-600">
+                  My Health Buddy by AIGF Cohort 5, Group 3
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Profile (optional, compact) */}
         <section className="mt-6 card px-4 py-4">

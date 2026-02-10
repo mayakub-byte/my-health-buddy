@@ -3,7 +3,6 @@
 // Warm, nurturing Indian family wellness
 // ============================================
 
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const FEATURE_CARDS = [
@@ -13,12 +12,6 @@ const FEATURE_CARDS = [
 ];
 
 export default function Landing() {
-  const [toast, setToast] = useState<string | null>(null);
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2500);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   return (
     <div className="min-h-screen bg-beige flex flex-col overflow-x-hidden max-w-md mx-auto w-full">
@@ -56,13 +49,12 @@ export default function Landing() {
       </section>
 
       <footer className="mt-auto px-5 pb-10 pt-4 space-y-3 max-w-md mx-auto w-full">
-        <button
-          type="button"
-          onClick={() => setToast('Coming soon!')}
+        <Link
+          to="/signup"
           className="btn-primary w-full flex items-center justify-center py-3.5 rounded-full text-base font-semibold"
         >
-          Download the App
-        </button>
+          Get Started
+        </Link>
         <Link
           to="/login"
           className="w-full flex items-center justify-center py-3.5 rounded-full text-base font-semibold border-2 border-olive-500 text-olive-600 hover:bg-olive-50 active:bg-olive-100 transition-colors"
@@ -73,15 +65,6 @@ export default function Landing() {
           Available on iOS &amp; Android
         </p>
       </footer>
-
-      {toast && (
-        <div
-          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg z-50"
-          role="status"
-        >
-          {toast}
-        </div>
-      )}
     </div>
   );
 }

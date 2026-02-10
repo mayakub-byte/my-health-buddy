@@ -3,7 +3,7 @@
 // Photo upload with REAL AI recognition
 // ============================================
 
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, X, Check, Loader2, Sparkles, AlertCircle } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
@@ -30,6 +30,13 @@ export default function Upload() {
   const [dishes, setDishes] = useState<IdentifiedDish[]>([]);
   const [mealSummary, setMealSummary] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -151,7 +158,7 @@ export default function Upload() {
     } catch (err) {
       console.error('Error saving meal:', err);
       setStep('confirm');
-      alert('Failed to save meal. Please try again.');
+      setToast('Failed to save meal. Please try again.');
     }
   };
 
@@ -432,6 +439,15 @@ export default function Upload() {
           </div>
         )}
       </div>
+
+      {toast && (
+        <div
+          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg z-50"
+          role="status"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
