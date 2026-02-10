@@ -1,81 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom base styles */
+/* Arogya — mobile-first 375px, warm cream #F4F1EA, olive #5C6B4A, accent #C4A96A */
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
   }
-  
   body {
-    @apply bg-neutral-50 text-neutral-800;
+    @apply bg-beige text-charcoal;
   }
 }
 
-/* Custom component styles */
 @layer components {
+  .font-heading {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
   .btn-primary {
-    @apply bg-primary-500 text-white px-6 py-3 rounded-xl font-semibold 
-           hover:bg-primary-600 active:bg-primary-700 
-           transition-colors duration-200 
-           disabled:bg-neutral-300 disabled:cursor-not-allowed;
+    @apply min-h-[48px] rounded-full font-semibold
+           bg-olive-500 text-white
+           hover:bg-olive-600 active:bg-olive-700
+           transition-colors duration-200
+           disabled:bg-neutral-300 disabled:cursor-not-allowed
+           inline-flex items-center justify-center px-6 py-3;
   }
-  
   .btn-secondary {
-    @apply bg-white text-primary-600 px-6 py-3 rounded-xl font-semibold 
-           border-2 border-primary-500
-           hover:bg-primary-50 active:bg-primary-100
-           transition-colors duration-200;
+    @apply min-h-[48px] rounded-full font-semibold
+           bg-transparent border-2 border-olive-500 text-olive-600
+           hover:bg-olive-50 active:bg-olive-100
+           transition-colors duration-200
+           inline-flex items-center justify-center px-6 py-3;
   }
-  
+  .btn-gold {
+    @apply min-h-[48px] rounded-full font-semibold
+           bg-gold-500 text-white
+           hover:bg-gold-600 active:bg-gold-700
+           transition-colors duration-200
+           inline-flex items-center justify-center px-6 py-3;
+  }
   .btn-ghost {
-    @apply text-neutral-600 px-4 py-2 rounded-lg font-medium
-           hover:bg-neutral-100 active:bg-neutral-200
+    @apply text-neutral-600 px-4 py-2 rounded-full font-medium min-h-[48px] inline-flex items-center justify-center
+           hover:bg-beige-200 active:bg-beige-300
            transition-colors duration-200;
   }
-  
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-neutral-100 p-5;
+    @apply bg-beige-50 rounded-2xl shadow-sm border border-beige-200 p-5;
   }
-  
   .input-field {
-    @apply w-full px-4 py-3 rounded-xl border border-neutral-200 
-           focus:border-primary-500 focus:ring-2 focus:ring-primary-100 
+    @apply w-full min-h-[48px] px-4 py-3 rounded-full border border-beige-300
+           focus:border-olive-500 focus:ring-2 focus:ring-olive-100
            outline-none transition-all duration-200
-           placeholder:text-neutral-400;
+           placeholder:text-neutral-400 bg-white;
   }
-  
   .label {
-    @apply block text-sm font-medium text-neutral-700 mb-1.5;
+    @apply block text-sm font-medium text-charcoal mb-1.5;
   }
-  
   .score-badge {
-    @apply inline-flex items-center justify-center w-12 h-12 rounded-full 
+    @apply inline-flex items-center justify-center w-12 h-12 rounded-full
            text-xl font-bold text-white;
   }
-  
   .score-great {
-    @apply bg-primary-500;
+    @apply bg-olive-500;
   }
-  
   .score-good {
-    @apply bg-yellow-500;
+    @apply bg-gold-500;
   }
-  
   .score-needs-attention {
     @apply bg-accent-500;
   }
-  
   .health-tag {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-           bg-primary-100 text-primary-700;
+           bg-olive-100 text-olive-700;
   }
-  
   .warning-tag {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
            bg-accent-100 text-accent-700;
   }
+}
+
+@keyframes fadeOpacity {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }

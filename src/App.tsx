@@ -52,7 +52,7 @@ function App() {
   if (!isSignedIn) {
     return (
       <Router>
-        <div className="min-h-screen bg-neutral-50">
+        <div className="min-h-screen bg-beige">
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
@@ -71,7 +71,7 @@ function App() {
   if (!family) {
     return (
       <Router>
-        <div className="min-h-screen bg-neutral-50">
+        <div className="min-h-screen bg-beige">
           <Routes>
             <Route path="/setup" element={<FamilySetup />} />
             <Route path="*" element={<Navigate to="/setup" replace />} />
@@ -83,7 +83,7 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-neutral-50">
+      <div className="min-h-screen bg-beige">
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/onboarding" element={<Onboarding onComplete={() => {}} />} />

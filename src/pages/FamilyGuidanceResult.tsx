@@ -156,25 +156,23 @@ export default function FamilyGuidanceResult() {
 
   if (!hasRealData) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex flex-col pb-8">
-        <header className="flex items-center gap-3 px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
+      <div className="min-h-screen bg-beige flex flex-col pb-8 max-w-md mx-auto w-full">
+        <header className="flex items-center gap-3 px-5 pt-6 pb-4">
           <Link
             to="/dashboard"
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
             aria-label="Back to dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="text-lg font-bold text-neutral-800">Meal Analysis</h1>
+          <h1 className="font-heading text-lg font-bold text-olive-800">Meal Analysis</h1>
         </header>
-        <main className="flex-1 px-4 py-6 flex flex-col items-center justify-center">
-          <p className="text-neutral-700 font-medium text-center mb-6">
-            Analysis failed. Please try again.
-          </p>
+        <main className="flex-1 px-5 py-6 flex flex-col items-center justify-center">
+          <p className="text-neutral-700 font-medium text-center mb-6">Analysis failed. Please try again.</p>
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            className="px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
+            className="px-6 py-3 rounded-full btn-primary font-semibold"
           >
             Back to Dashboard
           </button>
@@ -256,40 +254,71 @@ export default function FamilyGuidanceResult() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col pb-8">
-      {/* Header */}
-      <header className="flex items-center gap-3 px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
+    <div className="min-h-screen bg-beige flex flex-col pb-8 max-w-md mx-auto w-full">
+      <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         <Link
           to="/dashboard"
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
           aria-label="Back to dashboard"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-lg font-bold text-neutral-800">Meal Analysis</h1>
+        <h1 className="font-heading text-lg font-bold text-olive-800">Our Family Mealtime Journey</h1>
       </header>
 
-      <main className="flex-1 px-4 py-6 overflow-y-auto">
-        {/* Food image thumbnail */}
+      <main className="flex-1 px-5 py-6 overflow-y-auto">
         {imagePreview && (
           <div className="flex justify-center mb-4">
-            <div className="w-20 h-20 rounded-xl overflow-hidden border border-neutral-200 bg-neutral-100">
-              <img
-                src={imagePreview}
-                alt="Meal"
-                className="w-full h-full object-cover"
-              />
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-beige-300 bg-beige-100 shadow-card">
+              <img src={imagePreview} alt="Meal" className="w-full h-full object-cover" />
             </div>
           </div>
         )}
 
+        {/* Family member cards: avatar, name, status, suggestion */}
+        {members.length > 0 && (
+          <section className="mb-5">
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {members.map((m) => {
+                const score = healthScores ? getMemberScore(m) : (m.id === selectedMember?.id ? (healthScore ?? 0) : Math.min(100, Math.max(0, (healthScore ?? 0) + ((m.name?.length ?? 0) % 3 - 1) * 8)));
+                const status = score >= 70 ? 'Works well' : 'Small improvement';
+                const suggestions = m.id === selectedMember?.id ? guidance : getGuidanceForMember(m);
+                const suggestion = Array.isArray(suggestions) ? suggestions[0] : suggestions;
+                return (
+                  <div key={m.id} className="card flex-shrink-0 w-40 p-4 flex flex-col items-center text-center">
+                    <div
+                      className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white mb-2"
+                      style={{ backgroundColor: m.avatar_color || '#4A5D3A' }}
+                    >
+                      {m.name?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                    <p className="font-semibold text-olive-800 text-sm">{m.name}</p>
+                    <p className="text-xs text-neutral-600 mt-0.5">{status}</p>
+                    <p className="text-xs text-neutral-700 mt-2 line-clamp-2">{suggestion || '—'}</p>
+                    <span className="text-sm mt-1" aria-hidden>✨</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-center text-neutral-600 text-sm mt-3 italic">Every meal strengthens our bond.</p>
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              className="w-full mt-4 py-3.5 rounded-full btn-primary font-semibold flex items-center justify-center gap-2"
+            >
+              <span aria-hidden>🌱</span>
+              Grow Together
+            </button>
+          </section>
+        )}
+
         {/* Main result card */}
-        <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-5 mb-5">
+        <div className="card p-5 mb-5">
           <div className="flex items-start justify-between gap-2 mb-1">
             <h2 className="font-bold text-neutral-800 text-lg">{foodName ?? 'Meal'}</h2>
             {glycemicIndex && (
               <span className={`flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${
-                glycemicIndex === 'low' ? 'bg-green-100 text-green-700' :
+                glycemicIndex === 'low' ? 'bg-olive-100 text-olive-700' :
                 glycemicIndex === 'medium' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
               }`}>
                 GI: {glycemicIndex}
@@ -313,9 +342,9 @@ export default function FamilyGuidanceResult() {
           )}
 
           {/* Macro bar: Carbs (green) / Protein (blue) / Fat (orange) */}
-          <div className="flex h-3 rounded-full overflow-hidden bg-neutral-100 mb-2">
+          <div className="flex h-3 rounded-full overflow-hidden bg-beige-200 mb-2">
             <div
-              className="h-full bg-green-500 transition-all"
+              className="h-full bg-olive-500 transition-all"
               style={{ width: `${carbsPct}%` }}
             />
             <div
@@ -341,7 +370,7 @@ export default function FamilyGuidanceResult() {
         {micronutrients.length > 0 && (
           <section className="mb-5">
             <p className="text-sm font-medium text-neutral-700 mb-2">Top micronutrients</p>
-            <ul className="bg-white rounded-xl border border-neutral-100 p-4 space-y-2">
+            <ul className="card p-4 space-y-2">
               {micronutrients.slice(0, 5).map((m, i) => (
                 <li key={i} className="flex justify-between text-sm">
                   <span className="text-neutral-700">{m.name}</span>
@@ -376,7 +405,7 @@ export default function FamilyGuidanceResult() {
                       ? '#ef4444'
                       : scoreColor === 'orange'
                         ? '#f97316'
-                        : '#22c55e'
+                        : '#4A5D3A'
                   }
                   strokeWidth="10"
                   strokeDasharray={`${(healthScore ?? 0) * 2.64} 264`}
@@ -397,10 +426,10 @@ export default function FamilyGuidanceResult() {
             <h3 className="text-sm font-semibold text-neutral-800 mb-2">
               Guidance for {selectedMember.name}
             </h3>
-            <ul className="bg-white rounded-xl border border-neutral-100 p-4 space-y-2">
+            <ul className="card p-4 space-y-2">
               {guidance.map((line, i) => (
                 <li key={i} className="flex gap-2 text-sm text-neutral-700">
-                  <span className="text-green-500 mt-0.5">•</span>
+                  <span className="text-olive-500 mt-0.5">•</span>
                   <span>{line}</span>
                 </li>
               ))}
@@ -414,11 +443,11 @@ export default function FamilyGuidanceResult() {
             <p className="text-sm font-semibold text-neutral-800 mb-2">Condition-specific guidance</p>
             <div className="space-y-3">
               {detailedGuidance.map((d, i) => (
-                <div key={i} className="bg-white rounded-xl border border-neutral-100 p-4">
+                <div key={i} className="card p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <span className="font-medium text-neutral-800 capitalize">{d.condition}</span>
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      getScoreColor(d.score) === 'green' ? 'bg-green-100 text-green-700' :
+                      getScoreColor(d.score) === 'green' ? 'bg-olive-100 text-olive-700' :
                       getScoreColor(d.score) === 'orange' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
                     }`}>
                       {d.score}
@@ -457,7 +486,7 @@ export default function FamilyGuidanceResult() {
                           ? 'bg-red-100 text-red-700 border-red-200'
                           : color === 'orange'
                             ? 'bg-orange-100 text-orange-700 border-orange-200'
-                            : 'bg-green-100 text-green-700 border-green-200'
+                            : 'bg-olive-100 text-olive-700 border-olive-200'
                       }`}
                     >
                       {score}
@@ -488,7 +517,7 @@ export default function FamilyGuidanceResult() {
             <p className="text-sm font-semibold text-neutral-800 mb-2">Complete your meal</p>
             <ul className="flex flex-wrap gap-2">
               {bestPairedWith.map((s, i) => (
-                <li key={i} className="px-3 py-1.5 rounded-full bg-green-50 text-green-800 text-sm">
+                <li key={i} className="px-3 py-1.5 rounded-full bg-olive-50 text-olive-800 text-sm">
                   {s}
                 </li>
               ))}
@@ -500,7 +529,7 @@ export default function FamilyGuidanceResult() {
         <div className="flex flex-col gap-3">
           <Link
             to="/dashboard"
-            className="w-full py-3.5 rounded-xl border-2 border-neutral-300 font-semibold text-neutral-700 hover:bg-neutral-50 text-center transition-colors"
+            className="w-full py-3.5 rounded-full border-2 border-beige-300 font-semibold text-neutral-700 hover:bg-beige-100 text-center transition-colors"
           >
             Scan Another Meal
           </Link>
@@ -508,7 +537,7 @@ export default function FamilyGuidanceResult() {
             <button
               onClick={handleSaveToHistory}
               disabled={saving}
-              className="w-full py-3.5 rounded-xl bg-green-500 hover:bg-green-600 active:bg-green-700 font-semibold text-white disabled:opacity-70 transition-colors"
+              className="w-full py-3.5 rounded-full btn-primary font-semibold disabled:opacity-70"
             >
               {saving ? 'Saving…' : 'Save to History'}
             </button>
@@ -520,7 +549,7 @@ export default function FamilyGuidanceResult() {
       {toast && (
         <div
           className={`fixed bottom-24 left-4 right-4 mx-auto max-w-sm text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg animate-fade-in z-50 ${
-            toast.isSuccess ? 'bg-green-600' : 'bg-neutral-800'
+            toast.isSuccess ? 'bg-olive-600' : 'bg-neutral-800'
           }`}
           role="status"
         >

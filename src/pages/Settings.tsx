@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 const APP_VERSION = '1.0.0';
@@ -37,6 +37,13 @@ export default function Settings() {
   const [units, setUnits] = useState<Units>(() =>
     (localStorage.getItem(STORAGE_KEYS.units) as Units) || 'metric'
   );
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -70,24 +77,49 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col pb-24">
-      {/* Header */}
-      <header className="flex items-center gap-3 px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
+    <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
+      <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         <Link
           to="/dashboard"
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
           aria-label="Back to dashboard"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-lg font-bold text-neutral-800">Settings</h1>
+        <h1 className="font-heading text-lg font-bold text-olive-800 flex items-center gap-2">
+          <span className="text-olive-600" aria-hidden>🌿</span>
+          Settings
+        </h1>
       </header>
 
-      <main className="flex-1 overflow-y-auto">
-        {/* Profile section */}
-        <section className="bg-white px-4 py-5 border-b border-neutral-100">
+      <main className="flex-1 overflow-y-auto px-5">
+        <div className="space-y-3">
+          <Link
+            to="/setup"
+            className="block w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow"
+          >
+            Edit family
+          </Link>
+          <button
+            type="button"
+            onClick={() => setToast('Coming soon!')}
+            className="block w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow"
+          >
+            Preferences
+          </button>
+          <button
+            type="button"
+            onClick={() => setToast('Coming soon!')}
+            className="block w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow"
+          >
+            Help
+          </button>
+        </div>
+
+        {/* Profile (optional, compact) */}
+        <section className="mt-6 card px-4 py-4">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-2xl font-bold text-green-700 flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-olive-100 flex items-center justify-center text-lg font-bold text-olive-700 flex-shrink-0">
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -105,108 +137,49 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* Account */}
-        <section className="mt-4 bg-white rounded-xl border border-neutral-100 overflow-hidden mx-4">
-          <p className="px-4 py-2 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
-            Account
-          </p>
-          <Link
-            to="#"
-            className="flex items-center justify-between px-4 py-3 border-t border-neutral-100 text-neutral-800 hover:bg-neutral-50"
-          >
-            <span>Edit Profile</span>
-            <ChevronRight className="w-5 h-5 text-neutral-400" />
-          </Link>
-          <Link
-            to="#"
-            className="flex items-center justify-between px-4 py-3 border-t border-neutral-100 text-neutral-800 hover:bg-neutral-50"
-          >
-            <span>Change Password</span>
-            <ChevronRight className="w-5 h-5 text-neutral-400" />
-          </Link>
-        </section>
-
-        {/* Family */}
-        <section className="mt-4 bg-white rounded-xl border border-neutral-100 overflow-hidden mx-4">
-          <p className="px-4 py-2 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
-            Family
-          </p>
-          <Link
-            to="/setup"
-            className="flex items-center justify-between px-4 py-3 border-t border-neutral-100 text-neutral-800 hover:bg-neutral-50"
-          >
-            <span>Manage Family Members</span>
-            <ChevronRight className="w-5 h-5 text-neutral-400" />
-          </Link>
-          <Link
-            to="#"
-            className="flex items-center justify-between px-4 py-3 border-t border-neutral-100 text-neutral-800 hover:bg-neutral-50"
-          >
-            <span>Health Conditions</span>
-            <ChevronRight className="w-5 h-5 text-neutral-400" />
-          </Link>
-        </section>
-
-        {/* Preferences */}
-        <section className="mt-4 bg-white rounded-xl border border-neutral-100 overflow-hidden mx-4">
-          <p className="px-4 py-2 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
-            Preferences
-          </p>
-          <div className="px-4 py-3 border-t border-neutral-100">
-            <p className="text-sm font-medium text-neutral-700 mb-2">Language</p>
-            <div className="flex gap-2 flex-wrap">
-              {LANGUAGE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setLanguage(opt.value)}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                    language === opt.value
-                      ? 'bg-green-500 text-white'
-                      : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
+        {/* Preferences (optional expand) */}
+        <section className="mt-4 card p-4">
+          <p className="text-sm font-medium text-olive-800 mb-2">Language</p>
+          <div className="flex gap-2 flex-wrap">
+            {LANGUAGE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setLanguage(opt.value)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium ${
+                  language === opt.value ? 'bg-olive-500 text-white' : 'bg-beige-100 text-neutral-600 hover:bg-beige-200'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
-          <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-100">
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-beige-200">
             <span className="text-neutral-800">Notifications</span>
             <button
               type="button"
               role="switch"
               aria-checked={notifications}
               onClick={() => setNotifications((v) => !v)}
-              className={`relative w-11 h-6 rounded-full transition-colors ${
-                notifications ? 'bg-green-500' : 'bg-neutral-200'
-              }`}
+              className={`relative w-11 h-6 rounded-full transition-colors ${notifications ? 'bg-olive-500' : 'bg-beige-300'}`}
             >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                  notifications ? 'translate-x-5' : 'translate-x-0'
-                }`}
-              />
+              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${notifications ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>
           </div>
-          <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-100">
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-beige-200">
             <span className="text-neutral-800">Units</span>
-            <div className="flex rounded-lg border border-neutral-200 p-0.5">
+            <div className="flex rounded-full border border-beige-300 p-0.5">
               <button
                 type="button"
                 onClick={() => setUnits('metric')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium ${
-                  units === 'metric' ? 'bg-green-500 text-white' : 'text-neutral-600'
-                }`}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium ${units === 'metric' ? 'bg-olive-500 text-white' : 'text-neutral-600'}`}
               >
                 Metric
               </button>
               <button
                 type="button"
                 onClick={() => setUnits('imperial')}
-                className={`px-3 py-1.5 rounded-md text-sm font-medium ${
-                  units === 'imperial' ? 'bg-green-500 text-white' : 'text-neutral-600'
-                }`}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium ${units === 'imperial' ? 'bg-olive-500 text-white' : 'text-neutral-600'}`}
               >
                 Imperial
               </button>
@@ -214,48 +187,27 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* About */}
-        <section className="mt-4 bg-white rounded-xl border border-neutral-100 overflow-hidden mx-4">
-          <p className="px-4 py-2 text-xs font-semibold text-neutral-500 uppercase tracking-wide">
-            About
-          </p>
-          <p className="px-4 py-3 border-t border-neutral-100 text-neutral-600 text-sm">
-            App Version {APP_VERSION}
-          </p>
-          <Link
-            to="#"
-            className="flex items-center justify-between px-4 py-3 border-t border-neutral-100 text-neutral-800 hover:bg-neutral-50"
-          >
-            <span>Privacy Policy</span>
-            <ChevronRight className="w-5 h-5 text-neutral-400" />
-          </Link>
-          <Link
-            to="#"
-            className="flex items-center justify-between px-4 py-3 border-t border-neutral-100 text-neutral-800 hover:bg-neutral-50"
-          >
-            <span>Terms of Service</span>
-            <ChevronRight className="w-5 h-5 text-neutral-400" />
-          </Link>
-          <Link
-            to="#"
-            className="flex items-center justify-between px-4 py-3 border-t border-neutral-100 text-neutral-800 hover:bg-neutral-50"
-          >
-            <span>Help & Support</span>
-            <ChevronRight className="w-5 h-5 text-neutral-400" />
-          </Link>
-        </section>
-
-        {/* Sign Out */}
-        <div className="px-4 py-6">
+        <div className="mt-6">
           <button
             type="button"
             onClick={handleSignOut}
-            className="w-full py-3.5 rounded-xl bg-red-500 hover:bg-red-600 active:bg-red-700 font-semibold text-white transition-colors"
+            className="w-full py-3.5 rounded-full bg-red-500 hover:bg-red-600 font-semibold text-white transition-colors"
           >
             Sign Out
           </button>
         </div>
+
+        <p className="text-center text-neutral-500 text-sm py-6">App version {APP_VERSION}</p>
       </main>
+
+      {toast && (
+        <div
+          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg z-50"
+          role="status"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

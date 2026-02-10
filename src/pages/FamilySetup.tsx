@@ -101,13 +101,12 @@ export default function FamilySetup() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
-      {/* Header: back + progress */}
-      <div className="px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
+    <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
+      <div className="px-5 pt-6 pb-4">
         <div className="flex items-center gap-3 mb-4">
           <Link
             to="/onboarding"
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -118,7 +117,7 @@ export default function FamilySetup() {
                 <div
                   key={step}
                   className={`h-1.5 flex-1 rounded-full ${
-                    step <= 2 ? 'bg-green-500' : 'bg-neutral-200'
+                    step <= 2 ? 'bg-olive-500' : 'bg-beige-300'
                   }`}
                 />
               ))}
@@ -126,14 +125,13 @@ export default function FamilySetup() {
             <p className="text-xs text-neutral-500 mt-1.5">Step 2 of 3</p>
           </div>
         </div>
-        <h1 className="text-xl font-bold text-neutral-800">Set Up Your Family</h1>
-        <p className="text-neutral-500 text-sm mt-0.5">
-          Add family members for personalized nutrition guidance
+        <h1 className="font-heading text-xl font-bold text-olive-800">Settle In, Family</h1>
+        <p className="text-neutral-600 text-sm mt-0.5">
+          Who&apos;s joining the household?
         </p>
       </div>
 
-      {/* Member cards */}
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-5 py-4">
         <div className="space-y-4">
           {members.map((member, index) => (
             <MemberCard
@@ -149,25 +147,24 @@ export default function FamilySetup() {
           <button
             type="button"
             onClick={addMember}
-            className="w-full py-3 border-2 border-dashed border-neutral-200 rounded-xl text-neutral-500 hover:border-green-300 hover:text-green-600 flex items-center justify-center gap-2 transition-colors font-medium"
+            className="w-full py-3.5 border-2 border-dashed border-olive-300 rounded-2xl text-olive-600 hover:border-olive-400 hover:bg-olive-50/50 flex items-center justify-center gap-2 transition-colors font-medium"
           >
             <Plus className="w-5 h-5" />
-            Add Family Member
+            + Add Another Person
           </button>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-4 py-4 bg-white border-t border-neutral-100">
+      <div className="px-5 py-4 border-t border-beige-300">
         {error && (
-          <p className="text-sm text-red-600 mb-3 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+          <p className="text-sm text-red-600 mb-3 bg-red-50 px-3 py-2 rounded-xl">{error}</p>
         )}
         <button
           onClick={handleContinue}
           disabled={loading}
-          className="btn-primary w-full py-3.5 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold disabled:opacity-70"
+          className="btn-primary w-full py-3.5 rounded-full font-semibold disabled:opacity-70"
         >
-          {loading ? 'Saving…' : 'Continue'}
+          {loading ? 'Saving…' : 'Finish & Create Home'}
         </button>
       </div>
     </div>
@@ -190,7 +187,7 @@ function MemberCard({
   const [emojiOpen, setEmojiOpen] = useState(false);
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 shadow-sm overflow-hidden">
+    <div className="card overflow-hidden">
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-3">
           {/* Avatar emoji picker */}
@@ -198,7 +195,7 @@ function MemberCard({
             <button
               type="button"
               onClick={() => setEmojiOpen((o) => !o)}
-              className="w-12 h-12 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-2xl hover:bg-neutral-200"
+              className="w-12 h-12 rounded-full bg-beige-100 border border-beige-300 flex items-center justify-center text-2xl hover:bg-beige-200"
             >
               {member.avatarEmoji}
             </button>
@@ -209,7 +206,7 @@ function MemberCard({
                   aria-hidden
                   onClick={() => setEmojiOpen(false)}
                 />
-                <div className="absolute left-0 top-full mt-1 p-2 bg-white rounded-lg border border-neutral-200 shadow-lg z-20 grid grid-cols-4 gap-1">
+                <div className="absolute left-0 top-full mt-1 p-2 bg-beige-50 rounded-xl border border-beige-300 shadow-card z-20 grid grid-cols-4 gap-1">
                   {AVATAR_EMOJIS.map((emoji) => (
                     <button
                       key={emoji}
@@ -218,7 +215,7 @@ function MemberCard({
                         onUpdate({ avatarEmoji: emoji });
                         setEmojiOpen(false);
                       }}
-                      className="w-9 h-9 flex items-center justify-center text-xl rounded hover:bg-neutral-100"
+                      className="w-9 h-9 flex items-center justify-center text-xl rounded hover:bg-beige-200"
                     >
                       {emoji}
                     </button>
@@ -284,9 +281,9 @@ function MemberCard({
             </select>
           </div>
 
-          {/* Health conditions chips */}
+          {/* Health conditions / needs */}
           <div>
-            <p className="text-xs font-medium text-neutral-500 mb-2">Health conditions</p>
+            <p className="text-xs font-medium text-neutral-500 mb-2">Needs a little extra care</p>
             <div className="flex flex-wrap gap-2">
               {HEALTH_OPTIONS.map((opt) => {
                 const active =
@@ -299,8 +296,8 @@ function MemberCard({
                     onClick={() => onToggleHealth(opt.value)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
                       active
-                        ? 'bg-green-500 text-white border-green-500'
-                        : 'bg-white text-neutral-600 border-neutral-200 hover:border-green-300'
+                        ? 'bg-olive-500 text-white border-olive-500'
+                        : 'bg-beige-50 text-neutral-600 border-beige-300 hover:border-olive-400'
                     }`}
                   >
                     {opt.label}

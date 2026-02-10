@@ -12,15 +12,7 @@ import type { MealAnalysisResponse } from '../types/meal-analysis';
 import type { PhotoConfirmState } from './PhotoConfirmation';
 import type { PortionSize } from './PortionSelection';
 
-const ANALYSIS_STEPS: { text: string; emoji: string }[] = [
-  { text: 'Identifying food items...', emoji: '🔍' },
-  { text: 'Checking nutritional values...', emoji: '📊' },
-  { text: 'Calculating family scores...', emoji: '❤️' },
-  { text: 'Preparing personalized guidance...', emoji: '✨' },
-];
-
 const PROGRESS_DURATION_MS = 8000;
-const STEP_INTERVAL_MS = 2000;
 
 export interface AnalysisLoadingState extends PhotoConfirmState {
   portionSize?: PortionSize;
@@ -35,7 +27,6 @@ export default function AnalysisLoading() {
 
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [stepIndex, setStepIndex] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<MealAnalysisResponse | null>(null);
   const [apiError, setApiError] = useState<string | null>(null);
   const analysisStarted = useRef(false);
@@ -139,34 +130,18 @@ export default function AnalysisLoading() {
     };
   }, [hasImage, state.imageFile, state.imagePreview, state.manualText, state.selectedMemberId, state.portionSize, state.servings, imagePreview, navigate]);
 
-  // Rotating steps every 2 seconds
-  useEffect(() => {
-    if (!hasImage) return;
-    const id = setInterval(() => {
-      setStepIndex((i) => (i + 1) % ANALYSIS_STEPS.length);
-    }, STEP_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [hasImage]);
-
   if (!hasImage) {
     return null;
   }
 
-  const previewUrl = imagePreview;
-  const step = ANALYSIS_STEPS[stepIndex];
-  const waitingForApi = progress >= 100 && !analysisResult && !apiError;
-  const stepText = apiError ? 'Something went wrong.' : waitingForApi ? 'Almost done...' : step.text;
-  const stepEmoji = apiError ? '⚠️' : waitingForApi ? '⏳' : step.emoji;
-
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
-      {/* Header: back arrow (clickable on error, disabled during analysis) */}
-      <header className="flex items-center gap-3 px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
+    <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
+      <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         {apiError ? (
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
             aria-label="Back to dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -175,125 +150,111 @@ export default function AnalysisLoading() {
           <button
             type="button"
             disabled
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-300 cursor-not-allowed"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-400 cursor-not-allowed"
             aria-label="Back (disabled during analysis)"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="text-lg font-bold text-neutral-800">{apiError ? 'Something went wrong' : 'Analyzing Your Meal'}</h1>
+        <h1 className="font-heading text-lg font-bold text-olive-800">{apiError ? 'Something went wrong' : 'Analyzing Your Meal'}</h1>
       </header>
 
-      <main className="flex-1 flex flex-col items-center px-4 py-8">
-        {/* Centered: thumbnail + pulsing ring + rotating step */}
-        <div className="flex-1 flex flex-col items-center justify-center w-full">
-          <div className="relative inline-flex items-center justify-center">
-            {/* Pulsing green ring */}
-            <div
-              className="absolute inset-0 rounded-full animate-pulse-ring"
-              style={{ padding: 4 }}
-              aria-hidden
-            />
-            {/* Image thumbnail */}
-            <div className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-neutral-200 bg-neutral-100">
-              {previewUrl && (
-                <img
-                  src={previewUrl}
-                  alt="Your meal"
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Rotating analysis step or error */}
-          <div className="mt-6 min-h-[3rem] flex flex-col items-center justify-center">
-            {apiError ? (
-              <>
-                <p className="text-red-600 font-medium text-center mb-4">
-                  {apiError}
-                </p>
+      <main className="flex-1 flex flex-col items-center justify-center px-5 py-8">
+        {apiError ? (
+          <div className="text-center">
+            <p className="text-red-600 font-medium mb-4">{apiError}</p>
+            <div className="flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={() => navigate('/scan/portion', { state: { imageFile: state.imageFile, imagePreview: state.imagePreview ?? imagePreview, manualText: state.manualText, selectedMemberId: state.selectedMemberId, portionSize: state.portionSize, servings: state.servings } })}
-                  className="px-6 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold mb-2"
+                  onClick={() => navigate('/dashboard')}
+                  className="px-6 py-3 rounded-full btn-primary font-semibold"
                 >
                   Try Again
                 </button>
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-3 rounded-xl border border-neutral-300 text-neutral-700 font-semibold hover:bg-neutral-50"
+                  className="px-6 py-3 rounded-full border-2 border-olive-500 text-olive-600 font-semibold hover:bg-olive-50"
                 >
                   Back to Dashboard
                 </button>
-              </>
-            ) : (
-              <p
-                key={waitingForApi ? 'waiting' : stepIndex}
-                className="text-neutral-700 font-medium text-center animate-fade-step"
-              >
-                <span className="mr-2" aria-hidden>{stepEmoji}</span>
-                {stepText}
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Progress bar */}
-        <div className="w-full max-w-sm mb-6">
-          <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-green-500 rounded-full transition-all duration-150 ease-linear"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Selected family member */}
-        {selectedMember && (
-          <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white border border-neutral-100 w-full max-w-sm">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
-              style={{ backgroundColor: selectedMember.avatar_color || '#22c55e' }}
-            >
-              {selectedMember.name?.charAt(0)?.toUpperCase() || '?'}
             </div>
-            <span className="text-neutral-800 font-medium">{selectedMember.name}</span>
           </div>
+        ) : (
+          <>
+            <p className="font-heading text-olive-800/90 text-center text-lg italic mb-8 max-w-sm animate-fade-opacity">
+              Understanding how this meal works for your family...
+            </p>
+            {/* Gentle leaf / botanical spinner */}
+            <div className="leaf-spinner mb-8" aria-hidden>
+              <span className="leaf leaf-1">🌿</span>
+              <span className="leaf leaf-2">🍃</span>
+              <span className="leaf leaf-3">🌿</span>
+              <span className="leaf leaf-4">🍃</span>
+            </div>
+            <div className="w-full max-w-sm">
+              <div className="h-1.5 bg-beige-300 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-olive-500 rounded-full transition-all duration-150 ease-linear"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
+            {selectedMember && (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl card mt-6 w-full max-w-sm">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
+                  style={{ backgroundColor: selectedMember.avatar_color || '#4A5D3A' }}
+                >
+                  {selectedMember.name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+                <span className="text-neutral-800 font-medium">{selectedMember.name}</span>
+              </div>
+            )}
+          </>
         )}
       </main>
 
       <style>{`
-        @keyframes pulse-ring {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
-            border-radius: 9999px;
-            border: 2px solid rgba(34, 197, 94, 0.3);
-          }
-          50% {
-            box-shadow: 0 0 0 12px rgba(34, 197, 94, 0);
-            border: 2px solid rgba(34, 197, 94, 0.2);
-          }
+        .leaf-spinner {
+          position: relative;
+          width: 64px;
+          height: 64px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
-        .animate-pulse-ring {
-          width: calc(6rem + 24px);
-          height: calc(6rem + 24px);
-          margin: -12px;
-          animation: pulse-ring 1.5s ease-in-out infinite;
+        .leaf-spinner .leaf {
+          position: absolute;
+          font-size: 1.5rem;
+          opacity: 0.85;
+          animation: leaf-spin 2s ease-in-out infinite;
         }
-        @keyframes fade-step {
-          from {
-            opacity: 0;
-            transform: translateY(4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+        .leaf-spinner .leaf-1 { top: 0; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
+        .leaf-spinner .leaf-2 { right: 0; top: 50%; transform: translateY(-50%); animation-delay: 0.25s; }
+        .leaf-spinner .leaf-3 { bottom: 0; left: 50%; transform: translateX(-50%); animation-delay: 0.5s; }
+        .leaf-spinner .leaf-4 { left: 0; top: 50%; transform: translateY(-50%); animation-delay: 0.75s; }
+        @keyframes leaf-spin {
+          0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(0.9); }
+          50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
         }
-        .animate-fade-step {
-          animation: fade-step 0.4s ease-out forwards;
+        .leaf-2 { animation-name: leaf-spin-2; }
+        .leaf-2 { transform: translateY(-50%); }
+        .leaf-3 { animation-name: leaf-spin-3; }
+        .leaf-3 { transform: translateX(-50%); }
+        .leaf-4 { transform: translateY(-50%); }
+        .leaf-4 { animation-name: leaf-spin-4; }
+        @keyframes leaf-spin-2 {
+          0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(0.9); }
+          50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
+        }
+        @keyframes leaf-spin-3 {
+          0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(0.9); }
+          50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
+        }
+        @keyframes leaf-spin-4 {
+          0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(0.9); }
+          50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
         }
       `}</style>
     </div>

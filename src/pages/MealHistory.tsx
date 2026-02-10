@@ -60,6 +60,7 @@ export default function MealHistory() {
   const [meals, setMeals] = useState<MealHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<HistoryFilter>('all');
+  const [weekOffset, setWeekOffset] = useState(0);
 
   useEffect(() => {
     loadHistory();
@@ -128,30 +129,41 @@ export default function MealHistory() {
         });
   };
 
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + weekOffset * 7);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const weekRangeLabel = `${weekStart.toLocaleDateString('en-IN', { month: 'long', day: 'numeric' })} – ${weekEnd.toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })}`;
+
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col pb-24">
-      {/* Header */}
-      <header className="flex items-center gap-3 px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
+    <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
+      <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         <Link
           to="/dashboard"
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
           aria-label="Back to dashboard"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-lg font-bold text-neutral-800">Meal History</h1>
+        <h1 className="font-heading text-lg font-bold text-olive-800">Meal History</h1>
       </header>
 
-      {/* Filter chips */}
-      <div className="px-4 py-3 flex gap-2 overflow-x-auto">
+      {/* Week navigation */}
+      <div className="px-5 py-3 flex items-center justify-between">
+        <button type="button" onClick={() => setWeekOffset((o) => o - 1)} className="p-2 rounded-full text-olive-600 hover:bg-olive-50" aria-label="Previous week">&lt;</button>
+        <span className="text-sm font-medium text-neutral-700">{weekRangeLabel}</span>
+        <button type="button" onClick={() => setWeekOffset((o) => o + 1)} className="p-2 rounded-full text-olive-600 hover:bg-olive-50" aria-label="Next week">&gt;</button>
+      </div>
+
+      <div className="px-5 py-2 flex gap-2 overflow-x-auto">
         {FILTERS.map((f) => (
           <button
             key={f.value}
             onClick={() => setFilter(f.value)}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               filter === f.value
-                ? 'bg-green-500 text-white'
-                : 'bg-white border border-neutral-200 text-neutral-600 hover:border-green-300'
+                ? 'bg-olive-500 text-white'
+                : 'bg-beige-50 border border-beige-300 text-neutral-600 hover:border-olive-400'
             }`}
           >
             {f.label}
@@ -159,25 +171,17 @@ export default function MealHistory() {
         ))}
       </div>
 
-      {/* List or empty state */}
-      <main className="flex-1 px-4">
+      <main className="flex-1 px-5">
         {loading ? (
           <div className="py-12 flex flex-col items-center">
-            <div className="w-10 h-10 border-2 border-green-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-olive-500 border-t-transparent rounded-full animate-spin" />
             <p className="text-neutral-500 text-sm mt-3">Loading…</p>
           </div>
         ) : filteredMeals.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-24 h-24 rounded-full bg-neutral-100 flex items-center justify-center text-4xl mb-4">
-              🍽️
-            </div>
-            <p className="text-neutral-600 font-medium mb-4">
-              No meals scanned yet — start your first scan!
-            </p>
-            <Link
-              to="/dashboard"
-              className="py-2.5 px-4 rounded-xl bg-green-500 text-white font-semibold text-sm hover:bg-green-600"
-            >
+            <div className="w-24 h-24 rounded-full bg-beige-200 flex items-center justify-center text-4xl mb-4">🍽️</div>
+            <p className="text-neutral-600 font-medium mb-4">No meals scanned yet — start your first scan!</p>
+            <Link to="/dashboard" className="py-2.5 px-4 rounded-full btn-primary font-semibold text-sm">
               Go to Dashboard
             </Link>
           </div>
@@ -191,41 +195,25 @@ export default function MealHistory() {
                   <button
                     type="button"
                     onClick={() => handleCardClick(meal)}
-                    className="w-full bg-white rounded-xl border border-neutral-100 shadow-sm p-4 flex items-center gap-4 text-left hover:shadow-md transition-shadow"
+                    className="w-full card p-4 flex items-center gap-4 text-left hover:shadow-card-hover transition-shadow"
                   >
-                    <div className="w-14 h-14 rounded-lg bg-neutral-100 overflow-hidden flex-shrink-0">
+                    <div className="w-14 h-14 rounded-xl bg-beige-100 overflow-hidden flex-shrink-0">
                       {meal.image_url ? (
-                        <img
-                          src={meal.image_url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={meal.image_url} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-2xl text-neutral-400">
-                          🍽️
-                        </div>
+                        <div className="w-full h-full flex items-center justify-center text-2xl text-neutral-400">🍽️</div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-neutral-800 truncate">
-                        {meal.food_name}
-                      </p>
-                      <p className="text-xs text-neutral-500 mt-0.5">
-                        {formatDateTime(meal.created_at)}
-                      </p>
+                      <p className="font-semibold text-olive-800 truncate">{meal.food_name}</p>
+                      <p className="text-xs text-neutral-500 mt-0.5">{formatDateTime(meal.created_at)}</p>
                       <p className="text-sm text-neutral-600 mt-1">
-                        {meal.calories ?? '—'} kcal
-                        <span className="text-neutral-400 mx-1">·</span>
-                        {memberName(meal.family_member_id)}
+                        {meal.calories ?? '—'} kcal <span className="text-neutral-400 mx-1">·</span> {memberName(meal.family_member_id)}
                       </p>
                     </div>
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                        color === 'red'
-                          ? 'bg-red-100 text-red-700'
-                          : color === 'orange'
-                            ? 'bg-orange-100 text-orange-700'
-                            : 'bg-green-100 text-green-700'
+                        color === 'red' ? 'bg-red-100 text-red-700' : color === 'orange' ? 'bg-orange-100 text-orange-700' : 'bg-olive-100 text-olive-700'
                       }`}
                     >
                       {score}

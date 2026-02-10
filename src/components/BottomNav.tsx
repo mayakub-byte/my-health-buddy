@@ -22,8 +22,8 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-100 px-6 py-2 safe-area-bottom">
-      <div className="flex justify-around items-center max-w-lg mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-beige-50/90 backdrop-blur-sm border-t border-beige-300 px-6 safe-area-bottom shadow-card flex items-center">
+      <div className="flex justify-around items-center w-full max-w-md mx-auto">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.path === '/dashboard'
@@ -35,12 +35,9 @@ export default function BottomNav() {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center py-2 px-4 rounded-xl transition-colors
-                ${
-                  isActive
-                    ? 'text-green-500'
-                    : 'text-neutral-400 hover:text-neutral-600'
-                }`}
+              className={`flex flex-col items-center py-2 px-4 rounded-full transition-colors ${
+                isActive ? 'text-olive-600' : 'text-neutral-400 hover:text-olive-600'
+              }`}
             >
               <Icon
                 className={`w-6 h-6 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.5]'}`}

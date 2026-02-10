@@ -44,55 +44,56 @@ export default function PhotoConfirmation() {
   }
 
   const previewUrl = imagePreview;
+  const suggestedDishName = state.manualText?.trim() || 'Your meal';
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
-      {/* Header: back + title */}
-      <header className="flex items-center gap-3 px-4 pt-6 pb-4 bg-white border-b border-neutral-100">
+    <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
+      <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         <Link
           to="/dashboard"
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="text-lg font-bold text-neutral-800">Confirm Your Meal</h1>
+        <h1 className="font-heading text-lg font-bold text-olive-800">Confirm Your Meal</h1>
       </header>
 
-      <main className="flex-1 px-4 py-6">
-        {/* Image in large rounded container */}
-        <div className="rounded-2xl overflow-hidden bg-neutral-100 border border-neutral-200 aspect-[4/3] max-h-[50vh] flex items-center justify-center">
-          {previewUrl ? (
-            <img
-              src={previewUrl}
-              alt="Your meal"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <span className="text-neutral-400 text-sm">Loading…</span>
-          )}
-        </div>
+      <main className="flex-1 px-5 py-6">
+        <div className="card p-4">
+          {/* Food photo in rounded frame */}
+          <div className="rounded-2xl overflow-hidden bg-beige-100 border border-beige-300 aspect-square max-w-xs mx-auto flex items-center justify-center">
+            {previewUrl ? (
+              <img
+                src={previewUrl}
+                alt="Your meal"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-neutral-500 text-sm">Loading…</span>
+            )}
+          </div>
 
-        <p className="text-center text-neutral-600 font-medium mt-6">
-          Does this look right?
-        </p>
+          <p className="font-heading text-center text-olive-800 font-medium mt-4">
+            Our AI thinks you&apos;ll love: {suggestedDishName}
+          </p>
 
-        {/* Two buttons side by side */}
-        <div className="flex gap-3 mt-6">
-          <button
-            type="button"
-            onClick={() => navigate('/dashboard')}
-            className="flex-1 py-3.5 rounded-xl border-2 border-neutral-300 font-semibold text-neutral-700 hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
-          >
-            Retake
-          </button>
-          <button
-            type="button"
-            onClick={handleYesAnalyze}
-            className="flex-1 py-3.5 rounded-xl bg-green-500 hover:bg-green-600 active:bg-green-700 font-semibold text-white transition-colors"
-          >
-            Yes, Analyze
-          </button>
+          <div className="flex gap-3 mt-6">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              className="flex-1 py-3 rounded-full border-2 border-olive-500 text-olive-600 font-semibold hover:bg-olive-50 transition-colors"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              onClick={handleYesAnalyze}
+              className="flex-1 py-3 rounded-full btn-primary font-semibold"
+            >
+              Yes
+            </button>
+          </div>
         </div>
       </main>
     </div>

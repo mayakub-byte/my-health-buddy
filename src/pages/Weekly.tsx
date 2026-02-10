@@ -3,28 +3,37 @@
 // ============================================
 
 import { useNavigate } from 'react-router-dom';
-import { BarChart3 } from 'lucide-react';
 
 export default function Weekly() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-20">
-      <header className="p-4 border-b border-neutral-100 bg-white">
-        <h1 className="text-xl font-bold text-neutral-800">Weekly</h1>
-        <p className="text-neutral-500 text-sm mt-0.5">Your week at a glance</p>
+    <div className="min-h-screen bg-beige pb-20 max-w-md mx-auto w-full">
+      <header className="p-5">
+        <h1 className="font-heading text-xl font-bold text-olive-800">Weekly Snapshot</h1>
+        <p className="text-neutral-600 text-sm mt-0.5">Your week at a glance</p>
       </header>
-      <main className="p-4">
-        <div className="card text-center py-12">
-          <BarChart3 className="w-12 h-12 text-neutral-300 mx-auto mb-3" />
-          <p className="text-neutral-500">Weekly view coming soon</p>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className="mt-4 text-green-600 font-medium"
-          >
-            Back to Home
-          </button>
+      <main className="p-5">
+        <div className="card text-center py-8 mb-4">
+          <p className="text-sm font-medium text-neutral-600 mb-2">Weekly meal list with dates and dish names</p>
+          <p className="text-xs text-neutral-500">Coming soon</p>
         </div>
+        <section className="card p-5 mb-4">
+          <h2 className="font-heading font-semibold text-olive-800 mb-3">General Analytics</h2>
+          <ul className="space-y-2 text-sm text-neutral-700">
+            <li>Nutrition Score: —</li>
+            <li>Variety Score: —</li>
+            <li>Calorie Avg: —</li>
+            <li>Macros: —</li>
+          </ul>
+          <p className="text-xs text-neutral-500 mt-3">Visual charts for calorie intake coming soon.</p>
+        </section>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="mt-4 text-olive-600 font-medium hover:text-olive-700"
+        >
+          Back to Home
+        </button>
       </main>
     </div>
   );
