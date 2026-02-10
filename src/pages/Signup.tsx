@@ -32,12 +32,63 @@ export default function Signup() {
     }
     setLoading(true);
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
       });
       if (signUpError) throw signUpError;
+      
+      // Auto-create family for new user
+      if (authData.user) {
+        const userName = email.trim().split('@')[0]; // "shireenyakub0" from email
+        const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
+        
+        try {
+          // Create family
+          const { data: family, error: familyError } = await supabase
+            .from('families')
+            .insert({
+              name: `${displayName}'s Family`,
+              user_id: authData.user.id,
+              primary_user_email: email.trim(),
+            })
+            .select()
+            .single();
+          
+          if (familyError) {
+            console.error('Failed to create family:', familyError);
+            // Continue anyway - user can create family later
+          } else if (family) {
+            // Add the user as first member
+            const avatarColors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4'];
+            const { error: memberError } = await supabase
+              .from('family_members')
+              .insert({
+                family_id: family.id,
+                name: displayName,
+                age: 25, // Default age
+                health_conditions: [],
+                dietary_preferences: [],
+                is_primary: true,
+                avatar_color: avatarColors[0],
+              });
+            
+            if (memberError) {
+              console.error('Failed to create family member:', memberError);
+            } else {
+              // Save to localStorage so app knows they're onboarded
+              localStorage.setItem('mhb_family_id', family.id);
+            }
+          }
+        } catch (familyErr) {
+          console.error('Error during family creation:', familyErr);
+          // Don't block signup if family creation fails
+        }
+      }
+      
       setSuccess(true);
+      // Navigate directly to dashboard (will auto-login after email verification)
+      // For now, still redirect to login since email verification is required
       setTimeout(() => navigate('/login', { replace: true }), 2500);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Sign up failed. Please try again.');

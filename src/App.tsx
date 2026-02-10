@@ -33,8 +33,9 @@ import LoadingScreen from './components/LoadingScreen';
 import { useFamily } from './hooks/useFamily';
 
 function App() {
-  const { family, loading } = useFamily();
+  const { family, loading, autoCreateDefaultFamily } = useFamily();
   const [isSignedIn, setIsSignedIn] = useState<boolean | null>(null);
+  const [isCreatingFamily, setIsCreatingFamily] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -46,7 +47,26 @@ function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  if (isSignedIn === null) {
+  // Auto-create family if user is signed in but has no family
+  useEffect(() => {
+    if (isSignedIn && !loading && !family && !isCreatingFamily) {
+      setIsCreatingFamily(true);
+      autoCreateDefaultFamily()
+        .then((createdFamily) => {
+          if (!createdFamily) {
+            console.warn('Failed to auto-create family. User can still access app.');
+          }
+        })
+        .catch((err) => {
+          console.error('Error auto-creating family:', err);
+        })
+        .finally(() => {
+          setIsCreatingFamily(false);
+        });
+    }
+  }, [isSignedIn, loading, family, isCreatingFamily, autoCreateDefaultFamily]);
+
+  if (isSignedIn === null || (isSignedIn && (loading || isCreatingFamily))) {
     return <LoadingScreen />;
   }
 
@@ -66,18 +86,31 @@ function App() {
     );
   }
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
+  // If still no family after auto-create attempt, allow access to setup (but don't force)
+  // User can still access dashboard and other routes
   if (!family) {
     return (
       <Router>
         <div className="min-h-screen bg-beige">
           <Routes>
             <Route path="/setup" element={<FamilySetup />} />
-            <Route path="*" element={<Navigate to="/setup" replace />} />
+            <Route path="/dashboard" element={<MealInput />} />
+            <Route path="/home" element={<MealInput />} />
+            <Route path="/scan/confirm" element={<PhotoConfirmation />} />
+            <Route path="/scan/portion" element={<PortionSelection />} />
+            <Route path="/scan/loading" element={<AnalysisLoading />} />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/results" element={<FamilyGuidanceResult />} />
+            <Route path="/results/analysis" element={<FamilyGuidanceResult />} />
+            <Route path="/results/:mealId" element={<Results />} />
+            <Route path="/family" element={<Family />} />
+            <Route path="/history" element={<MealHistory />} />
+            <Route path="/weekly" element={<Weekly />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
+          <BottomNav />
         </div>
       </Router>
     );

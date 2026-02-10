@@ -198,6 +198,86 @@ export function useFamily() {
     }
   };
 
+  // Auto-create default family for user (if none exists)
+  const autoCreateDefaultFamily = async (): Promise<Family | null> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      // Check if family already exists
+      const { data: existingFamily } = await supabase
+        .from('families')
+        .select('*')
+        .eq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (existingFamily) {
+        localStorage.setItem(FAMILY_STORAGE_KEY, existingFamily.id);
+        setFamily(existingFamily);
+        // Load members
+        const { data: membersData } = await supabase
+          .from('family_members')
+          .select('*')
+          .eq('family_id', existingFamily.id)
+          .order('is_primary', { ascending: false });
+        if (membersData) setMembers(membersData);
+        return existingFamily;
+      }
+
+      // Create new family
+      const userName = user.email?.split('@')[0] || 'User';
+      const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
+
+      const { data: newFamily, error: familyError } = await supabase
+        .from('families')
+        .insert({
+          name: `${displayName}'s Family`,
+          user_id: user.id,
+          primary_user_email: user.email || '',
+        })
+        .select()
+        .single();
+
+      if (familyError) throw familyError;
+      if (!newFamily) return null;
+
+      // Add user as first member
+      const { error: memberError } = await supabase
+        .from('family_members')
+        .insert({
+          family_id: newFamily.id,
+          name: displayName,
+          age: 25,
+          health_conditions: [],
+          dietary_preferences: [],
+          is_primary: true,
+          avatar_color: getAvatarColor(0),
+        });
+
+      if (memberError) {
+        console.error('Failed to create default member:', memberError);
+      }
+
+      // Save to state and localStorage
+      localStorage.setItem(FAMILY_STORAGE_KEY, newFamily.id);
+      setFamily(newFamily);
+      
+      // Load members
+      const { data: membersData } = await supabase
+        .from('family_members')
+        .select('*')
+        .eq('family_id', newFamily.id)
+        .order('is_primary', { ascending: false });
+      if (membersData) setMembers(membersData);
+
+      return newFamily;
+    } catch (err) {
+      console.error('Error auto-creating family:', err);
+      return null;
+    }
+  };
+
   // Reset family (for testing/logout)
   const resetFamily = () => {
     localStorage.removeItem(FAMILY_STORAGE_KEY);
@@ -216,6 +296,7 @@ export function useFamily() {
     deleteMember,
     resetFamily,
     refreshFamily: loadFamily,
+    autoCreateDefaultFamily,
   };
 }
 
