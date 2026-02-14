@@ -139,6 +139,7 @@ export default function AnalysisLoading() {
               selectedMembers: state.selectedMembers,
               portionSize: state.portionSize,
               servings: state.servings,
+              mealTime: state.mealTime,
               claudeAnalysis: finalAnalysis,
             },
           });

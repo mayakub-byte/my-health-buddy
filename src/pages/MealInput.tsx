@@ -7,6 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, X, Mic } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
+import { supabase } from '../lib/supabase';
 
 // TypeScript declarations for Web Speech API
 interface SpeechRecognition extends EventTarget {
@@ -106,12 +107,34 @@ const getCurrentMealTime = (): MealTime => {
   return 'dinner';
 };
 
+const MEAL_TIME_PILLS = [
+  { key: 'breakfast' as const, label: 'Breakfast', emoji: '🌅' },
+  { key: 'lunch' as const, label: 'Lunch', emoji: '☀️' },
+  { key: 'snack' as const, label: 'Snack', emoji: '🍪' },
+  { key: 'dinner' as const, label: 'Dinner', emoji: '🌙' },
+];
+
+interface TodayMealRecord {
+  id: string;
+  food_name: string;
+  calories: number | null;
+  created_at: string;
+}
+
 export default function MealInput() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { members } = useFamily();
 
   const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [mealTime, setMealTime] = useState<'breakfast' | 'lunch' | 'snack' | 'dinner'>(() => {
+    const hour = new Date().getHours();
+    if (hour < 11) return 'breakfast';
+    if (hour < 15) return 'lunch';
+    if (hour < 18) return 'snack';
+    return 'dinner';
+  });
+  const [todayMeals, setTodayMeals] = useState<TodayMealRecord[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [manualText, setManualText] = useState('');
@@ -146,6 +169,28 @@ export default function MealInput() {
     return () => clearTimeout(t);
   }, [toast]);
 
+  // Load today's meals for stats and last meal shortcut
+  useEffect(() => {
+    const loadTodayMeals = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const { data, error } = await supabase
+          .from('meal_history')
+          .select('id, food_name, calories, created_at')
+          .eq('user_id', user.id)
+          .gte('created_at', todayStart.toISOString())
+          .order('created_at', { ascending: false });
+        if (!error) setTodayMeals((data as TodayMealRecord[]) || []);
+      } catch (err) {
+        console.error('Error loading today meals:', err);
+      }
+    };
+    loadTodayMeals();
+  }, []);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
@@ -176,6 +221,7 @@ export default function MealInput() {
           selectedMembers,
           selectedMemberId: selectedMembers[0] ?? undefined,
           mealType: 'text' as const,
+          mealTime,
         },
       });
       return;
@@ -191,6 +237,7 @@ export default function MealInput() {
           selectedMembers,
           selectedMemberId: selectedMembers[0] ?? undefined,
           mealType: 'photo' as const,
+          mealTime,
         },
       });
     }
@@ -265,6 +312,8 @@ export default function MealInput() {
   });
 
   const canAnalyze = !!imageFile || manualText.trim().length > 0;
+  const totalCalories = todayMeals.reduce((sum, m) => sum + (m.calories ?? 0), 0);
+  const lastMeal = todayMeals[0] ?? null;
 
   return (
     <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
@@ -309,6 +358,26 @@ export default function MealInput() {
         {members.length === 0 && (
           <p className="text-sm text-neutral-500 py-2">No family members yet</p>
         )}
+      </section>
+
+      {/* Meal time pills */}
+      <section className="px-5 mb-4">
+        <div className="flex gap-2">
+          {MEAL_TIME_PILLS.map((mt) => (
+            <button
+              key={mt.key}
+              type="button"
+              onClick={() => setMealTime(mt.key)}
+              className={`flex-1 py-2 px-1 rounded-full text-xs font-medium transition-all ${
+                mealTime === mt.key
+                  ? 'bg-olive-500 text-white shadow-sm'
+                  : 'bg-beige-50 text-neutral-600 border border-beige-300'
+              }`}
+            >
+              {mt.emoji} {mt.label}
+            </button>
+          ))}
+        </div>
       </section>
 
       <header className="px-5 pb-3">
@@ -386,6 +455,36 @@ export default function MealInput() {
         >
           LOG MEAL
         </button>
+
+        {/* Today's stats banner */}
+        <div className="mt-4 p-3 bg-beige-50 rounded-xl border border-beige-200">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-neutral-500">Today so far</span>
+            {todayMeals.length > 0 ? (
+              <span className="text-sm font-semibold text-olive-800">
+                {todayMeals.length} meal{todayMeals.length !== 1 ? 's' : ''} • {totalCalories} cal
+              </span>
+            ) : (
+              <span className="text-sm text-neutral-500">No meals logged yet today ☀️</span>
+            )}
+          </div>
+        </div>
+
+        {/* Last meal shortcut */}
+        {lastMeal && (
+          <button
+            type="button"
+            onClick={() => setManualText(lastMeal.food_name)}
+            className="mt-3 w-full p-3 bg-white rounded-xl border border-beige-200 flex items-center gap-3 text-left hover:bg-beige-100 transition-colors"
+          >
+            <span className="text-2xl">🔄</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-neutral-800 truncate">{lastMeal.food_name}</p>
+              <p className="text-xs text-neutral-500">Tap to log similar meal</p>
+            </div>
+            <span className="text-xs text-neutral-400 flex-shrink-0">{lastMeal.calories ?? 0} cal</span>
+          </button>
+        )}
       </main>
 
       {toast && (

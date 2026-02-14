@@ -13,6 +13,7 @@ export interface PhotoConfirmState {
   manualText?: string;
   selectedMemberId?: string;
   selectedMembers?: string[];
+  mealTime?: 'breakfast' | 'lunch' | 'snack' | 'dinner';
 }
 
 export default function PhotoConfirmation() {
