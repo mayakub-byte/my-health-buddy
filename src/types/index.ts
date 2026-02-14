@@ -13,11 +13,15 @@ export interface Family {
   updated_at: string;
 }
 
+export type AgeGroup = 'toddler' | 'child' | 'teen' | 'adult' | 'senior';
+
 export interface FamilyMember {
   id: string;
   family_id: string;
   name: string;
   age?: number;
+  dob?: string;
+  age_group?: AgeGroup;
   gender?: 'male' | 'female' | 'other';
   role?: 'father' | 'mother' | 'son' | 'daughter' | 'grandfather' | 'grandmother' | 'other';
   health_conditions: HealthCondition[];

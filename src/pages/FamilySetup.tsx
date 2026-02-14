@@ -31,7 +31,7 @@ const AVATAR_EMOJIS = ['👨', '👩', '👧', '👦', '👴', '👵', '🧑', '
 export interface FamilyMemberForm {
   avatarEmoji: string;
   name: string;
-  age: number | '';
+  dob: string;
   relationship: (typeof RELATIONSHIP_OPTIONS)[number]['value'] | '';
   healthConditions: HealthCondition[];
 }
@@ -39,10 +39,33 @@ export interface FamilyMemberForm {
 const initialMember: FamilyMemberForm = {
   avatarEmoji: '👤',
   name: '',
-  age: '',
+  dob: '',
   relationship: '',
   healthConditions: [],
 };
+
+function getAgeGroup(dob: string | null | undefined): 'toddler' | 'child' | 'teen' | 'adult' | 'senior' {
+  if (!dob) return 'adult';
+  const today = new Date();
+  const birth = new Date(dob);
+  const age = Math.floor((today.getTime() - birth.getTime()) / 31557600000);
+  if (age < 3) return 'toddler';
+  if (age < 13) return 'child';
+  if (age < 18) return 'teen';
+  if (age < 60) return 'adult';
+  return 'senior';
+}
+
+function getAge(dob: string | null | undefined): number | null {
+  if (!dob) return null;
+  const today = new Date();
+  const birth = new Date(dob);
+  return Math.floor((today.getTime() - birth.getTime()) / 31557600000);
+}
+
+function capitalizeAgeGroup(g: string): string {
+  return g.charAt(0).toUpperCase() + g.slice(1);
+}
 
 export default function FamilySetup() {
   const navigate = useNavigate();
@@ -86,12 +109,18 @@ export default function FamilySetup() {
       setError('Please enter a name for each family member.');
       return;
     }
-    const payload: Partial<FamilyMember>[] = members.map((m) => ({
-      name: m.name.trim(),
-      age: m.age === '' ? undefined : Number(m.age),
-      role: m.relationship || undefined,
-      health_conditions: m.healthConditions.length ? m.healthConditions : ['none'],
-    }));
+    const payload: Partial<FamilyMember>[] = members.map((m) => {
+      const ageGroup = getAgeGroup(m.dob || null);
+      const age = getAge(m.dob || null);
+      return {
+        name: m.name.trim(),
+        dob: m.dob || undefined,
+        age_group: ageGroup,
+        age: age ?? undefined,
+        role: m.relationship || undefined,
+        health_conditions: m.healthConditions.length ? m.healthConditions : ['none'],
+      };
+    });
     const family = await createFamily('My Family', payload);
     if (family) {
       navigate('/dashboard', { replace: true });
@@ -246,19 +275,20 @@ function MemberCard({
               placeholder="Name"
               className="input-field"
             />
+            {member.dob && (
+              <p className="text-xs text-neutral-500 mt-1">
+                {getAge(member.dob)} years • {capitalizeAgeGroup(getAgeGroup(member.dob))}
+              </p>
+            )}
           </div>
           <div>
-            <label className="label sr-only">Age</label>
+            <label className="text-sm font-medium text-neutral-700">Date of Birth</label>
             <input
-              type="number"
-              min={1}
-              max={120}
-              value={member.age === '' ? '' : member.age}
-              onChange={(e) =>
-                onUpdate({ age: e.target.value === '' ? '' : parseInt(e.target.value, 10) || '' })
-              }
-              placeholder="Age"
-              className="input-field"
+              type="date"
+              value={member.dob || ''}
+              onChange={(e) => onUpdate({ dob: e.target.value })}
+              max={new Date().toISOString().split('T')[0]}
+              className="w-full px-4 py-3 rounded-xl border border-beige-300 bg-beige-50 focus:border-olive-500 focus:ring-1 focus:ring-olive-500 outline-none transition-all mt-1"
             />
           </div>
           <div>
