@@ -52,10 +52,12 @@ export default function PortionSelection() {
   const handleStartAnalysis = () => {
     navigate('/scan/loading', {
       state: {
+        ...state,
         imageFile: state.imageFile,
         imagePreview: state.imagePreview ?? imagePreview,
         manualText: state.manualText,
         selectedMemberId: state.selectedMemberId,
+        selectedMembers: state.selectedMembers,
         portionSize,
         servings,
         mealType: isTextOnly ? 'text' : 'photo',

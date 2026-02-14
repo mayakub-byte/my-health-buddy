@@ -7,7 +7,6 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, X, Mic } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
-import type { FamilyMember } from '../types';
 
 // TypeScript declarations for Web Speech API
 interface SpeechRecognition extends EventTarget {
@@ -112,7 +111,7 @@ export default function MealInput() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { members } = useFamily();
 
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [manualText, setManualText] = useState('');
@@ -124,10 +123,15 @@ export default function MealInput() {
 
 
   useEffect(() => {
-    if (members.length > 0 && !selectedMemberId) {
-      setSelectedMemberId(members[0].id);
+    if (members.length > 0) {
+      setSelectedMembers((prev) => {
+        const ids = members.map((m) => m.id);
+        if (prev.length === 0) return ids;
+        const stillValid = prev.filter((id) => ids.includes(id));
+        return stillValid.length > 0 ? stillValid : ids;
+      });
     }
-  }, [members, selectedMemberId]);
+  }, [members]);
 
   // Reset tab to current meal time when modal opens
   useEffect(() => {
@@ -152,24 +156,31 @@ export default function MealInput() {
     e.target.value = '';
   };
 
+  const toggleMember = (id: string) => {
+    setSelectedMembers((prev) =>
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
+    );
+  };
+
   const handleAnalyze = () => {
     if (!imageFile && !manualText.trim()) return;
-    
+
     const mealText = manualText.trim();
     const hasImage = !!imageFile || !!imagePreview;
-    
+
     // Text-only flow: skip photo confirmation, go directly to portion selection
     if (!hasImage && mealText) {
       navigate('/scan/portion', {
         state: {
           manualText: mealText,
-          selectedMemberId: selectedMemberId ?? undefined,
+          selectedMembers,
+          selectedMemberId: selectedMembers[0] ?? undefined,
           mealType: 'text' as const,
         },
       });
       return;
     }
-    
+
     // Photo flow (with or without text): go to photo confirmation
     if (hasImage) {
       navigate('/scan/confirm', {
@@ -177,7 +188,8 @@ export default function MealInput() {
           imageFile: imageFile ?? undefined,
           imagePreview: imagePreview ?? undefined,
           manualText: mealText || undefined,
-          selectedMemberId: selectedMemberId ?? undefined,
+          selectedMembers,
+          selectedMemberId: selectedMembers[0] ?? undefined,
           mealType: 'photo' as const,
         },
       });
@@ -256,28 +268,55 @@ export default function MealInput() {
 
   return (
     <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
-      <header className="px-5 pt-6 pb-3">
+      {/* Who's eating? — ABOVE heading */}
+      <section className="px-5 pt-6 mb-4">
+        <p className="text-sm font-medium text-neutral-600 mb-2">Who&apos;s eating?</p>
+        <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide -mx-5 px-5">
+          {members.map((member) => (
+            <button
+              key={member.id}
+              type="button"
+              onClick={() => toggleMember(member.id)}
+              className={`flex flex-col items-center min-w-[64px] p-2 rounded-xl transition-all flex-shrink-0 ${
+                selectedMembers.includes(member.id)
+                  ? 'border-2 border-olive-500 bg-beige-50 shadow-sm'
+                  : 'border border-beige-300 opacity-50'
+              }`}
+            >
+              <div
+                className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white mb-1"
+                style={{ backgroundColor: member.avatar_color || '#5C6B4A' }}
+              >
+                {member.name?.charAt(0)?.toUpperCase() || '?'}
+              </div>
+              <span className="text-xs font-medium text-neutral-700 truncate max-w-[56px]">
+                {member.name}
+              </span>
+              {selectedMembers.includes(member.id) && (
+                <span className="text-xs text-emerald-600 mt-0.5">✓</span>
+              )}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => navigate('/setup')}
+            className="flex flex-col items-center justify-center min-w-[64px] p-2 rounded-xl border-2 border-dashed border-beige-300 opacity-60 hover:opacity-100 flex-shrink-0"
+          >
+            <span className="text-xl mb-1">+</span>
+            <span className="text-xs text-neutral-500">Add</span>
+          </button>
+        </div>
+        {members.length === 0 && (
+          <p className="text-sm text-neutral-500 py-2">No family members yet</p>
+        )}
+      </section>
+
+      <header className="px-5 pb-3">
         <h1 className="font-heading text-xl font-bold text-olive-800">
           What did you cook today?
         </h1>
         <p className="text-neutral-600 text-sm mt-0.5">{today}</p>
       </header>
-
-      <section className="px-5 pb-4">
-        <div className="flex gap-2 overflow-x-auto pb-1 -mx-5 px-5">
-          {members.map((member) => (
-            <MemberChip
-              key={member.id}
-              member={member}
-              isSelected={selectedMemberId === member.id}
-              onSelect={() => setSelectedMemberId(member.id)}
-            />
-          ))}
-          {members.length === 0 && (
-            <p className="text-sm text-neutral-500 py-2">No family members yet</p>
-          )}
-        </div>
-      </section>
 
       <main className="flex-1 px-5">
         <div className="relative">
@@ -439,33 +478,3 @@ export default function MealInput() {
   );
 }
 
-function MemberChip({
-  member,
-  isSelected,
-  onSelect,
-}: {
-  member: FamilyMember;
-  isSelected: boolean;
-  onSelect: () => void;
-}) {
-  const initial = member.name?.charAt(0)?.toUpperCase() || '?';
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`flex-shrink-0 flex items-center gap-2 rounded-full pl-1 pr-3 py-1.5 border-2 transition-colors ${
-        isSelected
-          ? 'border-olive-500 bg-olive-50 text-olive-700'
-          : 'border-beige-300 bg-beige-50 text-neutral-600 hover:border-olive-400'
-      }`}
-    >
-      <div
-        className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold text-white"
-        style={{ backgroundColor: member.avatar_color || '#4A5D3A' }}
-      >
-        {initial}
-      </div>
-      <span className="text-sm font-medium">{member.name}</span>
-    </button>
-  );
-}

@@ -12,6 +12,7 @@ export interface PhotoConfirmState {
   imagePreview?: string;
   manualText?: string;
   selectedMemberId?: string;
+  selectedMembers?: string[];
 }
 
 export default function PhotoConfirmation() {

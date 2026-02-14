@@ -389,7 +389,10 @@ export default function FamilyGuidanceResult() {
           <section className="mb-5">
             <h3 className="font-heading font-semibold text-olive-800 mb-3">For Your Family</h3>
             <div className="space-y-3">
-              {members.map((member) => {
+              {(state.selectedMembers && state.selectedMembers.length > 0
+                ? members.filter((m) => state.selectedMembers!.includes(m.id))
+                : members
+              ).map((member) => {
                 const guidance = getMemberGuidance(member);
                 if (!guidance) return null;
                 const memberTrafficLight = guidance.traffic_light || 'green';

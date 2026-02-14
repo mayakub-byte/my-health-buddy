@@ -136,6 +136,7 @@ export default function AnalysisLoading() {
               imagePreview: state.imagePreview ?? imagePreview,
               manualText: state.manualText,
               selectedMemberId: state.selectedMemberId,
+              selectedMembers: state.selectedMembers,
               portionSize: state.portionSize,
               servings: state.servings,
               claudeAnalysis: finalAnalysis,
