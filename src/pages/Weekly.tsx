@@ -31,6 +31,124 @@ function getTrafficLight(score: number | null): 'green' | 'yellow' | 'red' {
 
 const TARGET_MEALS_PER_WEEK = 21; // 3 meals × 7 days
 
+const RECIPE_SUGGESTIONS: Record<
+  string,
+  Array<{ name: string; telugu: string; emoji: string; why: string; prep: string }>
+> = {
+  protein: [
+    {
+      name: 'Pesarattu',
+      telugu: 'పెసరట్టు',
+      emoji: '🥞',
+      why: 'Rich in protein from moong dal — perfect for breakfast',
+      prep: '15 min',
+    },
+    {
+      name: 'Egg Curry with Roti',
+      telugu: 'ఎగ్ కర్రీ & రోటీ',
+      emoji: '🥚',
+      why: 'Quick protein boost the whole family loves',
+      prep: '20 min',
+    },
+    {
+      name: 'Chana Dal Paratha',
+      telugu: 'శనగపప్పు పరాటా',
+      emoji: '🫓',
+      why: 'Protein-packed stuffed paratha — great for tiffin too',
+      prep: '25 min',
+    },
+  ],
+  high_carbs: [
+    {
+      name: 'Palak Dal',
+      telugu: 'పాలకూర పప్పు',
+      emoji: '🥬',
+      why: 'Swap one rice meal with this dal-heavy dish for better balance',
+      prep: '20 min',
+    },
+    {
+      name: 'Ragi Mudde',
+      telugu: 'రాగి ముద్ద',
+      emoji: '🟤',
+      why: 'Lower GI alternative to rice, rich in calcium',
+      prep: '15 min',
+    },
+    {
+      name: 'Jowar Roti & Curry',
+      telugu: 'జొన్న రొట్టి & కూర',
+      emoji: '🫓',
+      why: 'Millet roti cuts carbs and adds fiber',
+      prep: '20 min',
+    },
+  ],
+  variety: [
+    {
+      name: 'Gongura Pachadi',
+      telugu: 'గొంగూర పచ్చడి',
+      emoji: '🌿',
+      why: 'Iron-rich Telugu specialty — try it this week!',
+      prep: '10 min',
+    },
+    {
+      name: 'Gutti Vankaya Kura',
+      telugu: 'గుత్తి వంకాయ కూర',
+      emoji: '🍆',
+      why: 'Classic Telugu stuffed brinjal, rich in fiber',
+      prep: '30 min',
+    },
+    {
+      name: 'Tomato Bath',
+      telugu: 'టమాటో బాత్',
+      emoji: '🍅',
+      why: 'Quick tangy rice dish — easy variety for busy days',
+      prep: '20 min',
+    },
+  ],
+  low_variety: [
+    {
+      name: 'Pulihora',
+      telugu: 'పులిహోర',
+      emoji: '🍋',
+      why: 'Tangy tamarind rice — quick change from daily routine',
+      prep: '15 min',
+    },
+    {
+      name: 'Pesarattu & Upma',
+      telugu: 'పెసరట్టు & ఉప్మా',
+      emoji: '🥞',
+      why: 'Classic Andhra combo for a refreshing breakfast switch',
+      prep: '20 min',
+    },
+    {
+      name: 'Bisi Bele Bath',
+      telugu: 'బిసి బేలే బాత్',
+      emoji: '🍲',
+      why: 'One-pot spiced rice with lentils — kids love it',
+      prep: '25 min',
+    },
+  ],
+  balanced: [],
+};
+
+function detectGaps(
+  meals: MealRecord[] | null | undefined,
+  carbsPct: number,
+  proteinPct: number
+): string[] {
+  const gaps: string[] = [];
+  if (proteinPct < 20) gaps.push('protein');
+  if (carbsPct > 60) gaps.push('high_carbs');
+  if (!meals || meals.length < 14) gaps.push('variety');
+  const mealCounts: Record<string, number> = {};
+  meals?.forEach((m) => {
+    const name = m.food_name ?? '';
+    mealCounts[name] = (mealCounts[name] || 0) + 1;
+  });
+  if (Object.values(mealCounts).some((c) => c > 4)) gaps.push('low_variety');
+  if (gaps.length === 0) gaps.push('balanced');
+  return gaps;
+}
+
 export default function Weekly() {
   const navigate = useNavigate();
   const [meals, setMeals] = useState<MealRecord[]>([]);
@@ -147,6 +265,11 @@ export default function Weekly() {
 
   const scoreColor = familyScore >= 70 ? 'emerald' : familyScore >= 40 ? 'amber' : 'red';
   const mealsProgress = Math.min(100, (totalMeals / TARGET_MEALS_PER_WEEK) * 100);
+
+  const gaps = detectGaps(meals, carbsPct, proteinPct);
+  const suggestions = gaps
+    .flatMap((gap) => RECIPE_SUGGESTIONS[gap] || [])
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-beige pb-24 max-w-md mx-auto w-full">
@@ -296,6 +419,46 @@ export default function Weekly() {
               </div>
             </div>
           </section>
+
+          {/* Recipe Suggestions - only when meal data exists */}
+          {suggestions.length > 0 ? (
+            <div className="mt-6">
+              <h3 className="font-serif text-lg font-semibold text-gray-800 mb-3">
+                🧑‍🍳 Try This Week
+              </h3>
+              <p className="text-xs text-gray-500 mb-3">
+                Based on your family&apos;s nutrition this week
+              </p>
+              <div className="space-y-3">
+                {suggestions.map((recipe, i) => (
+                  <div
+                    key={i}
+                    className="p-4 rounded-2xl border border-gray-100"
+                    style={{ backgroundColor: '#FDFBF7' }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="text-3xl">{recipe.emoji}</span>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{recipe.name}</p>
+                        <p className="text-xs text-gray-500 mb-1">
+                          {recipe.telugu} • ⏱️ {recipe.prep}
+                        </p>
+                        <p className="text-sm text-[#5C6B4A]">{recipe.why}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : gaps.includes('balanced') && meals.length > 0 ? (
+            <div className="mt-6 p-4 bg-emerald-50 rounded-2xl text-center">
+              <span className="text-3xl">🎉</span>
+              <p className="font-serif text-[#5C6B4A] mt-2 font-semibold">Great balance this week!</p>
+              <p className="text-sm text-gray-600 mt-1">
+                Your family&apos;s nutrition is well-rounded — keep it up!
+              </p>
+            </div>
+          ) : null}
 
           {/* SECTION 5: Action Buttons */}
           <section className="flex flex-col gap-3">
