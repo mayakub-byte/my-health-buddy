@@ -3,7 +3,8 @@
 // Manage family members
 // ============================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Plus, Edit2, Trash2, Check, X } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import type { FamilyMember, HealthCondition } from '../types';
@@ -18,9 +19,16 @@ const HEALTH_CONDITIONS: { value: HealthCondition; label: string }[] = [
 ];
 
 export default function Family() {
+  const location = useLocation();
   const { family, members, addMember, updateMember, deleteMember } = useFamily();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+
+  useEffect(() => {
+    if ((location.state as { addMember?: boolean } | null)?.addMember) {
+      setShowAddForm(true);
+    }
+  }, [location.state]);
 
   return (
     <div className="min-h-screen pb-24" style={{ backgroundColor: '#F4F1EA' }}>

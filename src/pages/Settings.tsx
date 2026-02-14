@@ -334,7 +334,7 @@ export default function Settings() {
 
               <button
                 type="button"
-                onClick={() => navigate('/setup')}
+                onClick={() => navigate('/family', { state: { addMember: true } })}
                 className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 font-medium"
               >
                 + Add Family Member
@@ -343,7 +343,7 @@ export default function Settings() {
           )}
 
           <Link
-            to="/setup"
+            to="/family"
             className="block w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow"
           >
             Edit family

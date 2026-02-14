@@ -349,7 +349,7 @@ export default function MealInput() {
           ))}
           <button
             type="button"
-            onClick={() => navigate('/setup')}
+            onClick={() => navigate('/family', { state: { addMember: true } })}
             className="flex flex-col items-center justify-center min-w-[64px] p-2 rounded-xl border-2 border-dashed border-beige-300 opacity-60 hover:opacity-100 flex-shrink-0"
           >
             <span className="text-xl mb-1">+</span>

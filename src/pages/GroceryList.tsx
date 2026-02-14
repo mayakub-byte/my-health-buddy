@@ -3,11 +3,19 @@
 // Auto-generated from this week's meals
 // ============================================
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import PageHeader from '../components/PageHeader';
 import { useFamily } from '../hooks/useFamily';
+
+const GROCERY_CHECKED_KEY = 'mhb_grocery_checked';
+function getWeekKey(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - d.getDay() + 1);
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
+}
 
 interface GroceryItem {
   name: string;
@@ -31,11 +39,26 @@ type GroceryError = 'no_meals' | 'failed' | null;
 
 export default function GroceryList() {
   const { members } = useFamily();
+  const memberCountRef = useRef(members?.length ?? 4);
+  memberCountRef.current = members?.length ?? 4;
+
   const [groceryData, setGroceryData] = useState<GroceryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<GroceryError>(null);
-  const [checkedItems, setCheckedItems] = useState<string[]>([]);
+  const [checkedItems, setCheckedItems] = useState<string[]>(() => {
+    try {
+      const raw = sessionStorage.getItem(`${GROCERY_CHECKED_KEY}_${getWeekKey()}`);
+      if (raw) {
+        const parsed = JSON.parse(raw) as string[];
+        return Array.isArray(parsed) ? parsed : [];
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
   const [expandedCategories, setExpandedCategories] = useState<string[]>([]);
+  const hasFetchedRef = useRef(false);
 
   const toggleCategory = useCallback((category: string) => {
     setExpandedCategories((prev) =>
@@ -44,19 +67,27 @@ export default function GroceryList() {
   }, []);
 
   const toggleItem = useCallback((itemName: string) => {
-    setCheckedItems((prev) =>
-      prev.includes(itemName) ? prev.filter((i) => i !== itemName) : [...prev, itemName]
-    );
+    setCheckedItems((prev) => {
+      const next = prev.includes(itemName)
+        ? prev.filter((i) => i !== itemName)
+        : [...prev, itemName];
+      try {
+        sessionStorage.setItem(`${GROCERY_CHECKED_KEY}_${getWeekKey()}`, JSON.stringify(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
   }, []);
 
   const fetchGroceryList = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setGroceryData(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setError('failed');
+        setLoading(false);
         return;
       }
 
@@ -73,6 +104,7 @@ export default function GroceryList() {
       if (mealsError) {
         console.error('Grocery meal_history query failed:', mealsError.message);
         setError('failed');
+        setLoading(false);
         return;
       }
 
@@ -87,7 +119,7 @@ export default function GroceryList() {
         return;
       }
 
-      const memberCount = members?.length || 4;
+      const memberCount = memberCountRef.current;
 
       const { data, error: fnError } = await supabase.functions.invoke('dynamic-processor', {
         body: { type: 'grocery', mealNames, memberCount },
@@ -96,6 +128,7 @@ export default function GroceryList() {
       if (fnError) {
         console.error('Grocery function error:', fnError);
         setError('failed');
+        setLoading(false);
         return;
       }
 
@@ -112,9 +145,11 @@ export default function GroceryList() {
     } finally {
       setLoading(false);
     }
-  }, [members?.length]);
+  }, []);
 
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchGroceryList();
   }, [fetchGroceryList]);
 

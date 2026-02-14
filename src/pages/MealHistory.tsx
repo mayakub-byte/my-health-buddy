@@ -4,7 +4,7 @@
 // ============================================
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import PageHeader from '../components/PageHeader';
 import { useFamily } from '../hooks/useFamily';
@@ -96,7 +96,6 @@ function getMonthDays(offset = 0): { date: Date; label: string }[] {
 }
 
 export default function MealHistory() {
-  const navigate = useNavigate();
   const { members } = useFamily();
   const [meals, setMeals] = useState<MealHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,23 +212,6 @@ export default function MealHistory() {
 
   const memberName = (id: string | null) =>
     id ? members.find((m) => m.id === id)?.name ?? '—' : '—';
-
-  const handleCardClick = (meal: MealHistoryRecord) => {
-    navigate('/results/analysis', {
-      state: {
-        fromHistory: true,
-        id: meal.id,
-        food_name: meal.food_name,
-        image_url: meal.image_url,
-        calories: meal.calories ?? 0,
-        macros: meal.macros ?? { carbs: 0, protein: 0, fat: 0 },
-        health_score: meal.health_score ?? 0,
-        guidance: meal.guidance ?? '',
-        selectedMemberId: meal.family_member_id,
-        created_at: meal.created_at,
-      },
-    });
-  };
 
   const formatDateTime = (iso: string) => {
     const d = new Date(iso);
@@ -393,10 +375,21 @@ export default function MealHistory() {
                       return (
                         <td key={mealTime} className="py-2 px-2 text-xs min-w-[100px]">
                           {meal ? (
-                            <button
-                              type="button"
-                              onClick={() => handleCardClick(meal)}
-                              className="flex items-center gap-1 w-full text-left hover:opacity-80"
+                            <Link
+                              to="/results/analysis"
+                              state={{
+                                fromHistory: true,
+                                id: meal.id,
+                                food_name: meal.food_name,
+                                image_url: meal.image_url,
+                                calories: meal.calories ?? 0,
+                                macros: meal.macros ?? { carbs: 0, protein: 0, fat: 0 },
+                                health_score: meal.health_score ?? 0,
+                                guidance: meal.guidance ?? '',
+                                selectedMemberId: meal.family_member_id,
+                                created_at: meal.created_at,
+                              }}
+                              className="flex items-center gap-1 w-full text-left hover:opacity-80 active:opacity-90 block"
                             >
                               <span
                                 className={`w-2 h-2 rounded-full flex-shrink-0 ${
@@ -408,7 +401,7 @@ export default function MealHistory() {
                                 }`}
                               />
                               <span className="truncate max-w-[80px]">{getMealDisplayName(meal)}</span>
-                            </button>
+                            </Link>
                           ) : (
                             <span className="text-gray-300">—</span>
                           )}
@@ -425,12 +418,24 @@ export default function MealHistory() {
             {filteredMeals.map((meal) => {
               const score = meal.health_score ?? 0;
               const color = getScoreColor(score);
+              const resultState = {
+                fromHistory: true as const,
+                id: meal.id,
+                food_name: meal.food_name,
+                image_url: meal.image_url,
+                calories: meal.calories ?? 0,
+                macros: meal.macros ?? { carbs: 0, protein: 0, fat: 0 },
+                health_score: meal.health_score ?? 0,
+                guidance: meal.guidance ?? '',
+                selectedMemberId: meal.family_member_id,
+                created_at: meal.created_at,
+              };
               return (
                 <li key={meal.id}>
-                  <button
-                    type="button"
-                    onClick={() => handleCardClick(meal)}
-                    className="w-full card p-4 flex items-center gap-4 text-left hover:shadow-card-hover transition-shadow"
+                  <Link
+                    to="/results/analysis"
+                    state={resultState}
+                    className="w-full card p-4 flex items-center gap-4 text-left hover:shadow-card-hover transition-shadow active:opacity-90 block"
                   >
                     <div className="w-14 h-14 rounded-xl bg-beige-100 overflow-hidden flex-shrink-0">
                       {meal.image_url ? (
@@ -453,7 +458,7 @@ export default function MealHistory() {
                     >
                       {score}
                     </div>
-                  </button>
+                  </Link>
                 </li>
               );
             })}
