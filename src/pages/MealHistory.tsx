@@ -252,7 +252,7 @@ export default function MealHistory() {
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="font-heading text-lg font-bold text-olive-800">Meal History</h1>
+        <h1 className="font-serif text-xl font-bold text-olive-800">Meal History</h1>
       </header>
 
       {/* Week / Month navigation (shown when Week or Month filter + grid) */}

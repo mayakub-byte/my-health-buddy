@@ -53,11 +53,7 @@ function App() {
     if (isSignedIn && !loading && !family && !isCreatingFamily) {
       setIsCreatingFamily(true);
       autoCreateDefaultFamily()
-        .then((createdFamily) => {
-          if (!createdFamily) {
-            console.warn('Failed to auto-create family. User can still access app.');
-          }
-        })
+        .then(() => {})
         .catch((err) => {
           console.error('Error auto-creating family:', err);
         })

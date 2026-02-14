@@ -289,7 +289,7 @@ export default function Weekly() {
           ←
         </button>
         <div className="text-center">
-          <p className="font-heading font-semibold text-olive-800 text-sm">This Week</p>
+          <p className="font-serif font-semibold text-olive-800 text-xl">This Week</p>
           <p className="text-neutral-600 text-xs mt-0.5">{weekRangeLabel}</p>
         </div>
         <button
@@ -424,7 +424,7 @@ export default function Weekly() {
           {suggestions.length > 0 ? (
             <div className="mt-6">
               <h3 className="font-serif text-lg font-semibold text-gray-800 mb-3">
-                🧑‍🍳 Try This Week
+                Try This Week
               </h3>
               <p className="text-xs text-gray-500 mb-3">
                 Based on your family&apos;s nutrition this week

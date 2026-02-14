@@ -28,7 +28,15 @@ export default function AnalysisLoading() {
 
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
+  const [messageIndex, setMessageIndex] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<MealAnalysisResponse | null>(null);
+
+  const loadingMessages = [
+    'Understanding your meal... 🍽️',
+    'Checking nutrition for your family... 👨‍👩‍👧‍👦',
+    'Finding smart cooking tips... 🧑‍🍳',
+    'Almost ready with your results... ✨',
+  ];
   const [apiError, setApiError] = useState<string | null>(null);
   const analysisStarted = useRef(false);
   const analysisResultRef = useRef<MealAnalysisResponse | null>(null);
@@ -41,6 +49,13 @@ export default function AnalysisLoading() {
   const selectedMember = state.selectedMemberId
     ? members.find((m) => m.id === state.selectedMemberId)
     : members[0];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Allow text-only flow OR photo flow
@@ -157,7 +172,7 @@ export default function AnalysisLoading() {
   }
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
+    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#F4F1EA' }}>
       <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         {apiError ? (
           <button
@@ -178,7 +193,7 @@ export default function AnalysisLoading() {
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="font-heading text-lg font-bold text-olive-800">{apiError ? 'Something went wrong' : 'Analyzing Your Meal'}</h1>
+        <h1 className="font-serif text-lg font-bold text-olive-800">{apiError ? 'Something went wrong' : 'Analyzing Your Meal'}</h1>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-5 py-8">
@@ -203,27 +218,28 @@ export default function AnalysisLoading() {
             </div>
           </div>
         ) : (
-          <>
-            <p className="font-heading text-olive-800/90 text-center text-lg italic mb-8 max-w-sm animate-fade-opacity">
-              Understanding how this meal works for your family...
+          <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 w-full">
+            {/* Bouncing food emojis */}
+            <div className="flex gap-5 mb-8">
+              <span className="text-4xl animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1.5s' }}>🥗</span>
+              <span className="text-4xl animate-bounce" style={{ animationDelay: '300ms', animationDuration: '1.5s' }}>🍚</span>
+              <span className="text-4xl animate-bounce" style={{ animationDelay: '600ms', animationDuration: '1.5s' }}>🥘</span>
+            </div>
+            {/* Rotating message */}
+            <p className="font-serif italic text-[#5C6B4A] text-lg text-center min-h-[56px] flex items-center justify-center">
+              {loadingMessages[messageIndex]}
             </p>
-            {/* Gentle leaf / botanical spinner */}
-            <div className="leaf-spinner mb-8" aria-hidden>
-              <span className="leaf leaf-1">🌿</span>
-              <span className="leaf leaf-2">🍃</span>
-              <span className="leaf leaf-3">🌿</span>
-              <span className="leaf leaf-4">🍃</span>
+            {/* Subtle progress bar with shimmer */}
+            <div className="w-48 h-1.5 bg-gray-200 rounded-full mt-8 overflow-hidden">
+              <div
+                className="h-full bg-[#5C6B4A] rounded-full shimmer-bar"
+                style={{ width: '60%' }}
+              />
             </div>
-            <div className="w-full max-w-sm">
-              <div className="h-1.5 bg-beige-300 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-olive-500 rounded-full transition-all duration-150 ease-linear"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-            </div>
+            {/* Warm subtext */}
+            <p className="text-xs text-gray-400 mt-4">This usually takes 5-10 seconds</p>
             {selectedMember && (
-              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl card mt-6 w-full max-w-sm">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl card mt-8 w-full max-w-sm">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
                   style={{ backgroundColor: selectedMember.avatar_color || '#4A5D3A' }}
@@ -233,50 +249,18 @@ export default function AnalysisLoading() {
                 <span className="text-neutral-800 font-medium">{selectedMember.name}</span>
               </div>
             )}
-          </>
+          </div>
         )}
       </main>
 
       <style>{`
-        .leaf-spinner {
-          position: relative;
-          width: 64px;
-          height: 64px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+        @keyframes shimmer {
+          0% { transform: translateX(-100%); opacity: 0.5; }
+          50% { transform: translateX(0); opacity: 1; }
+          100% { transform: translateX(100%); opacity: 0.5; }
         }
-        .leaf-spinner .leaf {
-          position: absolute;
-          font-size: 1.5rem;
-          opacity: 0.85;
-          animation: leaf-spin 2s ease-in-out infinite;
-        }
-        .leaf-spinner .leaf-1 { top: 0; left: 50%; transform: translateX(-50%); animation-delay: 0s; }
-        .leaf-spinner .leaf-2 { right: 0; top: 50%; transform: translateY(-50%); animation-delay: 0.25s; }
-        .leaf-spinner .leaf-3 { bottom: 0; left: 50%; transform: translateX(-50%); animation-delay: 0.5s; }
-        .leaf-spinner .leaf-4 { left: 0; top: 50%; transform: translateY(-50%); animation-delay: 0.75s; }
-        @keyframes leaf-spin {
-          0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(0.9); }
-          50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
-        }
-        .leaf-2 { animation-name: leaf-spin-2; }
-        .leaf-2 { transform: translateY(-50%); }
-        .leaf-3 { animation-name: leaf-spin-3; }
-        .leaf-3 { transform: translateX(-50%); }
-        .leaf-4 { transform: translateY(-50%); }
-        .leaf-4 { animation-name: leaf-spin-4; }
-        @keyframes leaf-spin-2 {
-          0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(0.9); }
-          50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
-        }
-        @keyframes leaf-spin-3 {
-          0%, 100% { opacity: 0.5; transform: translateX(-50%) scale(0.9); }
-          50% { opacity: 1; transform: translateX(-50%) scale(1.1); }
-        }
-        @keyframes leaf-spin-4 {
-          0%, 100% { opacity: 0.5; transform: translateY(-50%) scale(0.9); }
-          50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
+        .shimmer-bar {
+          animation: shimmer 2s ease-in-out infinite;
         }
       `}</style>
     </div>

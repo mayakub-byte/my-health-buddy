@@ -154,7 +154,7 @@ export default function FamilySetup() {
             <p className="text-xs text-neutral-500 mt-1.5">Step 2 of 3</p>
           </div>
         </div>
-        <h1 className="font-heading text-xl font-bold text-olive-800">Settle In, Family</h1>
+        <h1 className="font-serif text-xl font-bold text-olive-800">Settle In, Family</h1>
         <p className="text-neutral-600 text-sm mt-0.5">
           Who&apos;s joining the household?
         </p>

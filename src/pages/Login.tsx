@@ -54,7 +54,7 @@ export default function Login() {
             </div>
           </div>
 
-          <h1 className="font-heading text-2xl font-bold text-olive-800 text-center mb-1">
+          <h1 className="font-serif text-xl font-bold text-olive-800 text-center mb-1">
             Welcome back
           </h1>
           <p className="text-neutral-500 text-sm text-center mb-6">

@@ -24,7 +24,7 @@ export default function ScanPortion() {
       </header>
       <main className="flex-1 p-4">
         <p className="text-neutral-500 text-sm mb-4">
-          Portion selection coming soon. Proceed to analysis.
+          Select your portion and proceed to analysis.
         </p>
         <button
           onClick={handleProceed}

@@ -79,7 +79,7 @@ export default function Settings() {
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="font-heading text-lg font-bold text-olive-800 flex items-center gap-2">
+        <h1 className="font-serif text-xl font-bold text-olive-800 flex items-center gap-2">
           <span className="text-olive-600" aria-hidden>🌿</span>
           Settings
         </h1>

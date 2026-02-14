@@ -299,7 +299,7 @@ export default function FamilyGuidanceResult() {
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="font-heading text-lg font-bold text-olive-800">Our Family Mealtime Journey</h1>
+        <h1 className="font-serif text-xl font-bold text-olive-800">Our Family Mealtime Journey</h1>
       </header>
 
       <main className="flex-1 px-5 py-6 overflow-y-auto">

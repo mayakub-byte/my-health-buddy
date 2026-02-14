@@ -381,7 +381,7 @@ export default function MealInput() {
       </section>
 
       <header className="px-5 pb-3">
-        <h1 className="font-heading text-xl font-bold text-olive-800">
+        <h1 className="font-serif text-lg font-bold text-olive-800">
           What did you cook today?
         </h1>
         <p className="text-neutral-600 text-sm mt-0.5">{today}</p>

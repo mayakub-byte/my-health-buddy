@@ -116,7 +116,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F4F1EA' }}>
       {/* Progress Header */}
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center gap-4 mb-4">

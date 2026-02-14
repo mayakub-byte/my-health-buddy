@@ -79,7 +79,6 @@ export async function analyzeImageWithClaude(file: File): Promise<{
     const mediaType = 'image/jpeg';
 
     const edgeFunctionUrl = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
-    console.log('Calling Edge Function:', edgeFunctionUrl);
 
     // Call Supabase Edge Function
     const response = await fetch(edgeFunctionUrl, {
@@ -94,7 +93,6 @@ export async function analyzeImageWithClaude(file: File): Promise<{
       }),
     });
 
-    console.log('Edge Function response status:', response.status);
 
     if (!response.ok) {
       const errorBody = await response.text();

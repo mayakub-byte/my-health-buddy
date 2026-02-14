@@ -178,7 +178,7 @@ export default function GroceryList() {
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="font-serif text-lg font-bold text-olive-800">
+          <h1 className="font-serif text-xl font-bold text-olive-800">
             🛒 Smart Grocery List
           </h1>
           <p className="text-sm text-neutral-500">Based on your meals this week</p>

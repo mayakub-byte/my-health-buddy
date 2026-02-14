@@ -19,7 +19,7 @@ export default function Landing() {
         <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-olive-500 shadow-card mb-5 mx-auto">
           <span className="text-4xl" aria-hidden>🍽️</span>
         </div>
-        <h1 className="font-heading text-3xl sm:text-4xl font-bold text-olive-800 mb-1">
+        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-olive-800 mb-1">
           Your Family&apos;s Wellness Journey, Simplified
         </h1>
         <p className="text-neutral-600 text-sm sm:text-base mb-6">
