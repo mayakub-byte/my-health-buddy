@@ -16,8 +16,8 @@ export default function Landing() {
   return (
     <div className="min-h-screen bg-beige flex flex-col overflow-x-hidden max-w-md mx-auto w-full">
       <header className="pt-10 pb-6 px-5 text-center flex-1 flex flex-col justify-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-olive-500 shadow-card mb-5 mx-auto">
-          <span className="text-4xl" aria-hidden>🍽️</span>
+        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-olive-500 shadow-card mb-5 mx-auto cursor-default" aria-hidden>
+          <span className="text-4xl">🍽️</span>
         </div>
         <h1 className="font-serif text-3xl sm:text-4xl font-bold text-olive-800 mb-1">
           Your Family&apos;s Wellness Journey, Simplified
@@ -32,7 +32,8 @@ export default function Landing() {
           {FEATURE_CARDS.map((card, i) => (
             <div
               key={i}
-              className="card text-center py-4"
+              className="card text-center py-4 cursor-default"
+              role="presentation"
             >
               <span className="text-2xl mb-2 block" aria-hidden>{card.icon}</span>
               <p className="font-heading font-semibold text-olive-800 text-sm">{card.title}</p>
@@ -42,7 +43,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="flex-1 flex items-center justify-center px-5 py-6" aria-hidden>
+      <section className="flex-1 flex items-center justify-center px-5 py-6 cursor-default" aria-hidden>
         <div className="w-40 h-40 rounded-2xl bg-beige-200/60 flex items-center justify-center border border-beige-300">
           <span className="text-6xl">👨‍👩‍👧‍👦</span>
         </div>

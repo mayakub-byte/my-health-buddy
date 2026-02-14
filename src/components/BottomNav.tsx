@@ -22,7 +22,7 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-beige-50/90 backdrop-blur-sm border-t border-beige-300 px-6 safe-area-bottom shadow-card flex items-center">
+    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#FDFBF7] border-t border-gray-200 px-6 safe-area-bottom z-50 flex items-center">
       <div className="flex justify-around items-center w-full max-w-md mx-auto">
         {NAV_ITEMS.map((item) => {
           const isActive =

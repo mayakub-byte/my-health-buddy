@@ -3,19 +3,20 @@
 // Mobile-first onboarding: add family members (step 2 of 3)
 // ============================================
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import type { FamilyMember, HealthCondition } from '../types';
 
 const RELATIONSHIP_OPTIONS = [
-  { value: 'father', label: 'Father' },
-  { value: 'mother', label: 'Mother' },
-  { value: 'son', label: 'Son' },
-  { value: 'daughter', label: 'Daughter' },
-  { value: 'grandfather', label: 'Grandfather' },
-  { value: 'grandmother', label: 'Grandmother' },
+  { value: 'self', label: 'Self' },
+  { value: 'spouse', label: 'Spouse' },
+  { value: 'child', label: 'Child' },
+  { value: 'parent', label: 'Parent' },
+  { value: 'grandparent', label: 'Grandparent' },
+  { value: 'sibling', label: 'Sibling' },
+  { value: 'other', label: 'Other' },
 ] as const;
 
 const HEALTH_OPTIONS: { value: HealthCondition; label: string }[] = [
@@ -23,6 +24,7 @@ const HEALTH_OPTIONS: { value: HealthCondition; label: string }[] = [
   { value: 'bp', label: 'Hypertension' },
   { value: 'cholesterol', label: 'Cholesterol' },
   { value: 'thyroid', label: 'Thyroid' },
+  { value: 'weight_management', label: 'Weight Management' },
   { value: 'none', label: 'None' },
 ];
 
@@ -32,12 +34,18 @@ export interface FamilyMemberForm {
   avatarEmoji: string;
   name: string;
   dob: string;
-  relationship: (typeof RELATIONSHIP_OPTIONS)[number]['value'] | '';
+  relationship: string;
   healthConditions: HealthCondition[];
 }
 
-const initialMember: FamilyMemberForm = {
-  avatarEmoji: '👤',
+export interface SavedMember {
+  id: string;
+  name: string;
+  avatar?: string;
+}
+
+const initialForm: FamilyMemberForm = {
+  avatarEmoji: '😊',
   name: '',
   dob: '',
   relationship: '',
@@ -63,74 +71,145 @@ function getAge(dob: string | null | undefined): number | null {
   return Math.floor((today.getTime() - birth.getTime()) / 31557600000);
 }
 
-function capitalizeAgeGroup(g: string): string {
-  return g.charAt(0).toUpperCase() + g.slice(1);
+function mapRoleToBackend(rel: string): 'father' | 'mother' | 'son' | 'daughter' | 'grandfather' | 'grandmother' | 'other' {
+  const m: Record<string, 'father' | 'mother' | 'son' | 'daughter' | 'grandfather' | 'grandmother' | 'other'> = {
+    self: 'other',
+    spouse: 'other',
+    child: 'son',
+    parent: 'father',
+    grandparent: 'grandfather',
+    sibling: 'other',
+    other: 'other',
+  };
+  return m[rel] || 'other';
 }
 
 export default function FamilySetup() {
   const navigate = useNavigate();
-  const { createFamily, loading } = useFamily();
-  const [members, setMembers] = useState<FamilyMemberForm[]>([{ ...initialMember }]);
+  const { family, createFamily, addMember: addMemberToFamily, deleteMember, loading } = useFamily();
+  const [form, setForm] = useState<FamilyMemberForm>({ ...initialForm });
+  const [savedMembers, setSavedMembers] = useState<SavedMember[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const [emojiOpen, setEmojiOpen] = useState(false);
 
-  const addMember = () => {
-    if (members.length < 10) {
-      setMembers([...members, { ...initialMember }]);
-    }
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
+
+  const updateForm = (updates: Partial<FamilyMemberForm>) => {
+    setForm((f) => ({ ...f, ...updates }));
   };
 
-  const removeMember = (index: number) => {
-    if (members.length > 1) {
-      setMembers(members.filter((_, i) => i !== index));
-    }
-  };
-
-  const updateMember = (index: number, updates: Partial<FamilyMemberForm>) => {
-    setMembers(members.map((m, i) => (i === index ? { ...m, ...updates } : m)));
-  };
-
-  const toggleHealth = (index: number, condition: HealthCondition) => {
-    const m = members[index];
-    const current = m.healthConditions;
+  const toggleHealth = (condition: HealthCondition) => {
+    const current = form.healthConditions;
     if (condition === 'none') {
-      updateMember(index, { healthConditions: ['none'] });
+      updateForm({ healthConditions: ['none'] });
       return;
     }
     const next = current.includes(condition)
       ? current.filter((c) => c !== condition)
       : [...current.filter((c) => c !== 'none'), condition];
-    updateMember(index, { healthConditions: next });
+    updateForm({ healthConditions: next });
   };
 
-  const handleContinue = async () => {
+  const clearForm = () => {
+    setForm({
+      avatarEmoji: '😊',
+      name: '',
+      dob: '',
+      relationship: '',
+      healthConditions: [],
+    });
+  };
+
+  const saveAndAddAnother = async () => {
     setError(null);
-    const valid = members.every((m) => m.name.trim().length >= 2);
-    if (!valid) {
-      setError('Please enter a name for each family member.');
+    const name = form.name.trim();
+    if (!name || name.length < 2) {
+      setError('Please enter a name (at least 2 characters).');
       return;
     }
-    const payload: Partial<FamilyMember>[] = members.map((m) => {
-      const ageGroup = getAgeGroup(m.dob || null);
-      const age = getAge(m.dob || null);
-      return {
-        name: m.name.trim(),
-        dob: m.dob || undefined,
-        age_group: ageGroup,
-        age: age ?? undefined,
-        role: m.relationship || undefined,
-        health_conditions: m.healthConditions.length ? m.healthConditions : ['none'],
+    const payload: Partial<FamilyMember> = {
+      name,
+      dob: form.dob || undefined,
+      age_group: getAgeGroup(form.dob || null),
+      age: getAge(form.dob || null) ?? undefined,
+      role: mapRoleToBackend(form.relationship),
+      health_conditions: form.healthConditions.length ? form.healthConditions : ['none'],
+    };
+    if (!family) {
+      const created = await createFamily('My Family', [payload]);
+      if (created) {
+        setSavedMembers((prev) => [...prev, { id: `temp-${Date.now()}`, name, avatar: form.avatarEmoji }]);
+        clearForm();
+        setToast(`Added ${name}!`);
+      } else {
+        setError('Failed to save. Please try again.');
+      }
+    } else {
+      const added = await addMemberToFamily(payload);
+      if (added) {
+        setSavedMembers((prev) => [...prev, { id: added.id, name, avatar: form.avatarEmoji }]);
+        clearForm();
+        setToast(`Added ${name}!`);
+      } else {
+        setError('Failed to save. Please try again.');
+      }
+    }
+  };
+
+  const finishSetup = async () => {
+    setError(null);
+    const name = form.name.trim();
+    const hasFormData = name && name.length >= 2;
+    const hasSavedMembers = savedMembers.length > 0;
+
+    if (hasFormData) {
+      const payload: Partial<FamilyMember> = {
+        name,
+        dob: form.dob || undefined,
+        age_group: getAgeGroup(form.dob || null),
+        age: getAge(form.dob || null) ?? undefined,
+        role: mapRoleToBackend(form.relationship),
+        health_conditions: form.healthConditions.length ? form.healthConditions : ['none'],
       };
-    });
-    const family = await createFamily('My Family', payload);
-    if (family) {
+      if (!family) {
+        const created = await createFamily('My Family', [payload]);
+        if (created) {
+          setToast('Family setup complete!');
+          navigate('/dashboard', { replace: true });
+        } else {
+          setError('Failed to save. Please try again.');
+        }
+      } else {
+        const added = await addMemberToFamily(payload);
+        if (added) {
+          setToast('Family setup complete!');
+          navigate('/dashboard', { replace: true });
+        } else {
+          setError('Failed to save. Please try again.');
+        }
+      }
+    } else if (hasSavedMembers) {
+      setToast('Family setup complete!');
       navigate('/dashboard', { replace: true });
     } else {
-      setError('Failed to save family. Please try again.');
+      setError('Please add at least one family member.');
     }
+  };
+
+  const removeSavedMember = async (id: string) => {
+    if (!id.startsWith('temp-')) {
+      await deleteMember(id);
+    }
+    setSavedMembers((prev) => prev.filter((m) => m.id !== id));
   };
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
+    <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
       <div className="px-5 pt-6 pb-4">
         <div className="flex items-center gap-3 mb-4">
           <Link
@@ -145,9 +224,7 @@ export default function FamilySetup() {
               {[1, 2, 3].map((step) => (
                 <div
                   key={step}
-                  className={`h-1.5 flex-1 rounded-full ${
-                    step <= 2 ? 'bg-olive-500' : 'bg-beige-300'
-                  }`}
+                  className={`h-1.5 flex-1 rounded-full ${step <= 2 ? 'bg-olive-500' : 'bg-beige-300'}`}
                 />
               ))}
             </div>
@@ -155,189 +232,163 @@ export default function FamilySetup() {
           </div>
         </div>
         <h1 className="font-serif text-xl font-bold text-olive-800">Settle In, Family</h1>
-        <p className="text-neutral-600 text-sm mt-0.5">
-          Who&apos;s joining the household?
-        </p>
+        <p className="text-neutral-600 text-sm mt-0.5">Who&apos;s joining the household?</p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4">
-        <div className="space-y-4">
-          {members.map((member, index) => (
-            <MemberCard
-              key={index}
-              member={member}
-              onUpdate={(updates) => updateMember(index, updates)}
-              onToggleHealth={(condition) => toggleHealth(index, condition)}
-              onRemove={() => removeMember(index)}
-              canRemove={members.length > 1}
-            />
-          ))}
+        {/* Already added members */}
+        {savedMembers.length > 0 && (
+          <div className="mb-4">
+            <p className="text-sm text-gray-500 mb-2">Family members added:</p>
+            <div className="flex flex-wrap gap-2">
+              {savedMembers.map((m) => (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-2 px-3 py-2 bg-emerald-50 rounded-full"
+                >
+                  <span>{m.avatar || '😊'}</span>
+                  <span className="text-sm font-medium text-gray-700">{m.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeSavedMember(m.id)}
+                    className="text-gray-400 hover:text-red-500 text-xs p-0.5"
+                    aria-label={`Remove ${m.name}`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
+        {/* Current member form card */}
+        <div className="bg-[#FDFBF7] rounded-2xl p-5 border border-gray-100 mb-4">
+          <div className="flex items-start gap-3 mb-4">
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setEmojiOpen((o) => !o)}
+                className="w-12 h-12 rounded-full bg-beige-100 border border-beige-300 flex items-center justify-center text-2xl hover:bg-beige-200"
+              >
+                {form.avatarEmoji}
+              </button>
+              {emojiOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => setEmojiOpen(false)} />
+                  <div className="absolute left-0 top-full mt-1 p-2 bg-beige-50 rounded-xl border border-beige-300 shadow-card z-20 grid grid-cols-4 gap-1">
+                    {AVATAR_EMOJIS.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => {
+                          updateForm({ avatarEmoji: emoji });
+                          setEmojiOpen(false);
+                        }}
+                        className="w-9 h-9 flex items-center justify-center text-xl rounded hover:bg-beige-200"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="flex-1">
+              <label className="label sr-only">Name</label>
+              <input
+                type="text"
+                value={form.name}
+                onChange={(e) => updateForm({ name: e.target.value })}
+                placeholder="Name"
+                className="input-field"
+              />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div>
+              <label className="text-sm font-medium text-neutral-700">Date of Birth</label>
+              <input
+                type="date"
+                value={form.dob || ''}
+                onChange={(e) => updateForm({ dob: e.target.value })}
+                max={new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-3 rounded-xl border border-beige-300 bg-beige-50 focus:border-olive-500 focus:ring-1 focus:ring-olive-500 outline-none transition-all mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-neutral-700">Relationship</label>
+              <select
+                value={form.relationship}
+                onChange={(e) => updateForm({ relationship: e.target.value })}
+                className="input-field mt-1"
+              >
+                <option value="">Select relationship</option>
+                {RELATIONSHIP_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-neutral-500 mb-2">Health needs (optional)</p>
+              <div className="flex flex-wrap gap-2">
+                {HEALTH_OPTIONS.map((opt) => {
+                  const active =
+                    form.healthConditions.includes(opt.value) ||
+                    (opt.value === 'none' && (form.healthConditions.length === 0 || form.healthConditions.includes('none')));
+                  return (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => toggleHealth(opt.value)}
+                      className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+                        active ? 'bg-olive-500 text-white border-olive-500' : 'bg-beige-50 text-neutral-600 border-beige-300 hover:border-olive-400'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {error && (
+          <p className="text-sm text-red-600 mb-4 bg-red-50 px-3 py-2 rounded-xl">{error}</p>
+        )}
+
+        {/* Action buttons — MUST be visible above the bottom nav */}
+        <div className="space-y-3 mb-24">
           <button
             type="button"
-            onClick={addMember}
-            className="w-full py-3.5 border-2 border-dashed border-olive-300 rounded-2xl text-olive-600 hover:border-olive-400 hover:bg-olive-50/50 flex items-center justify-center gap-2 transition-colors font-medium"
+            onClick={saveAndAddAnother}
+            disabled={loading}
+            className="w-full py-3.5 border-2 border-[#5C6B4A] text-[#5C6B4A] rounded-full font-medium disabled:opacity-70"
           >
-            <Plus className="w-5 h-5" />
-            + Add Another Person
+            + Save & Add Another Person
+          </button>
+          <button
+            type="button"
+            onClick={finishSetup}
+            disabled={loading}
+            className="w-full py-3.5 bg-[#5C6B4A] text-white rounded-full font-medium disabled:opacity-70"
+          >
+            Finish Setup →
           </button>
         </div>
       </div>
 
-      <div className="px-5 py-4 border-t border-beige-300">
-        {error && (
-          <p className="text-sm text-red-600 mb-3 bg-red-50 px-3 py-2 rounded-xl">{error}</p>
-        )}
-        <button
-          onClick={handleContinue}
-          disabled={loading}
-          className="btn-primary w-full py-3.5 rounded-full font-semibold disabled:opacity-70"
+      {toast && (
+        <div
+          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg z-50"
+          role="status"
         >
-          {loading ? 'Saving…' : 'Finish & Create Home'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function MemberCard({
-  member,
-  onUpdate,
-  onToggleHealth,
-  onRemove,
-  canRemove,
-}: {
-  member: FamilyMemberForm;
-  onUpdate: (u: Partial<FamilyMemberForm>) => void;
-  onToggleHealth: (c: HealthCondition) => void;
-  onRemove: () => void;
-  canRemove: boolean;
-}) {
-  const [emojiOpen, setEmojiOpen] = useState(false);
-
-  return (
-    <div className="card overflow-hidden">
-      <div className="p-4">
-        <div className="flex items-start justify-between gap-2 mb-3">
-          {/* Avatar emoji picker */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setEmojiOpen((o) => !o)}
-              className="w-12 h-12 rounded-full bg-beige-100 border border-beige-300 flex items-center justify-center text-2xl hover:bg-beige-200"
-            >
-              {member.avatarEmoji}
-            </button>
-            {emojiOpen && (
-              <>
-                <div
-                  className="fixed inset-0 z-10"
-                  aria-hidden
-                  onClick={() => setEmojiOpen(false)}
-                />
-                <div className="absolute left-0 top-full mt-1 p-2 bg-beige-50 rounded-xl border border-beige-300 shadow-card z-20 grid grid-cols-4 gap-1">
-                  {AVATAR_EMOJIS.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => {
-                        onUpdate({ avatarEmoji: emoji });
-                        setEmojiOpen(false);
-                      }}
-                      className="w-9 h-9 flex items-center justify-center text-xl rounded hover:bg-beige-200"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-          {canRemove && (
-            <button
-              type="button"
-              onClick={onRemove}
-              className="p-2 text-neutral-400 hover:text-red-500 rounded-lg"
-              aria-label="Remove member"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-          )}
+          {toast}
         </div>
-
-        <div className="space-y-3">
-          <div>
-            <label className="label sr-only">Name</label>
-            <input
-              type="text"
-              value={member.name}
-              onChange={(e) => onUpdate({ name: e.target.value })}
-              placeholder="Name"
-              className="input-field"
-            />
-            {member.dob && (
-              <p className="text-xs text-neutral-500 mt-1">
-                {getAge(member.dob)} years • {capitalizeAgeGroup(getAgeGroup(member.dob))}
-              </p>
-            )}
-          </div>
-          <div>
-            <label className="text-sm font-medium text-neutral-700">Date of Birth</label>
-            <input
-              type="date"
-              value={member.dob || ''}
-              onChange={(e) => onUpdate({ dob: e.target.value })}
-              max={new Date().toISOString().split('T')[0]}
-              className="w-full px-4 py-3 rounded-xl border border-beige-300 bg-beige-50 focus:border-olive-500 focus:ring-1 focus:ring-olive-500 outline-none transition-all mt-1"
-            />
-          </div>
-          <div>
-            <label className="label sr-only">Relationship</label>
-            <select
-              value={member.relationship}
-              onChange={(e) =>
-                onUpdate({
-                  relationship: e.target.value as FamilyMemberForm['relationship'],
-                })
-              }
-              className="input-field"
-            >
-              <option value="">Relationship</option>
-              {RELATIONSHIP_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Health conditions / needs */}
-          <div>
-            <p className="text-xs font-medium text-neutral-500 mb-2">Needs a little extra care</p>
-            <div className="flex flex-wrap gap-2">
-              {HEALTH_OPTIONS.map((opt) => {
-                const active =
-                  member.healthConditions.includes(opt.value) ||
-                  (opt.value === 'none' && (member.healthConditions.length === 0 || member.healthConditions.includes('none')));
-                return (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => onToggleHealth(opt.value)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                      active
-                        ? 'bg-olive-500 text-white border-olive-500'
-                        : 'bg-beige-50 text-neutral-600 border-beige-300 hover:border-olive-400'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
