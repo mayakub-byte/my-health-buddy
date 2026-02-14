@@ -140,8 +140,9 @@ export default function PortionSelection() {
               onClick={() => setServings((s) => Math.max(MIN_SERVINGS, s - 1))}
               disabled={servings <= MIN_SERVINGS}
               className="w-12 h-12 rounded-full border-2 border-beige-300 flex items-center justify-center text-xl font-medium text-neutral-600 hover:bg-beige-100 disabled:opacity-40 disabled:pointer-events-none"
+              aria-label="Decrease servings"
             >
-              −
+              <span aria-hidden>−</span>
             </button>
             <span className="text-lg font-semibold text-olive-800 w-8 text-center">{servings}</span>
             <button
@@ -149,8 +150,9 @@ export default function PortionSelection() {
               onClick={() => setServings((s) => Math.min(MAX_SERVINGS, s + 1))}
               disabled={servings >= MAX_SERVINGS}
               className="w-12 h-12 rounded-full border-2 border-beige-300 flex items-center justify-center text-xl font-medium text-neutral-600 hover:bg-beige-100 disabled:opacity-40 disabled:pointer-events-none"
+              aria-label="Increase servings"
             >
-              +
+              <span aria-hidden>+</span>
             </button>
           </div>
         </div>

@@ -34,10 +34,12 @@ export default function BottomNav() {
           return (
             <button
               key={item.path}
+              type="button"
               onClick={() => navigate(item.path)}
               className={`flex flex-col items-center py-2 px-4 rounded-full transition-colors ${
                 isActive ? 'text-olive-600' : 'text-neutral-400 hover:text-olive-600'
               }`}
+              aria-label={item.label}
             >
               <Icon
                 className={`w-6 h-6 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.5]'}`}

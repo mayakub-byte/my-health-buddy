@@ -121,7 +121,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center gap-4 mb-4">
           {step !== 'family' && (
-            <button onClick={prevStep} className="p-2 -ml-2 text-neutral-600">
+            <button type="button" onClick={prevStep} className="p-2 -ml-2 text-neutral-600" aria-label="Go back">
               <ArrowLeft className="w-6 h-6" />
             </button>
           )}

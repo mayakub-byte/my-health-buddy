@@ -52,21 +52,34 @@ export default function Settings() {
 
   useEffect(() => {
     const loadUser = async () => {
-      const { data: { user: u } } = await supabase.auth.getUser();
-      if (u) {
-        setUser({
-          email: u.email ?? undefined,
-          name: u.user_metadata?.full_name ?? u.user_metadata?.name ?? u.email?.split('@')[0] ?? 'User',
-          avatarUrl: u.user_metadata?.avatar_url,
-        });
+      try {
+        const { data: { user: u }, error } = await supabase.auth.getUser();
+        if (error) {
+          console.error('Settings loadUser failed:', error.message);
+          return;
+        }
+        if (u) {
+          setUser({
+            email: u.email ?? undefined,
+            name: u.user_metadata?.full_name ?? u.user_metadata?.name ?? u.email?.split('@')[0] ?? 'User',
+            avatarUrl: u.user_metadata?.avatar_url,
+          });
+        }
+      } catch (err) {
+        console.error('Settings loadUser error:', err);
       }
     };
     loadUser();
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/login', { replace: true });
+    try {
+      await supabase.auth.signOut();
+      navigate('/login', { replace: true });
+    } catch (err) {
+      console.error('Sign out failed:', err);
+      navigate('/login', { replace: true });
+    }
   };
 
   return (
@@ -123,7 +136,7 @@ export default function Settings() {
                       className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition ${
                         dietPref === opt.key
                           ? 'bg-[#5C6B4A] text-white shadow-sm'
-                          : 'bg-white border border-gray-200 text-gray-600'
+                          : 'bg-[#FDFBF7] border border-gray-200 text-gray-600'
                       }`}
                     >
                       {opt.label}
@@ -196,7 +209,7 @@ export default function Settings() {
                       className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition ${
                         units === opt.key
                           ? 'bg-[#5C6B4A] text-white shadow-sm'
-                          : 'bg-white border border-gray-200 text-gray-600'
+                          : 'bg-[#FDFBF7] border border-gray-200 text-gray-600'
                       }`}
                     >
                       {opt.label}

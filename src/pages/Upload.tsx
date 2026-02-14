@@ -172,13 +172,13 @@ export default function Upload() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-24">
+    <div className="min-h-screen pb-24" style={{ backgroundColor: '#F4F1EA' }}>
       {/* Header */}
-      <div className="bg-white px-6 py-4 border-b border-neutral-100">
+      <div className="bg-[#FDFBF7] px-6 py-4 border-b border-neutral-100">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-neutral-800">Log Meal</h1>
           {step !== 'upload' && (
-            <button onClick={resetUpload} className="text-neutral-500">
+            <button type="button" onClick={resetUpload} className="text-neutral-500" aria-label="Close and reset upload">
               <X className="w-6 h-6" />
             </button>
           )}
@@ -201,11 +201,13 @@ export default function Upload() {
         {step === 'upload' && (
           <div className="space-y-6">
             {/* Photo Upload Area */}
-            <div
+            <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="aspect-[4/3] bg-white rounded-2xl border-2 border-dashed border-neutral-200 
-                         flex flex-col items-center justify-center cursor-pointer
+              className="aspect-[4/3] bg-[#FDFBF7] rounded-2xl border-2 border-dashed border-neutral-200 
+                         flex flex-col items-center justify-center cursor-pointer w-full
                          hover:border-primary-300 hover:bg-primary-50/50 transition-colors"
+              aria-label="Choose photo or take picture of your meal"
             >
               <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
                 <Camera className="w-8 h-8 text-primary-600" />
@@ -216,7 +218,7 @@ export default function Upload() {
               <p className="text-sm text-neutral-400">
                 Tap here to capture your meal
               </p>
-            </div>
+            </button>
 
             <input
               ref={fileInputRef}
@@ -239,7 +241,7 @@ export default function Upload() {
                       ${
                         mealType === type.value
                           ? 'bg-primary-500 text-white'
-                          : 'bg-white border border-neutral-200 text-neutral-700'
+                          : 'bg-[#FDFBF7] border border-neutral-200 text-neutral-700'
                       }`}
                   >
                     <span className="text-xl block mb-1">{type.emoji}</span>
@@ -364,7 +366,7 @@ export default function Upload() {
                     </div>
 
                     {/* Nutrition for this dish */}
-                    <div className="flex justify-between text-xs text-neutral-500 bg-neutral-50 rounded-lg p-2">
+                    <div className="flex justify-between text-xs text-neutral-500 rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
                       <span>{dish.nutrition.calories} kcal</span>
                       <span>C: {dish.nutrition.carbs}g</span>
                       <span>P: {dish.nutrition.protein}g</span>

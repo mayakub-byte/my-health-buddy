@@ -30,7 +30,7 @@ const HEALTH_OPTIONS: { value: HealthCondition; label: string }[] = [
 
 const AVATAR_EMOJIS = ['👨', '👩', '👧', '👦', '👴', '👵', '🧑', '👶'];
 
-export interface FamilyMemberForm {
+interface FamilyMemberForm {
   avatarEmoji: string;
   name: string;
   dob: string;
@@ -38,7 +38,7 @@ export interface FamilyMemberForm {
   healthConditions: HealthCondition[];
 }
 
-export interface SavedMember {
+interface SavedMember {
   id: string;
   name: string;
   avatar?: string;
@@ -275,7 +275,19 @@ export default function FamilySetup() {
               </button>
               {emojiOpen && (
                 <>
-                  <div className="fixed inset-0 z-10" aria-hidden onClick={() => setEmojiOpen(false)} />
+                  <div
+                  className="fixed inset-0 z-10"
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Close"
+                  onClick={() => setEmojiOpen(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setEmojiOpen(false);
+                    }
+                  }}
+                />
                   <div className="absolute left-0 top-full mt-1 p-2 bg-beige-50 rounded-xl border border-beige-300 shadow-card z-20 grid grid-cols-4 gap-1">
                     {AVATAR_EMOJIS.map((emoji) => (
                       <button

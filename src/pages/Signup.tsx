@@ -99,9 +99,9 @@ export default function Signup() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ backgroundColor: '#F4F1EA' }}>
         <div className="text-center">
-          <p className="text-green-600 font-medium mb-2">Check your email to verify your account.</p>
+          <p className="text-[#5C6B4A] font-medium mb-2">Check your email to verify your account.</p>
           <p className="text-neutral-500 text-sm">Redirecting to sign in…</p>
         </div>
       </div>
@@ -109,7 +109,7 @@ export default function Signup() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F4F1EA' }}>
       <div className="pt-6 px-4">
         <Link
           to="/login"
@@ -209,7 +209,7 @@ export default function Signup() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full flex items-center justify-center py-3 rounded-xl bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-semibold disabled:opacity-70"
+            className="btn-primary w-full flex items-center justify-center py-3 rounded-xl bg-[#5C6B4A] hover:bg-[#4A5D3A] active:bg-[#4A5D3A] text-white font-semibold disabled:opacity-70"
           >
             {loading ? 'Creating account…' : 'Sign up'}
           </button>
@@ -220,7 +220,7 @@ export default function Signup() {
         Already have an account?{' '}
         <Link
           to="/login"
-          className="font-medium text-green-600 hover:text-green-700 underline underline-offset-2"
+          className="font-medium text-[#5C6B4A] hover:text-[#4A5D3A] underline underline-offset-2"
         >
           Log in
         </Link>

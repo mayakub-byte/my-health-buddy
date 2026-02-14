@@ -238,23 +238,26 @@ export function useFamily() {
       if (!user) return null;
 
       // Check if family already exists
-      const { data: existingFamily } = await supabase
+      const { data: existingFamily, error: existingError } = await supabase
         .from('families')
         .select('*')
         .eq('user_id', user.id)
         .limit(1)
         .maybeSingle();
 
+      if (existingError) {
+        console.error('autoCreateDefaultFamily: families select failed:', existingError.message);
+        return null;
+      }
       if (existingFamily) {
         localStorage.setItem(FAMILY_STORAGE_KEY, existingFamily.id);
         setFamily(existingFamily);
-        // Load members
-        const { data: membersData } = await supabase
+        const { data: membersData, error: membersErr } = await supabase
           .from('family_members')
           .select('*')
           .eq('family_id', existingFamily.id)
           .order('is_primary', { ascending: false });
-        if (membersData) setMembers(membersData);
+        if (!membersErr && membersData) setMembers(membersData);
         return existingFamily;
       }
 
@@ -297,12 +300,12 @@ export function useFamily() {
       setFamily(newFamily);
       
       // Load members
-      const { data: membersData } = await supabase
+      const { data: membersData, error: loadMembersErr } = await supabase
         .from('family_members')
         .select('*')
         .eq('family_id', newFamily.id)
         .order('is_primary', { ascending: false });
-      if (membersData) setMembers(membersData);
+      if (!loadMembersErr && membersData) setMembers(membersData);
 
       return newFamily;
     } catch (err) {

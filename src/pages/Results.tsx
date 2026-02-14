@@ -18,6 +18,7 @@ export default function Results() {
   const [meal, setMeal] = useState<Meal | null>(null);
   const [scores, setScores] = useState<MealScore[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     if (mealId && family) {
@@ -27,33 +28,40 @@ export default function Results() {
 
   const loadMealAndScores = async () => {
     if (!mealId || !family) return;
-
+    setLoadError(null);
     try {
-      // Load meal
       const { data: mealData, error: mealError } = await supabase
         .from('meals')
         .select('*')
         .eq('id', mealId)
         .single();
 
-      if (mealError) throw mealError;
+      if (mealError) {
+        console.error('Results meals query failed:', mealError.message);
+        setLoadError(mealError.message);
+        return;
+      }
       setMeal(mealData);
 
-      // Check if scores exist, if not generate them
-      const { data: existingScores } = await supabase
+      const { data: existingScores, error: scoresError } = await supabase
         .from('meal_scores')
         .select('*')
         .eq('meal_id', mealId);
 
+      if (scoresError) {
+        console.error('Results meal_scores query failed:', scoresError.message);
+        setLoadError(scoresError.message);
+        return;
+      }
       if (existingScores && existingScores.length > 0) {
         setScores(existingScores);
       } else {
-        // Generate scores for each family member
         const generatedScores = await generateScoresForFamily(mealData, members);
         setScores(generatedScores);
       }
     } catch (err) {
       console.error('Error loading meal:', err);
+      setLoadError(err instanceof Error ? err.message : 'Failed to load');
     } finally {
       setLoading(false);
     }
@@ -80,6 +88,9 @@ export default function Results() {
         .select()
         .single();
 
+      if (error) {
+        console.error('meal_scores insert failed for member', member.id, error.message);
+      }
       if (!error && data) {
         newScores.push(data);
       }
@@ -189,10 +200,27 @@ export default function Results() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-neutral-500">Calculating scores...</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#F4F1EA' }}>
+        <div className="flex justify-center py-12">
+          <span className="animate-bounce text-2xl" aria-hidden>🍽️</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#F4F1EA' }}>
+        <div className="text-center py-12">
+          <span className="text-3xl" aria-hidden>😕</span>
+          <p className="text-gray-600 mt-2">Something went wrong</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-3 px-4 py-2 bg-[#5C6B4A] text-white rounded-full text-sm"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
@@ -200,22 +228,32 @@ export default function Results() {
 
   if (!meal) {
     return (
-      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
-        <p className="text-neutral-500">Meal not found</p>
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ backgroundColor: '#F4F1EA' }}>
+        <div className="text-center py-12">
+          <span className="text-3xl" aria-hidden>🍽️</span>
+          <p className="text-gray-600 mt-2">Meal not found</p>
+          <button
+            type="button"
+            onClick={() => navigate('/dashboard')}
+            className="mt-3 px-4 py-2 bg-[#5C6B4A] text-white rounded-full text-sm"
+          >
+            Back to Dashboard
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-24">
+    <div className="min-h-screen pb-24" style={{ backgroundColor: '#F4F1EA' }}>
       {/* Header */}
-      <div className="bg-white px-6 py-4 border-b border-neutral-100 sticky top-0 z-10">
+      <div className="bg-[#FDFBF7] px-6 py-4 border-b border-neutral-100 sticky top-0 z-10">
         <div className="flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2" aria-label="Go back">
             <ArrowLeft className="w-6 h-6 text-neutral-600" />
           </button>
           <h1 className="text-lg font-semibold text-neutral-800">Meal Analysis</h1>
-          <button className="p-2 -mr-2">
+          <button type="button" className="p-2 -mr-2" aria-label="Share">
             <Share2 className="w-5 h-5 text-neutral-600" />
           </button>
         </div>
@@ -301,8 +339,10 @@ function ScoreCard({
   return (
     <div className="card">
       <button
+        type="button"
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center gap-4"
+        aria-label={expanded ? `Collapse details for ${member.name}` : `Expand details for ${member.name}`}
       >
         {/* Avatar */}
         <div
@@ -339,25 +379,25 @@ function ScoreCard({
         <div className="mt-4 pt-4 border-t border-neutral-100">
           {/* Macros */}
           <div className="grid grid-cols-4 gap-2 text-center mb-4">
-            <div className="bg-neutral-50 rounded-lg p-2">
+            <div className="rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
               <p className="text-lg font-bold text-neutral-800">
                 {Math.round(score.macros.carbs)}g
               </p>
               <p className="text-xs text-neutral-500">Carbs</p>
             </div>
-            <div className="bg-neutral-50 rounded-lg p-2">
+            <div className="rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
               <p className="text-lg font-bold text-neutral-800">
                 {Math.round(score.macros.protein)}g
               </p>
               <p className="text-xs text-neutral-500">Protein</p>
             </div>
-            <div className="bg-neutral-50 rounded-lg p-2">
+            <div className="rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
               <p className="text-lg font-bold text-neutral-800">
                 {Math.round(score.macros.fat)}g
               </p>
               <p className="text-xs text-neutral-500">Fat</p>
             </div>
-            <div className="bg-neutral-50 rounded-lg p-2">
+            <div className="rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
               <p className="text-lg font-bold text-neutral-800">
                 {Math.round(score.macros.fiber)}g
               </p>

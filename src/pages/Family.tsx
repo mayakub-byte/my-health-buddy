@@ -23,9 +23,9 @@ export default function Family() {
   const [showAddForm, setShowAddForm] = useState(false);
 
   return (
-    <div className="min-h-screen bg-neutral-50 pb-24">
+    <div className="min-h-screen pb-24" style={{ backgroundColor: '#F4F1EA' }}>
       {/* Header */}
-      <div className="bg-white px-6 py-4 border-b border-neutral-100">
+      <div className="bg-[#FDFBF7] px-6 py-4 border-b border-neutral-100">
         <h1 className="text-xl font-bold text-neutral-800">
           {family?.name || 'Family'}
         </h1>
@@ -170,9 +170,9 @@ function MemberCard({
               <Check className="w-4 h-4" />
               Save
             </button>
-            <button onClick={onCancel} className="btn-ghost">
-              <X className="w-5 h-5" />
-            </button>
+<button type="button" onClick={onCancel} className="btn-ghost" aria-label="Close">
+            <X className="w-5 h-5" />
+          </button>
           </div>
         </div>
       </div>
@@ -220,15 +220,19 @@ function MemberCard({
         {/* Actions */}
         <div className="flex gap-1">
           <button
+            type="button"
             onClick={onEdit}
             className="p-2 text-neutral-400 hover:text-primary-500"
+            aria-label="Edit member"
           >
             <Edit2 className="w-5 h-5" />
           </button>
           {!member.is_primary && (
             <button
+              type="button"
               onClick={onDelete}
               className="p-2 text-neutral-400 hover:text-red-500"
+              aria-label="Delete member"
             >
               <Trash2 className="w-5 h-5" />
             </button>

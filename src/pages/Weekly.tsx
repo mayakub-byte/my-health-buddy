@@ -153,6 +153,7 @@ export default function Weekly() {
   const navigate = useNavigate();
   const [meals, setMeals] = useState<MealRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -177,8 +178,15 @@ export default function Weekly() {
   }, [toast]);
 
   const loadWeeklyMeals = async () => {
+    setFetchError(null);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('Weekly getUser failed:', userError.message);
+        setFetchError(userError.message);
+        setMeals([]);
+        return;
+      }
       if (!user) {
         setMeals([]);
         return;
@@ -192,10 +200,16 @@ export default function Weekly() {
         .lt('created_at', weekEnd.toISOString())
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Weekly meal_history query failed:', error.message);
+        setFetchError(error.message);
+        setMeals([]);
+        return;
+      }
       setMeals((data as MealRecord[]) || []);
     } catch (err) {
       console.error('Error loading weekly meals:', err);
+      setFetchError(err instanceof Error ? err.message : 'Failed to load');
       setMeals([]);
     } finally {
       setLoading(false);
@@ -286,7 +300,7 @@ export default function Weekly() {
           className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-olive-600 hover:bg-olive-50 border border-beige-300 transition-colors"
           aria-label="Previous week"
         >
-          ←
+          <span aria-hidden>←</span>
         </button>
         <div className="text-center">
           <p className="font-serif font-semibold text-olive-800 text-xl">This Week</p>
@@ -298,20 +312,25 @@ export default function Weekly() {
           className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-olive-600 hover:bg-olive-50 border border-beige-300 transition-colors"
           aria-label="Next week"
         >
-          →
+          <span aria-hidden>→</span>
         </button>
       </section>
 
       {loading ? (
-        /* Loading skeletons */
-        <main className="px-4 py-4 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="bg-beige-50 rounded-2xl p-4 h-24 animate-pulse" />
-            ))}
-          </div>
-          <div className="bg-beige-50 rounded-2xl p-4 h-48 animate-pulse" />
-          <div className="bg-beige-50 rounded-2xl p-4 h-32 animate-pulse" />
+        <main className="flex justify-center py-12">
+          <span className="animate-bounce text-2xl" aria-hidden>🍽️</span>
+        </main>
+      ) : fetchError ? (
+        <main className="text-center py-12 px-4">
+          <span className="text-3xl" aria-hidden>😕</span>
+          <p className="text-gray-600 mt-2">Something went wrong</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-3 px-4 py-2 bg-[#5C6B4A] text-white rounded-full text-sm"
+          >
+            Try Again
+          </button>
         </main>
       ) : totalMeals === 0 ? (
         /* Empty state */

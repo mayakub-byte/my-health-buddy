@@ -389,12 +389,15 @@ export default function MealInput() {
 
       <main className="flex-1 px-5">
         <div className="relative">
+          <label htmlFor="meal-description" className="sr-only">Describe your meal</label>
           <input
+            id="meal-description"
             type="text"
             value={manualText}
             onChange={(e) => setManualText(e.target.value)}
             placeholder="Tell us about your culinary creation..."
             className="input-field w-full rounded-full py-3.5 pr-12"
+            aria-label="Describe your meal"
           />
           {/* Voice Input Button */}
           {(window.SpeechRecognition || window.webkitSpeechRecognition) && (
@@ -475,7 +478,7 @@ export default function MealInput() {
           <button
             type="button"
             onClick={() => setManualText(lastMeal.food_name)}
-            className="mt-3 w-full p-3 bg-white rounded-xl border border-beige-200 flex items-center gap-3 text-left hover:bg-beige-100 transition-colors"
+            className="mt-3 w-full p-3 bg-[#FDFBF7] rounded-xl border border-beige-200 flex items-center gap-3 text-left hover:bg-beige-100 transition-colors"
           >
             <span className="text-2xl">🔄</span>
             <div className="flex-1 min-w-0">
@@ -501,8 +504,16 @@ export default function MealInput() {
         <>
           <div
             className="fixed inset-0 bg-black/40 z-40"
+            role="button"
+            tabIndex={0}
+            aria-label="Close modal"
             onClick={() => setShowMealModal(false)}
-            aria-hidden
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setShowMealModal(false);
+              }
+            }}
           />
           <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-beige-50 rounded-t-3xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto animate-slide-up">
             <div className="sticky top-0 bg-beige-50 border-b border-beige-300 px-5 py-4 flex items-center justify-between z-10">

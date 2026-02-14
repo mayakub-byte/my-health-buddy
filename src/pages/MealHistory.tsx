@@ -100,6 +100,7 @@ export default function MealHistory() {
   const { members } = useFamily();
   const [meals, setMeals] = useState<MealHistoryRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [filter, setFilter] = useState<HistoryFilter>('all');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [weekOffset, setWeekOffset] = useState(0);
@@ -110,8 +111,15 @@ export default function MealHistory() {
   }, []);
 
   const loadHistory = async () => {
+    setFetchError(null);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) {
+        console.error('MealHistory getUser failed:', userError.message);
+        setFetchError(userError.message);
+        setMeals([]);
+        return;
+      }
       if (!user) {
         setMeals([]);
         return;
@@ -122,10 +130,16 @@ export default function MealHistory() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Meal history query failed:', error.message);
+        setFetchError(error.message);
+        setMeals([]);
+        return;
+      }
       setMeals((data as MealHistoryRecord[]) || []);
     } catch (err) {
       console.error('Error loading meal history:', err);
+      setFetchError(err instanceof Error ? err.message : 'Failed to load history');
       setMeals([]);
     } finally {
       setLoading(false);
@@ -266,7 +280,7 @@ export default function MealHistory() {
             className="p-2 rounded-full text-olive-600 hover:bg-olive-50"
             aria-label={filter === 'week' ? 'Previous week' : 'Previous month'}
           >
-            &lt;
+            <span aria-hidden>&lt;</span>
           </button>
           <span className="text-sm font-medium text-neutral-700">
             {filter === 'week'
@@ -285,7 +299,7 @@ export default function MealHistory() {
             className="p-2 rounded-full text-olive-600 hover:bg-olive-50"
             aria-label={filter === 'week' ? 'Next week' : 'Next month'}
           >
-            &gt;
+            <span aria-hidden>&gt;</span>
           </button>
         </div>
       )}
@@ -314,8 +328,9 @@ export default function MealHistory() {
               type="button"
               onClick={() => setViewMode('list')}
               className={`flex-1 py-1.5 text-xs rounded-md transition ${
-                viewMode === 'list' ? 'bg-white shadow-sm font-medium' : 'text-gray-500'
+                viewMode === 'list' ? 'bg-[#FDFBF7] shadow-sm font-medium' : 'text-gray-500'
               }`}
+              aria-label="List view"
             >
               List
             </button>
@@ -323,8 +338,9 @@ export default function MealHistory() {
               type="button"
               onClick={() => setViewMode('grid')}
               className={`flex-1 py-1.5 text-xs rounded-md transition ${
-                viewMode === 'grid' ? 'bg-white shadow-sm font-medium' : 'text-gray-500'
+                viewMode === 'grid' ? 'bg-[#FDFBF7] shadow-sm font-medium' : 'text-gray-500'
               }`}
+              aria-label="Calendar view"
             >
               Calendar
             </button>
@@ -334,9 +350,31 @@ export default function MealHistory() {
 
       <main className="flex-1 px-5">
         {loading ? (
-          <div className="py-12 flex flex-col items-center">
-            <div className="w-10 h-10 border-2 border-olive-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-neutral-500 text-sm mt-3">Loading…</p>
+          <div className="flex justify-center py-12">
+            <span className="animate-bounce text-2xl" aria-hidden>🍽️</span>
+          </div>
+        ) : fetchError ? (
+          <div className="text-center py-12">
+            <span className="text-3xl" aria-hidden>😕</span>
+            <p className="text-gray-600 mt-2">Something went wrong</p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-3 px-4 py-2 bg-[#5C6B4A] text-white rounded-full text-sm"
+            >
+              Try Again
+            </button>
+          </div>
+        ) : filteredMeals.length === 0 ? (
+          <div className="text-center py-12">
+            <span className="text-3xl" aria-hidden>🍽️</span>
+            <p className="text-gray-600 mt-2">No meals yet. Scan your first meal to see history here.</p>
+            <Link
+              to="/dashboard"
+              className="mt-3 inline-block px-4 py-2 bg-[#5C6B4A] text-white rounded-full text-sm"
+            >
+              Scan a meal
+            </Link>
           </div>
         ) : showGrid ? (
           <div className="overflow-x-auto -mx-4 px-4 pb-4">
@@ -388,14 +426,6 @@ export default function MealHistory() {
                 ))}
               </tbody>
             </table>
-          </div>
-        ) : filteredMeals.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-24 h-24 rounded-full bg-beige-200 flex items-center justify-center text-4xl mb-4">🍽️</div>
-            <p className="text-neutral-600 font-medium mb-4">No meals scanned yet — start your first scan!</p>
-            <Link to="/dashboard" className="py-2.5 px-4 rounded-full btn-primary font-semibold text-sm">
-              Go to Dashboard
-            </Link>
           </div>
         ) : (
           <ul className="space-y-3 pb-4">

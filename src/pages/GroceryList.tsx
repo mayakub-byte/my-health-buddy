@@ -65,11 +65,17 @@ export default function GroceryList() {
       weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
       weekStart.setHours(0, 0, 0, 0);
 
-      const { data: meals } = await supabase
+      const { data: meals, error: mealsError } = await supabase
         .from('meal_history')
         .select('*')
         .eq('user_id', user.id)
         .gte('created_at', weekStart.toISOString());
+
+      if (mealsError) {
+        console.error('Grocery meal_history query failed:', mealsError.message);
+        setError('failed');
+        return;
+      }
 
       const mealNames =
         meals?.map((m: { food_name?: string; analysis_result?: { meal_name?: string } }) =>

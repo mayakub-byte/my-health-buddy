@@ -41,6 +41,9 @@ function App() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setIsSignedIn(!!session?.user);
+    }).catch((err) => {
+      console.error('getSession failed:', err);
+      setIsSignedIn(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsSignedIn(!!session?.user);
