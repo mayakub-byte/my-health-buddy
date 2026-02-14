@@ -51,7 +51,7 @@ export default function Landing() {
 
       <footer className="mt-auto px-5 pb-10 pt-4 space-y-3 max-w-md mx-auto w-full">
         <Link
-          to="/signup"
+          to="/goals"
           className="btn-primary w-full flex items-center justify-center py-3.5 rounded-full text-base font-semibold"
         >
           Get Started

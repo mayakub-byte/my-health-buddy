@@ -11,6 +11,10 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
+import GoalsScreen from './pages/GoalsScreen';
+import BaselineScreen from './pages/BaselineScreen';
+import CompleteScreen from './pages/CompleteScreen';
+import NotFound from './pages/NotFound';
 import Onboarding from './pages/Onboarding';
 import FamilySetup from './pages/FamilySetup';
 import MealInput from './pages/MealInput';
@@ -23,6 +27,8 @@ import PhotoConfirmation from './pages/PhotoConfirmation';
 import PortionSelection from './pages/PortionSelection';
 import AnalysisLoading from './pages/AnalysisLoading';
 import Weekly from './pages/Weekly';
+import ProgressScreen from './pages/ProgressScreen';
+import ProfileScreen from './pages/ProfileScreen';
 import GroceryList from './pages/GroceryList';
 import Settings from './pages/Settings';
 
@@ -76,10 +82,13 @@ function App() {
         <div className="min-h-screen bg-beige">
           <Routes>
             <Route path="/" element={<Landing />} />
+            <Route path="/goals" element={<GoalsScreen />} />
+            <Route path="/baseline" element={<BaselineScreen />} />
+            <Route path="/complete" element={<CompleteScreen />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </Router>
@@ -93,6 +102,9 @@ function App() {
       <Router>
         <div className="min-h-screen bg-beige">
           <Routes>
+            <Route path="/goals" element={<Navigate to="/home" replace />} />
+            <Route path="/baseline" element={<Navigate to="/home" replace />} />
+            <Route path="/complete" element={<Navigate to="/home" replace />} />
             <Route path="/setup" element={<FamilySetup />} />
             <Route path="/dashboard" element={<MealInput />} />
             <Route path="/home" element={<MealInput />} />
@@ -106,10 +118,12 @@ function App() {
             <Route path="/family" element={<Family />} />
             <Route path="/history" element={<MealHistory />} />
             <Route path="/weekly" element={<Weekly />} />
+            <Route path="/progress" element={<ProgressScreen />} />
+            <Route path="/profile" element={<ProfileScreen />} />
             <Route path="/grocery" element={<GroceryList />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
           <BottomNav />
         </div>
@@ -121,7 +135,10 @@ function App() {
     <Router>
       <div className="min-h-screen bg-beige">
         <Routes>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/goals" element={<Navigate to="/home" replace />} />
+          <Route path="/baseline" element={<Navigate to="/home" replace />} />
+          <Route path="/complete" element={<Navigate to="/home" replace />} />
+          <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/onboarding" element={<Onboarding onComplete={() => {}} />} />
           <Route path="/setup" element={<FamilySetup />} />
           <Route path="/home" element={<MealInput />} />
@@ -136,11 +153,13 @@ function App() {
           <Route path="/family" element={<Family />} />
           <Route path="/history" element={<MealHistory />} />
           <Route path="/weekly" element={<Weekly />} />
-            <Route path="/grocery" element={<GroceryList />} />
+          <Route path="/progress" element={<ProgressScreen />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+          <Route path="/grocery" element={<GroceryList />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/login" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/signup" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/login" element={<Navigate to="/home" replace />} />
+          <Route path="/signup" element={<Navigate to="/home" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <BottomNav />
       </div>

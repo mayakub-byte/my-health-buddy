@@ -26,7 +26,7 @@ const PageHeader = ({ title, subtitle }: { title: string; subtitle?: string }) =
       {!isHome && (
         <button
           type="button"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate('/home')}
           aria-label="Go to home"
           className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FDFBF7] border border-gray-100 flex-shrink-0"
         >
