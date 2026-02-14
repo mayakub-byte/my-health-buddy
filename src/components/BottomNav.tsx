@@ -12,11 +12,13 @@ const NAV_ITEMS = [
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
+const hideOnRoutes = ['/onboarding', '/setup', '/login', '/signup', '/'];
+
 export default function BottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Don't show on results or scan confirm
+  if (hideOnRoutes.includes(location.pathname)) return null;
   if (location.pathname.startsWith('/results') || location.pathname.startsWith('/scan')) {
     return null;
   }

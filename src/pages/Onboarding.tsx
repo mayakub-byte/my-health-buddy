@@ -116,7 +116,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F4F1EA' }}>
+    <div className="min-h-screen flex flex-col pb-28" style={{ backgroundColor: '#F4F1EA' }}>
       {/* Progress Header */}
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center gap-4 mb-4">
@@ -131,8 +131,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 px-6 pb-6 overflow-y-auto">
+      {/* Content — pb-24 so it doesn't sit under the fixed bottom button */}
+      <div className="flex-1 px-6 pb-24 overflow-y-auto">
         {step === 'family' && (
           <StepFamily familyName={familyName} setFamilyName={setFamilyName} />
         )}
@@ -153,25 +153,27 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         {step === 'ready' && <StepReady familyName={familyName} memberCount={members.length} />}
       </div>
 
-      {/* Footer */}
-      <div className="px-6 pb-8 pt-4 border-t border-neutral-100">
+      {/* Fixed bottom action — no bottom nav on onboarding */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#F4F1EA] max-w-md mx-auto">
         {step === 'ready' ? (
           <button
+            type="button"
             onClick={handleComplete}
             disabled={loading}
-            className="btn-primary w-full flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-[#5C6B4A] text-white rounded-full font-medium"
           >
             {loading ? 'Setting up...' : 'Start Tracking Meals'}
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-5 h-5 inline ml-2 align-middle" />
           </button>
         ) : (
           <button
+            type="button"
             onClick={nextStep}
             disabled={!canProceed()}
-            className="btn-primary w-full flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-[#5C6B4A] text-white rounded-full font-medium"
           >
             Continue
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="w-5 h-5 inline ml-2 align-middle" />
           </button>
         )}
       </div>
