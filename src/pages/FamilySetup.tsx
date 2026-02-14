@@ -142,22 +142,22 @@ export default function FamilySetup() {
       health_conditions: form.healthConditions.length ? form.healthConditions : ['none'],
     };
     if (!family) {
-      const created = await createFamily('My Family', [payload]);
-      if (created) {
+      const result = await createFamily('My Family', [payload]);
+      if (result.family) {
         setSavedMembers((prev) => [...prev, { id: `temp-${Date.now()}`, name, avatar: form.avatarEmoji }]);
         clearForm();
         setToast(`Added ${name}!`);
       } else {
-        setError('Failed to save. Please try again.');
+        setError(result.error || 'Failed to save. Please try again.');
       }
     } else {
-      const added = await addMemberToFamily(payload);
-      if (added) {
-        setSavedMembers((prev) => [...prev, { id: added.id, name, avatar: form.avatarEmoji }]);
+      const result = await addMemberToFamily(payload);
+      if (result.member) {
+        setSavedMembers((prev) => [...prev, { id: result.member!.id, name, avatar: form.avatarEmoji }]);
         clearForm();
         setToast(`Added ${name}!`);
       } else {
-        setError('Failed to save. Please try again.');
+        setError(result.error || 'Failed to save. Please try again.');
       }
     }
   };
@@ -179,20 +179,20 @@ export default function FamilySetup() {
         health_conditions: form.healthConditions.length ? form.healthConditions : ['none'],
       };
       if (!family) {
-        const created = await createFamily('My Family', [payload]);
-        if (created) {
+        const result = await createFamily('My Family', [payload]);
+        if (result.family) {
           setToast('Family setup complete!');
           navigate('/dashboard', { replace: true });
         } else {
-          setError('Failed to save. Please try again.');
+          setError(result.error || 'Failed to save. Please try again.');
         }
       } else {
-        const added = await addMemberToFamily(payload);
-        if (added) {
+        const result = await addMemberToFamily(payload);
+        if (result.member) {
           setToast('Family setup complete!');
           navigate('/dashboard', { replace: true });
         } else {
-          setError('Failed to save. Please try again.');
+          setError(result.error || 'Failed to save. Please try again.');
         }
       }
     } else if (hasSavedMembers) {

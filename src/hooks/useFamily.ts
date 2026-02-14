@@ -9,6 +9,19 @@ import type { Family, FamilyMember } from '../types';
 
 const FAMILY_STORAGE_KEY = 'mhb_family_id';
 
+/** Normalize date to YYYY-MM-DD for Supabase date column */
+function toISODate(value: string): string {
+  if (!value) return value;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const parts = value.split(/[/-]/);
+  if (parts.length === 3) {
+    const [a, b, c] = parts;
+    if (a.length === 4) return `${a}-${b.padStart(2, '0')}-${c.padStart(2, '0')}`;
+    return `${c}-${a.padStart(2, '0')}-${b.padStart(2, '0')}`;
+  }
+  return value;
+}
+
 export function useFamily() {
   const [family, setFamily] = useState<Family | null>(null);
   const [members, setMembers] = useState<FamilyMember[]>([]);
@@ -81,17 +94,21 @@ export function useFamily() {
     }
   };
 
-  // Create new family
+  // Create new family - returns { family, error } so UI can show specific error
   const createFamily = async (
     familyName: string,
     familyMembers: Partial<FamilyMember>[]
-  ): Promise<Family | null> => {
+  ): Promise<{ family: Family | null; error: string | null }> => {
     try {
       setLoading(true);
       setError(null);
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not signed in');
+      if (!user) {
+        const msg = 'Not signed in. Please log in and try again.';
+        setError(msg);
+        return { family: null, error: msg };
+      }
 
       const { data: newFamily, error: familyError } = await supabase
         .from('families')
@@ -100,21 +117,25 @@ export function useFamily() {
         .single();
 
       if (familyError) {
-        console.error('SAVE ERROR (createFamily - families table):', JSON.stringify(familyError, null, 2));
-        throw familyError;
+        const msg = familyError.message || JSON.stringify(familyError);
+        console.error('SAVE ERROR (createFamily - families table):', msg);
+        setError(msg);
+        return { family: null, error: msg };
       }
 
       // Create family members - build clean insert objects with exact column names
       const membersToInsert = familyMembers.map((member, index) => {
+        const rawDob = member.dob != null && member.dob !== '' ? member.dob : undefined;
+        const dob = rawDob ? (rawDob.includes('/') ? toISODate(rawDob) : rawDob) : undefined;
         const row: Record<string, unknown> = {
           family_id: newFamily.id,
-          name: member.name || '',
+          name: (member.name || '').trim() || '',
           is_primary: index === 0,
           avatar_color: getAvatarColor(index),
           health_conditions: Array.isArray(member.health_conditions) ? member.health_conditions : [],
           dietary_preferences: Array.isArray(member.dietary_preferences) ? member.dietary_preferences : [],
         };
-        if (member.dob != null && member.dob !== '') row.dob = member.dob;
+        if (dob) row.dob = dob;
         if (member.age_group != null) row.age_group = member.age_group;
         if (member.age != null) row.age = member.age;
         if (member.role != null) row.role = member.role;
@@ -135,10 +156,11 @@ export function useFamily() {
       console.log('Error:', JSON.stringify(membersError, null, 2));
 
       if (membersError) {
-        console.error('SAVE ERROR (createFamily members):', JSON.stringify(membersError, null, 2));
+        const msg = membersError.message || JSON.stringify(membersError);
+        console.error('SAVE ERROR (createFamily members):', msg, membersError);
         console.error('PAYLOAD:', JSON.stringify(membersToInsert, null, 2));
-        console.error('FAMILY ID:', newFamily.id);
-        throw membersError;
+        setError(msg);
+        return { family: null, error: msg };
       }
 
       // Save to state and localStorage
@@ -146,42 +168,47 @@ export function useFamily() {
       setMembers(newMembers || []);
       localStorage.setItem(FAMILY_STORAGE_KEY, newFamily.id);
 
-      return newFamily;
+      return { family: newFamily, error: null };
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create family';
       console.error('Error creating family:', err);
-      setError(err instanceof Error ? err.message : 'Failed to create family');
-      return null;
+      setError(message);
+      return { family: null, error: message };
     } finally {
       setLoading(false);
     }
   };
 
-  // Add family member
-  const addMember = async (member: Partial<FamilyMember>): Promise<FamilyMember | null> => {
+  // Add family member - returns { member, error } so UI can show specific error
+  const addMember = async (member: Partial<FamilyMember>): Promise<{ member: FamilyMember | null; error: string | null }> => {
     if (!family) {
+      const msg = 'No family loaded. Please refresh or complete family setup first.';
       console.error('FAMILY ID: null - family was not created properly');
-      return null;
+      setError(msg);
+      return { member: null, error: msg };
     }
 
     try {
-      console.log('FAMILY ID CHECK (addMember):', family.id);
+      setError(null);
+      // Normalize DOB to YYYY-MM-DD for Supabase date column
+      const rawDob = member.dob != null && member.dob !== '' ? member.dob : undefined;
+      const dob = rawDob ? (rawDob.includes('/') ? toISODate(rawDob) : rawDob) : undefined;
 
       const row: Record<string, unknown> = {
         family_id: family.id,
-        name: member.name || '',
+        name: (member.name || '').trim() || '',
         is_primary: false,
         avatar_color: getAvatarColor(members.length),
         health_conditions: Array.isArray(member.health_conditions) ? member.health_conditions : [],
         dietary_preferences: Array.isArray(member.dietary_preferences) ? member.dietary_preferences : [],
       };
-      if (member.dob != null && member.dob !== '') row.dob = member.dob;
+      if (dob) row.dob = dob;
       if (member.age_group != null) row.age_group = member.age_group;
       if (member.age != null) row.age = member.age;
       if (member.role != null) row.role = member.role;
       if (member.relationship != null && member.relationship !== '') row.relationship = member.relationship;
 
-      console.log('=== SAVE DEBUG (addMember) ===');
-      console.log('Payload:', JSON.stringify(row, null, 2));
+      console.log('=== SAVE DEBUG (addMember) ===', { family_id: family.id, payload: row });
 
       const { data, error } = await supabase
         .from('family_members')
@@ -189,22 +216,21 @@ export function useFamily() {
         .select()
         .single();
 
-      console.log('Result:', data);
-      console.log('Error:', JSON.stringify(error, null, 2));
-
       if (error) {
-        console.error('SAVE ERROR (addMember):', JSON.stringify(error, null, 2));
-        console.error('PAYLOAD:', JSON.stringify(row, null, 2));
-        console.error('FAMILY ID:', family.id);
-        throw error;
+        const msg = error.message || error.code || JSON.stringify(error);
+        console.error('SAVE ERROR (addMember):', msg, error);
+        console.error('PAYLOAD:', row);
+        setError(msg);
+        return { member: null, error: msg };
       }
-      
+
       setMembers([...members, data]);
-      return data;
+      return { member: data, error: null };
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add member';
       console.error('Error adding member:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add member');
-      return null;
+      setError(message);
+      return { member: null, error: message };
     }
   };
 

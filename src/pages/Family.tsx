@@ -23,6 +23,7 @@ export default function Family() {
   const { family, members, addMember, updateMember, deleteMember } = useFamily();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [addError, setAddError] = useState<string | null>(null);
 
   useEffect(() => {
     if ((location.state as { addMember?: boolean } | null)?.addMember) {
@@ -78,13 +79,26 @@ export default function Family() {
 
         {/* Add Member Form */}
         {showAddForm && (
-          <AddMemberForm
-            onSave={async (newMember) => {
-              await addMember(newMember);
-              setShowAddForm(false);
-            }}
-            onCancel={() => setShowAddForm(false)}
-          />
+          <>
+            {addError && (
+              <div className="mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 text-sm">
+                {addError}
+              </div>
+            )}
+            <AddMemberForm
+              onSave={async (newMember) => {
+                setAddError(null);
+                const result = await addMember(newMember);
+                if (result.member) {
+                  setShowAddForm(false);
+                  setAddError(null);
+                } else {
+                  setAddError(result.error || 'Failed to save member.');
+                }
+              }}
+              onCancel={() => { setShowAddForm(false); setAddError(null); }}
+            />
+          </>
         )}
       </div>
     </div>

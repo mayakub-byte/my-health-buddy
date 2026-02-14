@@ -98,11 +98,12 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       role: member.role ?? undefined,
       health_conditions: member.health_conditions ?? [],
     }));
-    const family = await createFamily(familyName, payload);
-    if (family) {
+    const result = await createFamily(familyName, payload);
+    if (result.family) {
       onComplete();
       navigate('/home');
     }
+    // If result.error, useFamily hook has set error; could surface via useFamily().error
   };
 
   const canProceed = () => {

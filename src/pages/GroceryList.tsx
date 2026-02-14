@@ -3,8 +3,9 @@
 // Auto-generated from this week's meals
 // ============================================
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { CheckSquare, Square } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import PageHeader from '../components/PageHeader';
 import { useFamily } from '../hooks/useFamily';
@@ -79,6 +80,42 @@ export default function GroceryList() {
       return next;
     });
   }, []);
+
+  const persistChecked = useCallback((items: string[]) => {
+    try {
+      sessionStorage.setItem(`${GROCERY_CHECKED_KEY}_${getWeekKey()}`, JSON.stringify(items));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const { totalItems, checkedCount, allSelected } = useMemo(() => {
+    if (!groceryData?.grocery_list) {
+      return { totalItems: 0, checkedCount: 0, allSelected: false };
+    }
+    const total = groceryData.grocery_list.reduce((sum, cat) => sum + cat.items.length, 0);
+    const checked = groceryData.grocery_list.reduce(
+      (sum, cat) => sum + cat.items.filter((i) => checkedItems.includes(i.name)).length,
+      0
+    );
+    return {
+      totalItems: total,
+      checkedCount: checked,
+      allSelected: total > 0 && checked === total,
+    };
+  }, [groceryData?.grocery_list, checkedItems]);
+
+  const handleToggleAll = useCallback(() => {
+    if (!groceryData?.grocery_list || totalItems === 0) return;
+    if (allSelected) {
+      setCheckedItems([]);
+      persistChecked([]);
+    } else {
+      const allNames = groceryData.grocery_list.flatMap((cat) => cat.items.map((i) => i.name));
+      setCheckedItems([...allNames]);
+      persistChecked([...allNames]);
+    }
+  }, [groceryData?.grocery_list, totalItems, allSelected, persistChecked]);
 
   const fetchGroceryList = useCallback(async () => {
     setLoading(true);
@@ -257,6 +294,33 @@ export default function GroceryList() {
           </div>
         ) : groceryData ? (
           <div className="space-y-4 pb-6">
+            {/* Select All / Deselect All */}
+            {totalItems > 0 && (
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 py-2">
+                <p className="text-sm text-neutral-600">
+                  {checkedCount} of {totalItems} items selected
+                </p>
+                <button
+                  type="button"
+                  onClick={handleToggleAll}
+                  className="min-h-[44px] px-4 py-2.5 rounded-xl border-2 border-olive-500 text-olive-700 font-medium flex items-center justify-center gap-2 transition-colors hover:bg-olive-50 active:opacity-90"
+                  aria-label={allSelected ? 'Deselect all items' : 'Select all items'}
+                >
+                  {allSelected ? (
+                    <>
+                      <CheckSquare className="w-5 h-5" aria-hidden />
+                      Deselect All
+                    </>
+                  ) : (
+                    <>
+                      <Square className="w-5 h-5" aria-hidden />
+                      Select All
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
             {/* Smart Tips Card */}
             {groceryData.smart_tips?.length > 0 && (
               <div className="rounded-2xl p-4 bg-emerald-50 border border-emerald-100">
