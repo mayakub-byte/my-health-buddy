@@ -132,12 +132,13 @@ export default function FamilySetup() {
       setError('Please enter a name (at least 2 characters).');
       return;
     }
-    const payload: Partial<FamilyMember> = {
+    const payload: Partial<FamilyMember> & { relationship?: string } = {
       name,
       dob: form.dob || undefined,
       age_group: getAgeGroup(form.dob || null),
       age: getAge(form.dob || null) ?? undefined,
       role: mapRoleToBackend(form.relationship),
+      relationship: form.relationship || undefined,
       health_conditions: form.healthConditions.length ? form.healthConditions : ['none'],
     };
     if (!family) {
@@ -168,12 +169,13 @@ export default function FamilySetup() {
     const hasSavedMembers = savedMembers.length > 0;
 
     if (hasFormData) {
-      const payload: Partial<FamilyMember> = {
+      const payload: Partial<FamilyMember> & { relationship?: string } = {
         name,
         dob: form.dob || undefined,
         age_group: getAgeGroup(form.dob || null),
         age: getAge(form.dob || null) ?? undefined,
         role: mapRoleToBackend(form.relationship),
+        relationship: form.relationship || undefined,
         health_conditions: form.healthConditions.length ? form.healthConditions : ['none'],
       };
       if (!family) {

@@ -24,6 +24,7 @@ export interface FamilyMember {
   age_group?: AgeGroup;
   gender?: 'male' | 'female' | 'other';
   role?: 'father' | 'mother' | 'son' | 'daughter' | 'grandfather' | 'grandmother' | 'other';
+  relationship?: string;
   health_conditions: HealthCondition[];
   dietary_preferences: DietaryPreference[];
   is_primary: boolean;

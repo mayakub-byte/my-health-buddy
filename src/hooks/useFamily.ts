@@ -111,20 +111,28 @@ export function useFamily() {
           name: member.name || '',
           is_primary: index === 0,
           avatar_color: getAvatarColor(index),
-          health_conditions: member.health_conditions ?? [],
-          dietary_preferences: member.dietary_preferences ?? [],
+          health_conditions: Array.isArray(member.health_conditions) ? member.health_conditions : [],
+          dietary_preferences: Array.isArray(member.dietary_preferences) ? member.dietary_preferences : [],
         };
-        if (member.dob != null) row.dob = member.dob;
+        if (member.dob != null && member.dob !== '') row.dob = member.dob;
         if (member.age_group != null) row.age_group = member.age_group;
         if (member.age != null) row.age = member.age;
         if (member.role != null) row.role = member.role;
+        if (member.relationship != null && member.relationship !== '') row.relationship = member.relationship;
         return row;
       });
+
+      console.log('=== SAVE DEBUG (createFamily members) ===');
+      console.log('family_id:', newFamily.id);
+      console.log('Payload:', JSON.stringify(membersToInsert, null, 2));
 
       const { data: newMembers, error: membersError } = await supabase
         .from('family_members')
         .insert(membersToInsert)
         .select();
+
+      console.log('Result:', newMembers);
+      console.log('Error:', JSON.stringify(membersError, null, 2));
 
       if (membersError) {
         console.error('SAVE ERROR (createFamily members):', JSON.stringify(membersError, null, 2));
@@ -156,23 +164,33 @@ export function useFamily() {
     }
 
     try {
+      console.log('FAMILY ID CHECK (addMember):', family.id);
+
       const row: Record<string, unknown> = {
         family_id: family.id,
         name: member.name || '',
+        is_primary: false,
         avatar_color: getAvatarColor(members.length),
-        health_conditions: member.health_conditions ?? [],
-        dietary_preferences: member.dietary_preferences ?? [],
+        health_conditions: Array.isArray(member.health_conditions) ? member.health_conditions : [],
+        dietary_preferences: Array.isArray(member.dietary_preferences) ? member.dietary_preferences : [],
       };
-      if (member.dob != null) row.dob = member.dob;
+      if (member.dob != null && member.dob !== '') row.dob = member.dob;
       if (member.age_group != null) row.age_group = member.age_group;
       if (member.age != null) row.age = member.age;
       if (member.role != null) row.role = member.role;
+      if (member.relationship != null && member.relationship !== '') row.relationship = member.relationship;
+
+      console.log('=== SAVE DEBUG (addMember) ===');
+      console.log('Payload:', JSON.stringify(row, null, 2));
 
       const { data, error } = await supabase
         .from('family_members')
         .insert(row)
         .select()
         .single();
+
+      console.log('Result:', data);
+      console.log('Error:', JSON.stringify(error, null, 2));
 
       if (error) {
         console.error('SAVE ERROR (addMember):', JSON.stringify(error, null, 2));
