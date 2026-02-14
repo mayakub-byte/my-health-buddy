@@ -393,35 +393,55 @@ export default function FamilyGuidanceResult() {
                 ? members.filter((m) => state.selectedMembers!.includes(m.id))
                 : members
               ).map((member) => {
-                const guidance = getMemberGuidance(member);
-                if (!guidance) return null;
-                const memberTrafficLight = guidance.traffic_light || 'green';
+                const memberGuidance = getMemberGuidance(member);
+                if (!memberGuidance) return null;
+                const lightColors: Record<string, { bg: string; border: string; badge: string; label: string }> = {
+                  green: { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', label: 'Great!' },
+                  yellow: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', label: 'Watch' },
+                  red: { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', label: 'Careful' },
+                };
+                const lightKey = (memberGuidance.traffic_light || 'green') as 'green' | 'yellow' | 'red';
+                const colors = lightColors[lightKey] || lightColors.green;
+                const ageGroupLabel = member.age_group ? member.age_group.charAt(0).toUpperCase() + member.age_group.slice(1) : '';
+                const conditionsLabel = member.health_conditions?.length ? member.health_conditions.join(', ') : '';
                 return (
-                  <div key={member.id} className="card p-4">
-                    <div className="flex items-start gap-3">
-                      {/* Avatar */}
-                      <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white flex-shrink-0"
-                        style={{ backgroundColor: member.avatar_color || '#4A5D3A' }}
-                      >
-                        {member.name?.charAt(0)?.toUpperCase() || '?'}
+                  <div key={member.id} className={`p-4 rounded-2xl ${colors.bg} ${colors.border} border-2`}>
+                    {/* Header: Avatar + Name + Badge */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-12 h-12 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center text-xl font-bold text-neutral-700 flex-shrink-0`}>
+                        {(member as { avatar?: string }).avatar ?? member.name?.charAt(0)?.toUpperCase() ?? '😊'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-semibold text-olive-800">{member.name}</p>
-                          {/* Traffic Light Dot */}
-                          <div className={`w-3 h-3 rounded-full ${getTrafficLightColor(memberTrafficLight)} flex-shrink-0`} />
-                        </div>
-                        <p className="text-sm text-neutral-700 mb-1">{guidance.tip}</p>
-                        {guidance.avoid && (
-                          <p className="text-xs text-red-600 mt-1">Avoid: {guidance.avoid}</p>
-                        )}
+                        <p className="font-semibold text-neutral-800">{member.name}</p>
+                        <p className="text-xs text-neutral-500">
+                          {[ageGroupLabel, conditionsLabel].filter(Boolean).join(' • ')}
+                        </p>
                       </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors.badge}`}>
+                        {colors.label}
+                      </span>
                     </div>
+                    {/* Tip */}
+                    {memberGuidance.tip && (
+                      <div className="flex gap-2 mb-2">
+                        <span className="text-sm flex-shrink-0">💡</span>
+                        <p className="text-sm text-neutral-700 font-serif">{memberGuidance.tip}</p>
+                      </div>
+                    )}
+                    {/* Avoid warning */}
+                    {memberGuidance.avoid && (
+                      <div className="flex gap-2 mt-2 p-2 bg-red-50 rounded-lg">
+                        <span className="text-sm flex-shrink-0">⚠️</span>
+                        <p className="text-sm text-red-700">{memberGuidance.avoid}</p>
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
+            <p className="text-center font-serif italic text-[#5C6B4A] mt-4 mb-6">
+              Every meal strengthens our bond 💚
+            </p>
           </section>
         )}
 
