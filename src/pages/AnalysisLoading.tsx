@@ -27,7 +27,6 @@ export default function AnalysisLoading() {
   const { members } = useFamily();
 
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
   const [messageIndex, setMessageIndex] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<MealAnalysisResponse | null>(null);
 
@@ -140,7 +139,6 @@ export default function AnalysisLoading() {
       if (cancelled) return;
       const elapsed = Date.now() - start;
       const p = Math.min(100, (elapsed / PROGRESS_DURATION_MS) * 100);
-      setProgress(p);
       if (p >= 100) {
         const finalAnalysis = analysisResultRef.current;
         if (finalAnalysis) {
