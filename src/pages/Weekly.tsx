@@ -301,7 +301,7 @@ export default function Weekly() {
           <section className="flex flex-col gap-3">
             <button
               type="button"
-              onClick={() => setToast('Coming next week!')}
+              onClick={() => navigate('/grocery')}
               className="w-full py-3.5 rounded-full btn-primary font-semibold"
             >
               Generate Grocery List

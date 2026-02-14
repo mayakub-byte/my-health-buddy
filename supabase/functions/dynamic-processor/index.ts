@@ -133,7 +133,102 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { type, image_base64, media_type, mealDescription, portion } = body;
+    const { type, image_base64, media_type, mealDescription, portion, mealNames, memberCount } = body;
+
+    // Grocery list generation
+    if (type === 'grocery') {
+      if (!mealNames || !Array.isArray(mealNames) || mealNames.length === 0) {
+        throw new Error('mealNames array required for grocery list');
+      }
+      const groceryPrompt = `Based on these meals eaten this week by a Telugu family in Hyderabad:
+${mealNames.join(', ')}
+Generate a grocery shopping list for NEXT WEEK assuming similar meals.
+Family size: ${memberCount || 4} members.
+RULES:
+Use Telugu/Indian ingredient names with English in brackets
+Group by store section
+Include approximate quantities for the family size
+Include estimated costs in INR (Hyderabad prices 2025-26)
+Add 2-3 smart suggestions that fill nutrition gaps based on the meals
+
+Respond ONLY with this JSON (no other text, no markdown):
+{
+  "grocery_list": [
+    {
+      "category": "Vegetables",
+      "emoji": "🥬",
+      "items": [
+        { "name": "Ullipayalu (Onions)", "quantity": "2 kg", "cost": "₹60" },
+        { "name": "Tomatoes", "quantity": "1 kg", "cost": "₹40" }
+      ]
+    },
+    {
+      "category": "Rice & Grains",
+      "emoji": "🍚",
+      "items": []
+    },
+    {
+      "category": "Lentils & Dal",
+      "emoji": "🫘",
+      "items": []
+    },
+    {
+      "category": "Spices & Masalas",
+      "emoji": "🌶️",
+      "items": []
+    },
+    {
+      "category": "Dairy & Eggs",
+      "emoji": "🥛",
+      "items": []
+    },
+    {
+      "category": "Meat & Fish",
+      "emoji": "🍗",
+      "items": []
+    },
+    {
+      "category": "Oils & Condiments",
+      "emoji": "🫒",
+      "items": []
+    }
+  ],
+  "estimated_total": "₹2,500",
+  "smart_tips": [
+    "Add palakura (spinach) — your family's iron intake was low this week",
+    "Stock up on pesalu (moong dal) — great for quick pesarattu breakfasts"
+  ]
+}`;
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_API_KEY!,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          messages: [{ role: 'user', content: groceryPrompt }],
+        }),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Claude API error:', response.status, errText);
+        throw new Error(`Claude API error: ${response.status}`);
+      }
+      const data = await response.json();
+      const textContent = data.content.find((c: any) => c.type === 'text');
+      if (!textContent?.text) throw new Error('No text in Claude response');
+      let jsonText = textContent.text.trim();
+      if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+      }
+      const parsed = JSON.parse(jsonText);
+      return new Response(JSON.stringify(parsed), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
 
     // Text-only analysis
     if (type === 'text') {

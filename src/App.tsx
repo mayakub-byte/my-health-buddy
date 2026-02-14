@@ -23,6 +23,7 @@ import PhotoConfirmation from './pages/PhotoConfirmation';
 import PortionSelection from './pages/PortionSelection';
 import AnalysisLoading from './pages/AnalysisLoading';
 import Weekly from './pages/Weekly';
+import GroceryList from './pages/GroceryList';
 import Settings from './pages/Settings';
 
 // Components
@@ -106,6 +107,7 @@ function App() {
             <Route path="/family" element={<Family />} />
             <Route path="/history" element={<MealHistory />} />
             <Route path="/weekly" element={<Weekly />} />
+            <Route path="/grocery" element={<GroceryList />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -135,6 +137,7 @@ function App() {
           <Route path="/family" element={<Family />} />
           <Route path="/history" element={<MealHistory />} />
           <Route path="/weekly" element={<Weekly />} />
+            <Route path="/grocery" element={<GroceryList />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/login" element={<Navigate to="/dashboard" replace />} />
           <Route path="/signup" element={<Navigate to="/dashboard" replace />} />
