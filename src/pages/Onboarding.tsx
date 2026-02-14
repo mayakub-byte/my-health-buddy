@@ -169,7 +169,13 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             toggleHealthCondition={toggleHealthCondition}
           />
         )}
-        {step === 'ready' && <StepReady familyName={familyName} memberCount={members.length} />}
+        {step === 'ready' && (
+          <StepReady
+            familyName={familyName}
+            members={members}
+            onEditFamily={() => setStep('members')}
+          />
+        )}
       </div>
 
       {/* Fixed bottom action — no bottom nav on onboarding */}
@@ -406,12 +412,24 @@ function StepHealth({
 }
 
 // Step 4: Ready
+const ROLE_LABELS: Record<string, string> = {
+  father: 'Father',
+  mother: 'Mother',
+  son: 'Son',
+  daughter: 'Daughter',
+  grandfather: 'Grandfather',
+  grandmother: 'Grandmother',
+  other: 'Member',
+};
+
 function StepReady({
   familyName,
-  memberCount,
+  members,
+  onEditFamily,
 }: {
   familyName: string;
-  memberCount: number;
+  members: Partial<FamilyMember>[];
+  onEditFamily: () => void;
 }) {
   return (
     <div className="text-center py-8">
@@ -423,7 +441,7 @@ function StepReady({
         You're all set! 🎉
       </h1>
       <p className="text-neutral-500 mb-6">
-        {familyName} with {memberCount} member{memberCount > 1 ? 's' : ''} is ready
+        {familyName} with {members.length} member{members.length !== 1 ? 's' : ''} is ready
       </p>
 
       <div className="bg-primary-50 rounded-xl p-4 text-left">
@@ -434,6 +452,51 @@ function StepReady({
           <li>💯 Get personalized health scores</li>
           <li>💡 Small suggestions to improve</li>
         </ul>
+      </div>
+
+      {/* Family Members Added */}
+      <div className="mt-6 p-4 bg-[#FDFBF7] rounded-2xl border border-gray-100 text-left">
+        <p className="text-sm font-semibold text-gray-700 mb-3">👨‍👩‍👧‍👦 Your Family</p>
+        <div className="space-y-2">
+          {members.map((m, i) => {
+            const age = m.dob
+              ? Math.floor((new Date().getTime() - new Date(m.dob).getTime()) / 31557600000)
+              : null;
+            const relationshipLabel = m.role ? ROLE_LABELS[m.role] || m.role : 'Member';
+            const healthLabel =
+              (m.health_conditions?.length ?? 0) > 0 && m.health_conditions?.[0] !== 'none'
+                ? (m.health_conditions ?? [])
+                    .map((c) => HEALTH_CONDITIONS.find((h) => h.value === c)?.label ?? c)
+                    .join(', ')
+                : '';
+            return (
+              <div
+                key={i}
+                className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">😊</span>
+                  <div>
+                    <p className="text-sm font-medium text-gray-800">{m.name}</p>
+                    <p className="text-xs text-gray-500">
+                      {relationshipLabel}
+                      {age != null ? ` • ${age} yrs` : ''}
+                      {healthLabel ? ` • ${healthLabel}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <span className="text-emerald-500 text-sm">✓</span>
+              </div>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={onEditFamily}
+          className="w-full mt-3 py-2 text-sm text-[#5C6B4A] font-medium"
+        >
+          ✏️ Edit Family
+        </button>
       </div>
     </div>
   );
