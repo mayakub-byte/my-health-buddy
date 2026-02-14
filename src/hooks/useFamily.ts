@@ -99,22 +99,39 @@ export function useFamily() {
         .select()
         .single();
 
-      if (familyError) throw familyError;
+      if (familyError) {
+        console.error('SAVE ERROR (createFamily - families table):', JSON.stringify(familyError, null, 2));
+        throw familyError;
+      }
 
-      // Create family members
-      const membersToInsert = familyMembers.map((member, index) => ({
-        ...member,
-        family_id: newFamily.id,
-        is_primary: index === 0,
-        avatar_color: getAvatarColor(index),
-      }));
+      // Create family members - build clean insert objects with exact column names
+      const membersToInsert = familyMembers.map((member, index) => {
+        const row: Record<string, unknown> = {
+          family_id: newFamily.id,
+          name: member.name || '',
+          is_primary: index === 0,
+          avatar_color: getAvatarColor(index),
+          health_conditions: member.health_conditions ?? [],
+          dietary_preferences: member.dietary_preferences ?? [],
+        };
+        if (member.dob != null) row.dob = member.dob;
+        if (member.age_group != null) row.age_group = member.age_group;
+        if (member.age != null) row.age = member.age;
+        if (member.role != null) row.role = member.role;
+        return row;
+      });
 
       const { data: newMembers, error: membersError } = await supabase
         .from('family_members')
         .insert(membersToInsert)
         .select();
 
-      if (membersError) throw membersError;
+      if (membersError) {
+        console.error('SAVE ERROR (createFamily members):', JSON.stringify(membersError, null, 2));
+        console.error('PAYLOAD:', JSON.stringify(membersToInsert, null, 2));
+        console.error('FAMILY ID:', newFamily.id);
+        throw membersError;
+      }
 
       // Save to state and localStorage
       setFamily(newFamily);
@@ -133,20 +150,36 @@ export function useFamily() {
 
   // Add family member
   const addMember = async (member: Partial<FamilyMember>): Promise<FamilyMember | null> => {
-    if (!family) return null;
+    if (!family) {
+      console.error('FAMILY ID: null - family was not created properly');
+      return null;
+    }
 
     try {
+      const row: Record<string, unknown> = {
+        family_id: family.id,
+        name: member.name || '',
+        avatar_color: getAvatarColor(members.length),
+        health_conditions: member.health_conditions ?? [],
+        dietary_preferences: member.dietary_preferences ?? [],
+      };
+      if (member.dob != null) row.dob = member.dob;
+      if (member.age_group != null) row.age_group = member.age_group;
+      if (member.age != null) row.age = member.age;
+      if (member.role != null) row.role = member.role;
+
       const { data, error } = await supabase
         .from('family_members')
-        .insert({
-          ...member,
-          family_id: family.id,
-          avatar_color: getAvatarColor(members.length),
-        })
+        .insert(row)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('SAVE ERROR (addMember):', JSON.stringify(error, null, 2));
+        console.error('PAYLOAD:', JSON.stringify(row, null, 2));
+        console.error('FAMILY ID:', family.id);
+        throw error;
+      }
       
       setMembers([...members, data]);
       return data;
