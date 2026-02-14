@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { path: '/settings', icon: Settings, label: 'Settings' },
 ];
 
-const hideOnRoutes = ['/onboarding', '/setup', '/login', '/signup', '/'];
+const hideOnRoutes = ['/', '/login', '/signup', '/onboarding', '/setup'];
 
 export default function BottomNav() {
   const location = useLocation();

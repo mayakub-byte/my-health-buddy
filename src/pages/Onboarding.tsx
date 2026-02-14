@@ -15,15 +15,27 @@ interface OnboardingProps {
 
 type OnboardingStep = 'family' | 'members' | 'health' | 'ready';
 
+// Match /setup page: Diabetes, Hypertension, Cholesterol, Thyroid, Weight Management, None
 const HEALTH_CONDITIONS: { value: HealthCondition; label: string }[] = [
   { value: 'diabetes', label: 'Diabetes' },
-  { value: 'pre_diabetic', label: 'Pre-diabetic' },
-  { value: 'bp', label: 'High Blood Pressure' },
-  { value: 'cholesterol', label: 'High Cholesterol' },
-  { value: 'weight_management', label: 'Weight Management' },
+  { value: 'bp', label: 'Hypertension' },
+  { value: 'cholesterol', label: 'Cholesterol' },
   { value: 'thyroid', label: 'Thyroid' },
-  { value: 'none', label: 'None of the above' },
+  { value: 'weight_management', label: 'Weight Management' },
+  { value: 'none', label: 'None' },
 ];
+
+function getAgeGroup(dob: string | null | undefined): 'toddler' | 'child' | 'teen' | 'adult' | 'senior' {
+  if (!dob) return 'adult';
+  const today = new Date();
+  const birth = new Date(dob);
+  const age = Math.floor((today.getTime() - birth.getTime()) / 31557600000);
+  if (age < 3) return 'toddler';
+  if (age < 13) return 'child';
+  if (age < 18) return 'teen';
+  if (age < 60) return 'adult';
+  return 'senior';
+}
 
 const ROLE_OPTIONS = [
   { value: 'father', label: 'Father' },
@@ -42,14 +54,14 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState<OnboardingStep>('family');
   const [familyName, setFamilyName] = useState('');
   const [members, setMembers] = useState<Partial<FamilyMember>[]>([
-    { name: '', age: undefined, gender: undefined, role: undefined, health_conditions: [] },
+    { name: '', dob: undefined, gender: undefined, role: undefined, health_conditions: [] },
   ]);
 
   const addMember = () => {
     if (members.length < 6) {
       setMembers([
         ...members,
-        { name: '', age: undefined, gender: undefined, role: undefined, health_conditions: [] },
+        { name: '', dob: undefined, gender: undefined, role: undefined, health_conditions: [] },
       ]);
     }
   };
@@ -79,7 +91,14 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
   };
 
   const handleComplete = async () => {
-    const family = await createFamily(familyName, members);
+    const payload = members.map((member) => ({
+      name: member.name,
+      dob: member.dob,
+      age_group: getAgeGroup(member.dob),
+      role: member.role ?? undefined,
+      health_conditions: member.health_conditions ?? [],
+    }));
+    const family = await createFamily(familyName, payload);
     if (family) {
       onComplete();
       navigate('/home');
@@ -131,8 +150,8 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
         </div>
       </div>
 
-      {/* Content — pb-24 so it doesn't sit under the fixed bottom button */}
-      <div className="flex-1 px-6 pb-24 overflow-y-auto">
+      {/* Content — pb-28 so it doesn't sit under the fixed bottom button */}
+      <div className="flex-1 px-6 pb-28 overflow-y-auto">
         {step === 'family' && (
           <StepFamily familyName={familyName} setFamilyName={setFamilyName} />
         )}
@@ -154,13 +173,13 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       </div>
 
       {/* Fixed bottom action — no bottom nav on onboarding */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#F4F1EA] max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#F4F1EA] border-t border-gray-200 max-w-md mx-auto">
         {step === 'ready' ? (
           <button
             type="button"
             onClick={handleComplete}
             disabled={loading}
-            className="w-full py-3.5 bg-[#5C6B4A] text-white rounded-full font-medium"
+            className="w-full py-3.5 bg-[#5C6B4A] text-white rounded-full font-medium text-base"
           >
             {loading ? 'Setting up...' : 'Start Tracking Meals'}
             <ArrowRight className="w-5 h-5 inline ml-2 align-middle" />
@@ -170,10 +189,9 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
             type="button"
             onClick={nextStep}
             disabled={!canProceed()}
-            className="w-full py-3.5 bg-[#5C6B4A] text-white rounded-full font-medium"
+            className="w-full py-3.5 bg-[#5C6B4A] text-white rounded-full font-medium text-base"
           >
-            Continue
-            <ArrowRight className="w-5 h-5 inline ml-2 align-middle" />
+            Continue →
           </button>
         )}
       </div>
@@ -289,17 +307,13 @@ function StepMembers({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="label">Age</label>
+                  <label className="text-sm font-medium text-gray-700">Date of Birth</label>
                   <input
-                    type="number"
-                    value={member.age || ''}
-                    onChange={(e) =>
-                      updateMember(index, { age: parseInt(e.target.value) || undefined })
-                    }
-                    placeholder="Age"
-                    className="input-field"
-                    min="1"
-                    max="120"
+                    type="date"
+                    value={member.dob || ''}
+                    onChange={(e) => updateMember(index, { dob: e.target.value || undefined })}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-[#FDFBF7] focus:border-[#5C6B4A] focus:ring-1 focus:ring-[#5C6B4A] mt-1"
+                    max={new Date().toISOString().split('T')[0]}
                   />
                 </div>
                 <div>
