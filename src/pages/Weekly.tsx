@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import PageHeader from '../components/PageHeader';
 
 interface MealRecord {
   id: string;
@@ -288,8 +289,7 @@ export default function Weekly() {
   return (
     <div className="min-h-screen bg-beige pb-24 max-w-md mx-auto w-full">
       <header className="px-4 pt-6 pb-2">
-        <h1 className="font-heading text-xl font-bold text-olive-800">Weekly Snapshot</h1>
-        <p className="text-neutral-600 text-sm mt-0.5">Your week at a glance</p>
+        <PageHeader title="This Week" subtitle="Weekly nutrition snapshot" />
       </header>
 
       {/* SECTION 1: Week Navigation */}

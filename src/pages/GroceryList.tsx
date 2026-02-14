@@ -4,9 +4,9 @@
 // ============================================
 
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import PageHeader from '../components/PageHeader';
 import { useFamily } from '../hooks/useFamily';
 
 interface GroceryItem {
@@ -30,7 +30,6 @@ interface GroceryData {
 type GroceryError = 'no_meals' | 'failed' | null;
 
 export default function GroceryList() {
-  const navigate = useNavigate();
   const { members } = useFamily();
   const [groceryData, setGroceryData] = useState<GroceryData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -174,21 +173,11 @@ export default function GroceryList() {
       className="min-h-screen pb-24 max-w-md mx-auto w-full"
       style={{ backgroundColor: '#F4F1EA' }}
     >
-      <header className="flex items-center gap-3 px-4 pt-6 pb-4">
-        <button
-          type="button"
-          onClick={() => navigate(-1)}
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
-          aria-label="Back"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <div>
-          <h1 className="font-serif text-xl font-bold text-olive-800">
-            🛒 Smart Grocery List
-          </h1>
-          <p className="text-sm text-neutral-500">Based on your meals this week</p>
-        </div>
+      <header className="px-4 pt-6 pb-4">
+        <PageHeader
+          title="🛒 Smart Grocery List"
+          subtitle="Based on your meals this week"
+        />
       </header>
 
       <main className="px-4">

@@ -5,8 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import PageHeader from '../components/PageHeader';
 import { useFamily } from '../hooks/useFamily';
 
 export type HistoryFilter = 'all' | 'today' | 'week' | 'month';
@@ -258,15 +258,8 @@ export default function MealHistory() {
 
   return (
     <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
-      <header className="flex items-center gap-3 px-5 pt-6 pb-4">
-        <Link
-          to="/dashboard"
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
-          aria-label="Back to dashboard"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Link>
-        <h1 className="font-serif text-xl font-bold text-olive-800">Meal History</h1>
+      <header className="px-5 pt-6 pb-4">
+        <PageHeader title="Meal History" subtitle="Your family's meal log" />
       </header>
 
       {/* Week / Month navigation (shown when Week or Month filter + grid) */}

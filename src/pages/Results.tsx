@@ -5,7 +5,8 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Share2, Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import { Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
+import PageHeader from '../components/PageHeader';
 import { useFamily } from '../hooks/useFamily';
 import { supabase } from '../lib/supabase';
 import type { Meal, MealScore, FamilyMember } from '../types';
@@ -248,15 +249,7 @@ export default function Results() {
     <div className="min-h-screen pb-24" style={{ backgroundColor: '#F4F1EA' }}>
       {/* Header */}
       <div className="bg-[#FDFBF7] px-6 py-4 border-b border-neutral-100 sticky top-0 z-10">
-        <div className="flex items-center justify-between">
-          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2" aria-label="Go back">
-            <ArrowLeft className="w-6 h-6 text-neutral-600" />
-          </button>
-          <h1 className="text-lg font-semibold text-neutral-800">Meal Analysis</h1>
-          <button type="button" className="p-2 -mr-2" aria-label="Share">
-            <Share2 className="w-5 h-5 text-neutral-600" />
-          </button>
-        </div>
+        <PageHeader title="Family Mealtime" subtitle="Here's how your meal stacks up" />
       </div>
 
       <div className="px-6 py-6 space-y-6">
