@@ -1,6 +1,6 @@
 // ============================================
 // MY HEALTH BUDDY - Weekly Snapshot
-// Real data from meal_history for current week
+// Real data from meal_history with analytics
 // ============================================
 
 import { useState, useEffect } from 'react';
@@ -9,23 +9,54 @@ import { supabase } from '../lib/supabase';
 
 interface MealRecord {
   id: string;
+  user_id: string;
+  family_member_id: string | null;
   food_name: string;
+  image_url: string | null;
   calories: number | null;
   macros: { carbs?: number; protein?: number; fat?: number } | null;
   health_score: number | null;
+  guidance: string | null;
+  portion_size: string | null;
   created_at: string;
 }
 
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+// Derive traffic_light from health_score (API may not store it yet)
+function getTrafficLight(score: number | null): 'green' | 'yellow' | 'red' {
+  if (score == null) return 'yellow';
+  if (score >= 70) return 'green';
+  if (score >= 40) return 'yellow';
+  return 'red';
+}
+
+const TARGET_MEALS_PER_WEEK = 21; // 3 meals × 7 days
 
 export default function Weekly() {
   const navigate = useNavigate();
   const [meals, setMeals] = useState<MealRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay() + weekOffset * 7);
+  weekStart.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  const weekRangeLabel = `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
 
   useEffect(() => {
     loadWeeklyMeals();
-  }, []);
+  }, [weekOffset]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2500);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const loadWeeklyMeals = async () => {
     try {
@@ -35,23 +66,13 @@ export default function Weekly() {
         return;
       }
 
-      // Get current week start (Sunday) and end (Saturday)
-      const now = new Date();
-      const dayOfWeek = now.getDay();
-      const weekStart = new Date(now);
-      weekStart.setDate(now.getDate() - dayOfWeek);
-      weekStart.setHours(0, 0, 0, 0);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekStart.getDate() + 6);
-      weekEnd.setHours(23, 59, 59, 999);
-
       const { data, error } = await supabase
         .from('meal_history')
         .select('*')
         .eq('user_id', user.id)
         .gte('created_at', weekStart.toISOString())
-        .lte('created_at', weekEnd.toISOString())
-        .order('created_at', { ascending: false });
+        .lt('created_at', weekEnd.toISOString())
+        .order('created_at', { ascending: true });
 
       if (error) throw error;
       setMeals((data as MealRecord[]) || []);
@@ -63,26 +84,41 @@ export default function Weekly() {
     }
   };
 
-  // Group meals by day
+  // Group meals by day and order Sun–Sat
   const mealsByDay: Record<string, MealRecord[]> = {};
+  const orderedDays: string[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(weekStart);
+    d.setDate(weekStart.getDate() + i);
+    const dayKey = d.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    mealsByDay[dayKey] = [];
+    orderedDays.push(dayKey);
+  }
   meals.forEach((meal) => {
-    const date = new Date(meal.created_at);
-    const dayName = DAYS[date.getDay()];
-    if (!mealsByDay[dayName]) mealsByDay[dayName] = [];
-    mealsByDay[dayName].push(meal);
+    const day = new Date(meal.created_at).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+    if (!mealsByDay[day]) mealsByDay[day] = [];
+    mealsByDay[day].push(meal);
   });
 
-  // Calculate analytics
+  // Analytics
   const totalMeals = meals.length;
+  const greenCount = meals.filter((m) => getTrafficLight(m.health_score) === 'green').length;
+  const yellowCount = meals.filter((m) => getTrafficLight(m.health_score) === 'yellow').length;
+  const redCount = meals.filter((m) => getTrafficLight(m.health_score) === 'red').length;
+
+  const familyScore = totalMeals > 0
+    ? Math.round(((greenCount * 10 + yellowCount * 6 + redCount * 2) / (totalMeals * 10)) * 100)
+    : 0;
+
   const avgCalories = totalMeals > 0
     ? Math.round(meals.reduce((sum, m) => sum + (m.calories || 0), 0) / totalMeals)
     : 0;
-  
+
   const dishCounts: Record<string, number> = {};
   meals.forEach((m) => {
     dishCounts[m.food_name] = (dishCounts[m.food_name] || 0) + 1;
   });
-  const mostCommonDish = Object.entries(dishCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+  const topDish = Object.entries(dishCounts).sort((a, b) => b[1] - a[1])[0];
 
   const totalMacros = meals.reduce(
     (acc, m) => {
@@ -95,126 +131,201 @@ export default function Weekly() {
     },
     { carbs: 0, protein: 0, fat: 0 }
   );
+
   const avgMacros = totalMeals > 0
     ? {
-        carbs: Math.round(totalMacros.carbs / totalMeals),
-        protein: Math.round(totalMacros.protein / totalMeals),
-        fat: Math.round(totalMacros.fat / totalMeals),
+        carbs: totalMacros.carbs / totalMeals,
+        protein: totalMacros.protein / totalMeals,
+        fat: totalMacros.fat / totalMeals,
       }
     : { carbs: 0, protein: 0, fat: 0 };
 
-  // Daily calories for chart
-  const dailyCalories: Record<string, number> = {};
-  meals.forEach((m) => {
-    const date = new Date(m.created_at);
-    const dayKey = DAYS[date.getDay()];
-    dailyCalories[dayKey] = (dailyCalories[dayKey] || 0) + (m.calories || 0);
-  });
-  const maxCalories = Math.max(...Object.values(dailyCalories), 1);
+  const totalGrams = avgMacros.carbs + avgMacros.protein + avgMacros.fat;
+  const carbsPct = totalGrams > 0 ? Math.round((avgMacros.carbs / totalGrams) * 100) : 33;
+  const proteinPct = totalGrams > 0 ? Math.round((avgMacros.protein / totalGrams) * 100) : 33;
+  const fatPct = Math.max(0, 100 - carbsPct - proteinPct);
+
+  const scoreColor = familyScore >= 70 ? 'emerald' : familyScore >= 40 ? 'amber' : 'red';
+  const mealsProgress = Math.min(100, (totalMeals / TARGET_MEALS_PER_WEEK) * 100);
 
   return (
-    <div className="min-h-screen bg-beige pb-20 max-w-md mx-auto w-full">
-      <header className="p-5">
+    <div className="min-h-screen bg-beige pb-24 max-w-md mx-auto w-full">
+      <header className="px-4 pt-6 pb-2">
         <h1 className="font-heading text-xl font-bold text-olive-800">Weekly Snapshot</h1>
         <p className="text-neutral-600 text-sm mt-0.5">Your week at a glance</p>
       </header>
-      <main className="p-5">
-        {loading ? (
-          <div className="py-12 flex flex-col items-center">
-            <div className="w-10 h-10 border-2 border-olive-500 border-t-transparent rounded-full animate-spin" />
-            <p className="text-neutral-500 text-sm mt-3">Loading…</p>
-          </div>
-        ) : (
-          <>
-            {/* Weekly meal list */}
-            <section className="card p-5 mb-4">
-              <h2 className="font-heading font-semibold text-olive-800 mb-3">This Week&apos;s Meals</h2>
-              {totalMeals === 0 ? (
-                <p className="text-neutral-500 text-sm text-center py-4">No meals logged this week yet.</p>
-              ) : (
-                <div className="space-y-3">
-                  {DAYS.map((day) => {
-                    const dayMeals = mealsByDay[day] || [];
-                    if (dayMeals.length === 0) return null;
-                    return (
-                      <div key={day} className="border-b border-beige-200 pb-2 last:border-0">
-                        <p className="font-semibold text-olive-800 text-sm mb-1">{day}</p>
-                        <ul className="space-y-1">
-                          {dayMeals.map((meal) => (
-                            <li key={meal.id} className="text-sm text-neutral-700 flex items-center gap-2">
-                              <span className="w-1.5 h-1.5 rounded-full bg-olive-500" />
-                              {meal.food_name}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
 
-            {/* General Analytics */}
-            <section className="card p-5 mb-4">
-              <h2 className="font-heading font-semibold text-olive-800 mb-3">General Analytics</h2>
-              <ul className="space-y-2 text-sm text-neutral-700">
-                <li className="flex justify-between">
-                  <span>Total meals logged:</span>
-                  <span className="font-semibold text-olive-800">{totalMeals}</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Average calories per meal:</span>
-                  <span className="font-semibold text-olive-800">{avgCalories} kcal</span>
-                </li>
-                <li className="flex justify-between">
-                  <span>Most common dish:</span>
-                  <span className="font-semibold text-olive-800">{mostCommonDish}</span>
-                </li>
-                <li className="pt-2 border-t border-beige-200">
-                  <span className="block mb-1">Average macros:</span>
-                  <div className="flex gap-3 text-xs">
-                    <span>Carbs: {avgMacros.carbs}g</span>
-                    <span>Protein: {avgMacros.protein}g</span>
-                    <span>Fat: {avgMacros.fat}g</span>
-                  </div>
-                </li>
-              </ul>
-            </section>
-
-            {/* Daily Calorie Chart */}
-            {totalMeals > 0 && (
-              <section className="card p-5 mb-4">
-                <h2 className="font-heading font-semibold text-olive-800 mb-3">Daily Calorie Intake</h2>
-                <div className="space-y-2">
-                  {DAYS.map((day) => {
-                    const calories = dailyCalories[day] || 0;
-                    const percentage = maxCalories > 0 ? (calories / maxCalories) * 100 : 0;
-                    return (
-                      <div key={day} className="flex items-center gap-3">
-                        <span className="text-xs text-neutral-600 w-16 flex-shrink-0">{day.slice(0, 3)}</span>
-                        <div className="flex-1 h-6 bg-beige-200 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-olive-500 rounded-full transition-all"
-                            style={{ width: `${percentage}%` }}
-                          />
-                        </div>
-                        <span className="text-xs font-medium text-neutral-700 w-12 text-right">{calories || '—'}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
-          </>
-        )}
-
+      {/* SECTION 1: Week Navigation */}
+      <section className="px-4 py-3 flex items-center justify-between">
         <button
-          onClick={() => navigate('/dashboard')}
-          className="mt-4 text-olive-600 font-medium hover:text-olive-700"
+          type="button"
+          onClick={() => setWeekOffset((o) => o - 1)}
+          className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-olive-600 hover:bg-olive-50 border border-beige-300 transition-colors"
+          aria-label="Previous week"
         >
-          Back to Home
+          ←
         </button>
-      </main>
+        <div className="text-center">
+          <p className="font-heading font-semibold text-olive-800 text-sm">This Week</p>
+          <p className="text-neutral-600 text-xs mt-0.5">{weekRangeLabel}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setWeekOffset((o) => o + 1)}
+          className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center text-olive-600 hover:bg-olive-50 border border-beige-300 transition-colors"
+          aria-label="Next week"
+        >
+          →
+        </button>
+      </section>
+
+      {loading ? (
+        /* Loading skeletons */
+        <main className="px-4 py-4 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-beige-50 rounded-2xl p-4 h-24 animate-pulse" />
+            ))}
+          </div>
+          <div className="bg-beige-50 rounded-2xl p-4 h-48 animate-pulse" />
+          <div className="bg-beige-50 rounded-2xl p-4 h-32 animate-pulse" />
+        </main>
+      ) : totalMeals === 0 ? (
+        /* Empty state */
+        <main className="px-4 py-8 flex flex-col items-center justify-center text-center">
+          <div className="text-5xl mb-4" aria-hidden>🍽️</div>
+          <p className="font-heading text-lg font-semibold text-olive-800 mb-2">No meals tracked this week yet</p>
+          <p className="text-neutral-600 text-sm mb-6">Start scanning to see your family&apos;s nutrition progress!</p>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="w-full max-w-xs py-3.5 rounded-full btn-primary font-semibold"
+          >
+            Scan Your First Meal
+          </button>
+        </main>
+      ) : (
+        <main className="px-4 py-4 space-y-6">
+          {/* SECTION 2: Daily Meal Grid */}
+          <section className="card rounded-2xl shadow-sm p-4 bg-beige-50">
+            <h2 className="font-heading font-semibold text-olive-800 mb-3">Daily Meals</h2>
+            <div className="space-y-3">
+              {orderedDays.map((day) => {
+                const dayMeals = mealsByDay[day] || [];
+                return (
+                  <div key={day} className="flex items-start gap-3 py-2 border-b border-beige-200 last:border-0">
+                    <div className="w-14 flex-shrink-0">
+                      <p className="text-sm font-semibold text-olive-800">{day}</p>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {dayMeals.length === 0 ? (
+                        <p className="text-sm text-neutral-400 italic">— No meals logged —</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-x-2 gap-y-1">
+                          {dayMeals.map((meal) => {
+                            const light = getTrafficLight(meal.health_score);
+                            const dot = light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : '🔴';
+                            const cals = meal.calories ?? 0;
+                            return (
+                              <span key={meal.id} className="text-sm text-neutral-700">
+                                {dot} {meal.food_name} ({cals} cal)
+                                {dayMeals.indexOf(meal) < dayMeals.length - 1 ? ' • ' : ''}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* SECTION 3: Weekly Analytics Cards */}
+          <section className="grid grid-cols-2 gap-3">
+            <div className="card rounded-2xl shadow-sm p-4 bg-beige-50">
+              <p className="text-xs font-medium text-neutral-500 mb-1">Family Score</p>
+              <div className="flex items-center gap-2">
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold text-white ${
+                    scoreColor === 'emerald' ? 'bg-emerald-500' : scoreColor === 'amber' ? 'bg-amber-400' : 'bg-red-500'
+                  }`}
+                >
+                  {familyScore}
+                </div>
+                <span className="text-2xl font-bold text-olive-800">{familyScore}%</span>
+              </div>
+            </div>
+            <div className="card rounded-2xl shadow-sm p-4 bg-beige-50">
+              <p className="text-xs font-medium text-neutral-500 mb-1">Meals Tracked</p>
+              <p className="text-2xl font-bold text-olive-800">
+                {totalMeals} of {TARGET_MEALS_PER_WEEK}
+              </p>
+              <div className="mt-2 h-1.5 bg-beige-200 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-olive-500 rounded-full transition-all"
+                  style={{ width: `${mealsProgress}%` }}
+                />
+              </div>
+            </div>
+            <div className="card rounded-2xl shadow-sm p-4 bg-beige-50">
+              <p className="text-xs font-medium text-neutral-500 mb-1">Avg Calories</p>
+              <p className="text-2xl font-bold text-olive-800">{avgCalories} cal/meal</p>
+            </div>
+            <div className="card rounded-2xl shadow-sm p-4 bg-beige-50">
+              <p className="text-xs font-medium text-neutral-500 mb-1">Top Dish</p>
+              <p className="text-sm font-semibold text-olive-800">
+                {topDish ? `${topDish[0]} — ${topDish[1]}×` : '—'}
+              </p>
+            </div>
+          </section>
+
+          {/* SECTION 4: Macro Breakdown */}
+          <section className="card rounded-2xl shadow-sm p-4 bg-beige-50">
+            <h2 className="font-heading font-semibold text-olive-800 mb-3">Avg Macro Breakdown</h2>
+            <div className="space-y-2">
+              <div className="flex h-6 rounded-full overflow-hidden bg-beige-200">
+                <div style={{ width: `${carbsPct}%` }} className="bg-amber-400" />
+                <div style={{ width: `${proteinPct}%` }} className="bg-emerald-500" />
+                <div style={{ width: `${fatPct}%` }} className="bg-rose-400" />
+              </div>
+              <div className="flex justify-between text-xs text-neutral-500">
+                <span>Carbs {carbsPct}%</span>
+                <span>Protein {proteinPct}%</span>
+                <span>Fat {fatPct}%</span>
+              </div>
+            </div>
+          </section>
+
+          {/* SECTION 5: Action Buttons */}
+          <section className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={() => setToast('Coming next week!')}
+              className="w-full py-3.5 rounded-full btn-primary font-semibold"
+            >
+              Generate Grocery List
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              className="w-full py-3.5 rounded-full border-2 border-olive-500 text-olive-600 font-semibold hover:bg-olive-50 transition-colors"
+            >
+              Scan a Meal
+            </button>
+          </section>
+        </main>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div
+          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg z-50"
+          role="status"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
