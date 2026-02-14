@@ -10,47 +10,45 @@ import { supabase } from '../lib/supabase';
 
 const APP_VERSION = '1.0.0';
 
-type Language = 'telugu' | 'english' | 'hindi';
-type Units = 'metric' | 'imperial';
-type DietaryPreference = 'veg_only' | 'veg_egg' | 'all';
-
-const LANGUAGE_OPTIONS: { value: Language; label: string }[] = [
-  { value: 'english', label: 'English' },
-  { value: 'telugu', label: 'Telugu' },
-  { value: 'hindi', label: 'Hindi' },
+const FAQS = [
+  {
+    q: 'How does meal scanning work?',
+    a: 'Take a photo of your meal or describe it by typing or speaking. Our AI analyzes the nutritional content and gives personalized guidance for each family member based on their health needs.',
+  },
+  {
+    q: 'How are traffic light scores calculated?',
+    a: '🟢 Green = Balanced meal within healthy range.\n🟡 Yellow = Good but one area needs attention.\n🔴 Red = Multiple nutritional concerns to address.',
+  },
+  {
+    q: 'Can I edit my family members?',
+    a: 'Yes! Go to Settings → Edit Family to add, remove, or update family member details including health conditions.',
+  },
+  {
+    q: 'What is the Smart Grocery List?',
+    a: 'Based on your weekly meals, our AI generates a grocery shopping list with Telugu ingredients, quantities, and estimated costs. You can share it on WhatsApp!',
+  },
+  {
+    q: 'Is my data private?',
+    a: 'Yes. Your meal data is stored securely and only visible to you. We never share your health information with anyone.',
+  },
+  {
+    q: 'Who built this?',
+    a: 'My Health Buddy (Arogya) is built by AIGF Cohort 5, Group 3 — a team passionate about making family nutrition accessible for Indian families.',
+  },
 ];
-
-const STORAGE_KEYS = {
-  language: 'mhb_language',
-  notifications: 'mhb_notifications',
-  units: 'mhb_units',
-  dietary: 'mhb_dietary',
-} as const;
 
 export default function Settings() {
   const navigate = useNavigate();
   const [user, setUser] = useState<{ email?: string; name?: string; avatarUrl?: string } | null>(null);
-  const [language, setLanguage] = useState<Language>(() =>
-    (localStorage.getItem(STORAGE_KEYS.language) as Language) || 'english'
-  );
-  const [notifications, setNotifications] = useState(() =>
-    localStorage.getItem(STORAGE_KEYS.notifications) !== 'false'
-  );
-  const [units, setUnits] = useState<Units>(() =>
-    (localStorage.getItem(STORAGE_KEYS.units) as Units) || 'metric'
-  );
-  const [dietary, setDietary] = useState<DietaryPreference>(() =>
-    (localStorage.getItem(STORAGE_KEYS.dietary) as DietaryPreference) || 'all'
-  );
+  const [showPrefs, setShowPrefs] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [showPreferences, setShowPreferences] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 2500);
-    return () => clearTimeout(t);
-  }, [toast]);
+  const [dietPref, setDietPref] = useState(() => localStorage.getItem('mhb_diet_pref') || 'all');
+  const [reminderOn, setReminderOn] = useState(() => localStorage.getItem('mhb_reminders') === 'true');
+  const [weeklyReportOn, setWeeklyReportOn] = useState(
+    () => localStorage.getItem('mhb_weekly_report') === 'true'
+  );
+  const [units, setUnits] = useState(() => localStorage.getItem('mhb_units') || 'metric');
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -65,22 +63,6 @@ export default function Settings() {
     };
     loadUser();
   }, []);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.language, language);
-  }, [language]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.notifications, String(notifications));
-  }, [notifications]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.units, units);
-  }, [units]);
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.dietary, dietary);
-  }, [dietary]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -113,12 +95,118 @@ export default function Settings() {
           </Link>
           <button
             type="button"
-            onClick={() => setShowPreferences(!showPreferences)}
+            onClick={() => setShowPrefs(!showPrefs)}
             className="w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
           >
             Preferences
-            {showPreferences ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {showPrefs ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
+
+          {showPrefs && (
+            <div className="space-y-5 p-4 bg-[#FDFBF7] rounded-xl mt-2 mb-3">
+              {/* Dietary Preference */}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">Dietary Preference</p>
+                <div className="flex gap-2">
+                  {[
+                    { key: 'veg', label: '🥬 Veg Only' },
+                    { key: 'egg', label: '🥚 Veg + Egg' },
+                    { key: 'all', label: '🍗 All' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => {
+                        setDietPref(opt.key);
+                        localStorage.setItem('mhb_diet_pref', opt.key);
+                      }}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition ${
+                        dietPref === opt.key
+                          ? 'bg-[#5C6B4A] text-white shadow-sm'
+                          : 'bg-white border border-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Meal Reminders Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Meal Reminders</p>
+                  <p className="text-xs text-gray-500">Get notified to log meals</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newVal = !reminderOn;
+                    setReminderOn(newVal);
+                    localStorage.setItem('mhb_reminders', String(newVal));
+                  }}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${reminderOn ? 'bg-[#5C6B4A]' : 'bg-gray-300'}`}
+                >
+                  <div
+                    className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200 ${reminderOn ? 'left-6' : 'left-1'}`}
+                  />
+                </button>
+              </div>
+
+              {/* Weekly Report Toggle */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Weekly Report</p>
+                  <p className="text-xs text-gray-500">Get weekly nutrition summary</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newVal = !weeklyReportOn;
+                    setWeeklyReportOn(newVal);
+                    localStorage.setItem('mhb_weekly_report', String(newVal));
+                  }}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${
+                    weeklyReportOn ? 'bg-[#5C6B4A]' : 'bg-gray-300'
+                  }`}
+                >
+                  <div
+                    className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200 ${
+                      weeklyReportOn ? 'left-6' : 'left-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Measurement Units */}
+              <div>
+                <p className="text-sm font-medium text-gray-700 mb-2">Measurements</p>
+                <div className="flex gap-2">
+                  {[
+                    { key: 'metric', label: 'Metric (kg, g)' },
+                    { key: 'imperial', label: 'Imperial (lb, oz)' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => {
+                        setUnits(opt.key);
+                        localStorage.setItem('mhb_units', opt.key);
+                      }}
+                      className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition ${
+                        units === opt.key
+                          ? 'bg-[#5C6B4A] text-white shadow-sm'
+                          : 'bg-white border border-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <button
             type="button"
             onClick={() => setShowHelp(!showHelp)}
@@ -127,69 +215,38 @@ export default function Settings() {
             Help
             {showHelp ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
-        </div>
 
-        {/* Preferences Section */}
-        {showPreferences && (
-          <section className="mt-4 card p-4">
-            <h3 className="font-heading font-semibold text-olive-800 mb-3">Dietary Preference</h3>
-            <div className="space-y-2">
-              {[
-                { value: 'veg_only' as DietaryPreference, label: 'Vegetarian Only' },
-                { value: 'veg_egg' as DietaryPreference, label: 'Vegetarian + Egg' },
-                { value: 'all' as DietaryPreference, label: 'All Foods' },
-              ].map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => setDietary(opt.value)}
-                  className={`w-full px-4 py-2.5 rounded-full text-sm font-medium text-left transition-colors ${
-                    dietary === opt.value
-                      ? 'bg-olive-500 text-white'
-                      : 'bg-beige-100 text-neutral-600 hover:bg-beige-200'
-                  }`}
+          {showHelp && (
+            <div className="space-y-2 mt-2 mb-3">
+              {FAQS.map((faq, i) => (
+                <div
+                  key={i}
+                  className="bg-[#FDFBF7] rounded-xl overflow-hidden border border-gray-100"
                 >
-                  {opt.label}
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between p-3.5 text-left"
+                  >
+                    <span className="text-sm font-medium text-gray-700 flex-1 pr-2">{faq.q}</span>
+                    <span
+                      className={`text-gray-400 text-xs inline-block transition-transform duration-200 ${openFaq === i ? 'rotate-90' : ''}`}
+                    >
+                      ▶
+                    </span>
+                  </button>
+                  {openFaq === i && (
+                    <div className="px-3.5 pb-3.5">
+                      <p className="text-sm text-gray-600 whitespace-pre-line">{faq.a}</p>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
-          </section>
-        )}
+          )}
+        </div>
 
-        {/* Help Section */}
-        {showHelp && (
-          <section className="mt-4 card p-4">
-            <h3 className="font-heading font-semibold text-olive-800 mb-3">Frequently Asked Questions</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-semibold text-neutral-800 text-sm mb-1">How does meal scanning work?</h4>
-                <p className="text-xs text-neutral-600">
-                  Take a photo of your meal or describe it in text. Our AI analyzes the food items and provides personalized nutrition guidance for each family member based on their health conditions.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-neutral-800 text-sm mb-1">How are health scores calculated?</h4>
-                <p className="text-xs text-neutral-600">
-                  Health scores consider nutritional balance, portion size, and how well the meal aligns with each family member&apos;s specific health needs (diabetes, BP, cholesterol, etc.).
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-neutral-800 text-sm mb-1">Can I edit my family members?</h4>
-                <p className="text-xs text-neutral-600">
-                  Yes! Go to Settings &gt; Edit family to add, remove, or update family member details and health conditions.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-semibold text-neutral-800 text-sm mb-1">Who built this?</h4>
-                <p className="text-xs text-neutral-600">
-                  My Health Buddy by AIGF Cohort 5, Group 3
-                </p>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* Profile (optional, compact) */}
+        {/* Profile */}
         <section className="mt-6 card px-4 py-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-olive-100 flex items-center justify-center text-lg font-bold text-olive-700 flex-shrink-0">
@@ -210,56 +267,6 @@ export default function Settings() {
           </div>
         </section>
 
-        {/* Preferences (optional expand) */}
-        <section className="mt-4 card p-4">
-          <p className="text-sm font-medium text-olive-800 mb-2">Language</p>
-          <div className="flex gap-2 flex-wrap">
-            {LANGUAGE_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setLanguage(opt.value)}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                  language === opt.value ? 'bg-olive-500 text-white' : 'bg-beige-100 text-neutral-600 hover:bg-beige-200'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-beige-200">
-            <span className="text-neutral-800">Notifications</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={notifications}
-              onClick={() => setNotifications((v) => !v)}
-              className={`relative w-11 h-6 rounded-full transition-colors ${notifications ? 'bg-olive-500' : 'bg-beige-300'}`}
-            >
-              <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${notifications ? 'translate-x-5' : 'translate-x-0'}`} />
-            </button>
-          </div>
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-beige-200">
-            <span className="text-neutral-800">Units</span>
-            <div className="flex rounded-full border border-beige-300 p-0.5">
-              <button
-                type="button"
-                onClick={() => setUnits('metric')}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium ${units === 'metric' ? 'bg-olive-500 text-white' : 'text-neutral-600'}`}
-              >
-                Metric
-              </button>
-              <button
-                type="button"
-                onClick={() => setUnits('imperial')}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium ${units === 'imperial' ? 'bg-olive-500 text-white' : 'text-neutral-600'}`}
-              >
-                Imperial
-              </button>
-            </div>
-          </div>
-        </section>
-
         <div className="mt-6">
           <button
             type="button"
@@ -270,17 +277,11 @@ export default function Settings() {
           </button>
         </div>
 
-        <p className="text-center text-neutral-500 text-sm py-6">App version {APP_VERSION}</p>
-      </main>
-
-      {toast && (
-        <div
-          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg z-50"
-          role="status"
-        >
-          {toast}
+        <div className="text-center py-6 mt-4">
+          <p className="text-xs text-gray-400">Arogya — My Health Buddy</p>
+          <p className="text-xs text-gray-300">v{APP_VERSION} • AIGF Cohort 5, Group 3</p>
         </div>
-      )}
+      </main>
     </div>
   );
 }
