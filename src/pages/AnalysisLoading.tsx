@@ -143,7 +143,13 @@ export default function AnalysisLoading() {
         const finalAnalysis = analysisResultRef.current;
         if (finalAnalysis) {
           clearInterval(interval);
-          navigate('/results/analysis', {
+          // Navigate to meal correction first (so user can verify detected items)
+          // MealCorrection will then route to portion-confirm or results
+          const hasDishes = finalAnalysis.dishes && finalAnalysis.dishes.length > 0;
+          const nextRoute = hasDishes ? '/meal-correction' : (
+            (state.selectedMembers && state.selectedMembers.length > 1) ? '/portion-confirm' : '/results/analysis'
+          );
+          navigate(nextRoute, {
             state: {
               imageFile: state.imageFile,
               imagePreview: state.imagePreview ?? imagePreview,

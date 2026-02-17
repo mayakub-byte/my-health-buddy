@@ -27,6 +27,9 @@ import PhotoConfirmation from './pages/PhotoConfirmation';
 import PortionSelection from './pages/PortionSelection';
 import AnalysisLoading from './pages/AnalysisLoading';
 import Weekly from './pages/Weekly';
+import MonthlyOverview from './pages/MonthlyOverview';
+import PortionConfirmation from './pages/PortionConfirmation';
+import MealCorrection from './pages/MealCorrection';
 import ProgressScreen from './pages/ProgressScreen';
 import ProfileScreen from './pages/ProfileScreen';
 import GroceryList from './pages/GroceryList';
@@ -111,6 +114,8 @@ function App() {
             <Route path="/scan/confirm" element={<PhotoConfirmation />} />
             <Route path="/scan/portion" element={<PortionSelection />} />
             <Route path="/scan/loading" element={<AnalysisLoading />} />
+            <Route path="/portion-confirm" element={<PortionConfirmation />} />
+            <Route path="/meal-correction" element={<MealCorrection />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/results" element={<FamilyGuidanceResult />} />
             <Route path="/results/analysis" element={<FamilyGuidanceResult />} />
@@ -118,6 +123,7 @@ function App() {
             <Route path="/family" element={<Family />} />
             <Route path="/history" element={<MealHistory />} />
             <Route path="/weekly" element={<Weekly />} />
+            <Route path="/monthly" element={<MonthlyOverview />} />
             <Route path="/progress" element={<ProgressScreen />} />
             <Route path="/profile" element={<ProfileScreen />} />
             <Route path="/grocery" element={<GroceryList />} />
@@ -146,6 +152,8 @@ function App() {
           <Route path="/scan/confirm" element={<PhotoConfirmation />} />
           <Route path="/scan/portion" element={<PortionSelection />} />
           <Route path="/scan/loading" element={<AnalysisLoading />} />
+          <Route path="/portion-confirm" element={<PortionConfirmation />} />
+            <Route path="/meal-correction" element={<MealCorrection />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/results" element={<FamilyGuidanceResult />} />
           <Route path="/results/analysis" element={<FamilyGuidanceResult />} />
@@ -153,6 +161,7 @@ function App() {
           <Route path="/family" element={<Family />} />
           <Route path="/history" element={<MealHistory />} />
           <Route path="/weekly" element={<Weekly />} />
+          <Route path="/monthly" element={<MonthlyOverview />} />
           <Route path="/progress" element={<ProgressScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/grocery" element={<GroceryList />} />

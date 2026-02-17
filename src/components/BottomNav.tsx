@@ -19,7 +19,7 @@ export default function BottomNav() {
   const navigate = useNavigate();
 
   if (hideOnRoutes.includes(location.pathname)) return null;
-  if (location.pathname.startsWith('/results') || location.pathname.startsWith('/scan')) {
+  if (location.pathname.startsWith('/results') || location.pathname.startsWith('/scan') || location.pathname.startsWith('/meal-correction') || location.pathname.startsWith('/portion-confirm')) {
     return null;
   }
 
