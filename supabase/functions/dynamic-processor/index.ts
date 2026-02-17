@@ -8,6 +8,50 @@ const corsHeaders = {
 
 const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY');
 
+const JSON_SYSTEM_PROMPT = 'You are a food recognition API. Respond with ONLY valid JSON. No text before or after the JSON object. No markdown backticks. No explanation. No commentary. Just the raw JSON object starting with { and ending with }.';
+
+// Robust JSON extraction — handles text before/after JSON, markdown fences, etc.
+function extractJSON(raw: string): any {
+  let text = raw.trim();
+
+  // 1. Strip markdown code fences if present
+  if (text.startsWith('```')) {
+    text = text.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+  }
+
+  // 2. Try direct parse first
+  try {
+    return JSON.parse(text);
+  } catch (_) {
+    // continue to fallback strategies
+  }
+
+  // 3. Extract JSON using regex — find the outermost { ... }
+  const match = text.match(/\{[\s\S]*\}/);
+  if (match) {
+    try {
+      return JSON.parse(match[0]);
+    } catch (_) {
+      // continue
+    }
+  }
+
+  // 4. Strip everything before first '{' and after last '}'
+  const firstBrace = text.indexOf('{');
+  const lastBrace = text.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    const sliced = text.substring(firstBrace, lastBrace + 1);
+    try {
+      return JSON.parse(sliced);
+    } catch (_) {
+      // continue
+    }
+  }
+
+  // 5. All strategies failed
+  throw new Error(`Failed to extract JSON from Claude response. Raw start: "${text.substring(0, 100)}..."`);
+}
+
 const FOOD_RECOGNITION_PROMPT = `You are a world-class food recognition AI and a culturally-aware Telugu family nutrition companion.
 
 YOUR PRIMARY JOB: Identify EXACTLY what food is in this image with high accuracy.
@@ -381,6 +425,7 @@ Respond ONLY with this JSON (no other text, no markdown):
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 2000,
+          system: JSON_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: groceryPrompt }],
         }),
       });
@@ -392,11 +437,7 @@ Respond ONLY with this JSON (no other text, no markdown):
       const data = await response.json();
       const textContent = data.content.find((c: any) => c.type === 'text');
       if (!textContent?.text) throw new Error('No text in Claude response');
-      let jsonText = textContent.text.trim();
-      if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
-      }
-      const parsed = JSON.parse(jsonText);
+      const parsed = extractJSON(textContent.text);
       return new Response(JSON.stringify(parsed), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -427,6 +468,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
           temperature: 0,
+          system: JSON_SYSTEM_PROMPT,
           messages: [{
             role: 'user',
             content: textPrompt
@@ -443,12 +485,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
       const data = await response.json();
       const textContent = data.content.find((c: any) => c.type === 'text');
       if (!textContent?.text) throw new Error('No text in Claude response');
-      let jsonText = textContent.text.trim();
-      // Remove markdown code fences if present
-      if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
-      }
-      const parsed = JSON.parse(jsonText);
+      const parsed = extractJSON(textContent.text);
 
       return new Response(JSON.stringify(parsed), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -489,6 +526,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
           temperature: 0,
+          system: JSON_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: messageContent }]
         })
       });
@@ -500,11 +538,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
       const data = await response.json();
       const textContent = data.content.find((c: any) => c.type === 'text');
       if (!textContent?.text) throw new Error('No text in Claude response');
-      let jsonText = textContent.text.trim();
-      if (jsonText.startsWith('```')) {
-        jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
-      }
-      const parsed = JSON.parse(jsonText);
+      const parsed = extractJSON(textContent.text);
       return new Response(JSON.stringify(parsed), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -528,6 +562,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
         temperature: 0,
+        system: JSON_SYSTEM_PROMPT,
         messages: [{
           role: 'user',
           content: [
@@ -550,12 +585,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
     const data = await response.json();
     const textContent = data.content.find((c: any) => c.type === 'text');
     if (!textContent?.text) throw new Error('No text in Claude response');
-    let jsonText = textContent.text.trim();
-    // Remove markdown code fences if present
-    if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
-    }
-    const parsed = JSON.parse(jsonText);
+    const parsed = extractJSON(textContent.text);
 
     return new Response(JSON.stringify(parsed), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
