@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import { analyzeMealImage, analyzeMealText, imageFileToBase64, blobUrlToBase64 } from '../lib/analyze-meal-api';
+import type { MemberProfile } from '../lib/analyze-meal-api';
 import type { MealAnalysisResponse } from '../types/meal-analysis';
 import type { PhotoConfirmState } from './PhotoConfirmation';
 import type { PortionSize } from './PortionSelection';
@@ -18,6 +19,7 @@ export interface AnalysisLoadingState extends PhotoConfirmState {
   portionSize?: PortionSize;
   servings?: number;
   mealType?: 'text' | 'photo';
+  voiceContext?: string;
 }
 
 export default function AnalysisLoading() {
@@ -79,13 +81,30 @@ export default function AnalysisLoading() {
     let cancelled = false;
     (async () => {
       try {
+        // Build member profiles for personalized AI analysis
+        const selectedIds = state.selectedMembers ?? (state.selectedMemberId ? [state.selectedMemberId] : []);
+        const profiles: MemberProfile[] = members
+          .filter((m) => selectedIds.includes(m.id))
+          .map((m) => {
+            const age = m.dob
+              ? Math.floor((new Date().getTime() - new Date(m.dob).getTime()) / 31557600000)
+              : (m.age ?? 30);
+            return {
+              name: m.name,
+              age,
+              conditions: (m.health_conditions || []).filter((c) => c !== 'none'),
+              relationship: m.relationship ?? undefined,
+            };
+          });
+        const voiceCtx = state.voiceContext ?? '';
+
         if (isTextOnly) {
           // Text-only analysis
           const mealDescription = state.manualText?.trim() || '';
           const portionSize = state.portionSize || 'medium';
           if (!mealDescription) return;
-          
-          const result = await analyzeMealText(mealDescription, portionSize);
+
+          const result = await analyzeMealText(mealDescription, portionSize, profiles, voiceCtx);
           if (!cancelled) {
             analysisResultRef.current = result;
             setAnalysisResult(result);
@@ -112,7 +131,7 @@ export default function AnalysisLoading() {
             return;
           }
           if (cancelled || !base64) return;
-          const result = await analyzeMealImage(base64, mediaType);
+          const result = await analyzeMealImage(base64, mediaType, profiles, voiceCtx);
           if (!cancelled) {
             analysisResultRef.current = result;
             setAnalysisResult(result);

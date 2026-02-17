@@ -387,6 +387,31 @@ export default function Settings() {
           >
             Edit family
           </Link>
+
+          {/* Ask Nutritionist — MHP Link */}
+          <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #2d6a4f 0%, #40916c 100%)' }}>
+            <div className="p-4">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl" role="img" aria-hidden>👨‍⚕️</span>
+                <div>
+                  <h3 className="text-white font-semibold text-base m-0">Talk to a Nutritionist</h3>
+                  <p className="text-white/80 text-xs mt-0.5">
+                    Get 1-on-1 expert consultation from My Health Passport
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://www.myhealthpassport.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block mt-3 py-2.5 px-4 bg-white rounded-lg text-center font-semibold text-sm no-underline"
+                style={{ color: '#2d6a4f' }}
+              >
+                Ask a Nutritionist →
+              </a>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={() => setShowPrefs(!showPrefs)}

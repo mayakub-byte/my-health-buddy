@@ -115,12 +115,56 @@ CRITICAL RULES:
    🟡 Yellow: Acceptable but one area needs attention
    🔴 Red: Multiple nutritional concerns
 
-6. per_member_guidance: Only include guidance types relevant to the 
+6. per_member_guidance: Only include guidance types relevant to the
    detected meal. Always include "general_adult" and "child".
    Include condition-specific ones only when relevant.
 
 7. before_cooking_tips: Frame as things to do WHILE cooking, not after.
-   These should be implementable RIGHT NOW.`;
+   These should be implementable RIGHT NOW.
+
+8. If FAMILY_MEMBER_PROFILES are provided below, ALSO return a "family_member_scores"
+   array with a SEPARATE entry per named member. Each member gets their OWN score and
+   suggestion based on their age and health conditions. A diabetic elder eating rice
+   should score MUCH LOWER than a growing child eating the same meal.`;
+
+function buildMemberBlock(memberProfiles: any[]): string {
+  if (!memberProfiles || memberProfiles.length === 0) return '';
+  const lines = memberProfiles.map((m: any) => {
+    const conditions = Array.isArray(m.conditions) ? m.conditions.filter((c: string) => c !== 'none').join(', ') : 'none';
+    return `- ${m.name} (age ${m.age}, relationship: ${m.relationship || 'family'}, health: ${conditions || 'none'})`;
+  }).join('\n');
+  return `
+
+FAMILY MEMBER PROFILES EATING THIS MEAL:
+${lines}
+
+CRITICAL: In addition to per_member_guidance, return a "family_member_scores" array:
+[
+  {
+    "name": "Member Name",
+    "score": 75,
+    "traffic_light": "green",
+    "tip": "Personalized tip for THIS specific member based on their age and conditions",
+    "avoid": "What this member should avoid or null",
+    "reason": "Why this score for this member"
+  }
+]
+RULES for family_member_scores:
+- A diabetic person eating rice/biryani scores 30-45 (RED). A healthy child eating the same meal scores 70-85 (GREEN).
+- Someone with hypertension eating pickles/papad gets a WARNING and lower score.
+- Growing children (age <18) generally score HIGHER on carb-heavy meals.
+- Seniors (age >60) with conditions get LOWER scores than healthy adults.
+- Each member MUST get a DIFFERENT score and DIFFERENT tip specific to their condition.
+- NEVER give the same score to members with different health profiles.`;
+}
+
+function buildVoiceBlock(voiceContext: string): string {
+  if (!voiceContext || voiceContext.trim() === '') return '';
+  return `
+
+USER VOICE CONTEXT: "${voiceContext.trim()}"
+The user has provided additional context about this meal. Use this to correct any AI misidentification and adjust the analysis accordingly. For example, if the user says "this is sourdough bread, not regular bread" — trust the user's correction.`;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -133,7 +177,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { type, image_base64, media_type, mealDescription, portion, mealNames, memberCount } = body;
+    const { type, image_base64, media_type, mealDescription, portion, mealNames, memberCount, memberProfiles, voiceContext } = body;
 
     // Grocery list generation
     if (type === 'grocery') {
@@ -236,7 +280,7 @@ Respond ONLY with this JSON (no other text, no markdown):
         throw new Error('No meal description provided');
       }
 
-      const textPrompt = `${FOOD_RECOGNITION_PROMPT}
+      const textPrompt = `${FOOD_RECOGNITION_PROMPT}${buildMemberBlock(memberProfiles)}${buildVoiceBlock(voiceContext)}
 
 IMPORTANT: Analyze this meal based on the TEXT DESCRIPTION only (no image):
 Meal description: "${mealDescription}"
@@ -287,6 +331,8 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
       throw new Error('No image provided');
     }
 
+    const fullImagePrompt = `${FOOD_RECOGNITION_PROMPT}${buildMemberBlock(memberProfiles)}${buildVoiceBlock(voiceContext)}`;
+
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -304,7 +350,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
               type: 'image',
               source: { type: 'base64', media_type: media_type || 'image/jpeg', data: image_base64 }
             },
-            { type: 'text', text: FOOD_RECOGNITION_PROMPT }
+            { type: 'text', text: fullImagePrompt }
           ]
         }]
       })

@@ -59,12 +59,13 @@ export default function Landing() {
         >
           Start your first scan &rarr;
         </Link>
-        <p className="text-center text-sm" style={{ color: '#6B7B5E' }}>
-          Already have an account?{' '}
-          <Link to="/login" className="font-semibold underline" style={{ color: '#5C6B4A' }}>
-            Welcome back
-          </Link>
-        </p>
+        <Link
+          to="/login"
+          className="w-full flex items-center justify-center py-3 rounded-full text-base font-medium transition-colors"
+          style={{ border: '1.5px solid #5C6B4A', color: '#5C6B4A' }}
+        >
+          Already have an account? Log in
+        </Link>
       </footer>
     </div>
   );

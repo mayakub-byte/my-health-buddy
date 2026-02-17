@@ -408,8 +408,71 @@ export default function FamilyGuidanceResult() {
           </section>
         )}
 
-        {/* SECTION 3: For Your Family */}
-        {perMemberGuidance && members.length > 0 && (
+        {/* SECTION 3: For Your Family — Per-Member Personalized Scores */}
+        {claude?.family_member_scores && claude.family_member_scores.length > 0 && (
+          <section className="mb-5">
+            <h3 className="font-heading font-semibold text-olive-800 mb-3">For Your Family</h3>
+            <div className="space-y-3">
+              {claude.family_member_scores.map((ms, idx) => {
+                const matchedMember = members.find((m) => m.name.toLowerCase() === ms.name.toLowerCase());
+                const lightColors: Record<string, { bg: string; border: string; badge: string; label: string }> = {
+                  green: { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', label: 'Great!' },
+                  yellow: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', label: 'Watch' },
+                  red: { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', label: 'Careful' },
+                };
+                const lightKey = (ms.traffic_light || 'green') as 'green' | 'yellow' | 'red';
+                const colors = lightColors[lightKey] || lightColors.green;
+                const ageGroupLabel = matchedMember?.age_group ? matchedMember.age_group.charAt(0).toUpperCase() + matchedMember.age_group.slice(1) : '';
+                const conditionsLabel = matchedMember?.health_conditions?.filter((c) => c !== 'none').join(', ') || '';
+                return (
+                  <div key={idx} className={`p-4 rounded-2xl ${colors.bg} ${colors.border} border-2`}>
+                    {/* Header: Avatar + Name + Score + Badge */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-12 h-12 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center flex-shrink-0`}>
+                        <span className="text-lg font-bold" style={{ color: ms.score >= 70 ? '#10B981' : ms.score >= 40 ? '#F59E0B' : '#EF4444' }}>
+                          {ms.score}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-neutral-800">{ms.name}</p>
+                        <p className="text-xs text-neutral-500">
+                          {[ageGroupLabel, conditionsLabel].filter(Boolean).join(' • ')}
+                        </p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors.badge}`}>
+                        {ms.score}/100
+                      </span>
+                    </div>
+                    {/* Reason */}
+                    {ms.reason && (
+                      <p className="text-xs text-neutral-500 italic mb-2">{ms.reason}</p>
+                    )}
+                    {/* Tip */}
+                    {ms.tip && (
+                      <div className="flex gap-2 mb-2">
+                        <span className="text-sm flex-shrink-0">💡</span>
+                        <p className="text-sm text-neutral-700 font-serif">{ms.tip}</p>
+                      </div>
+                    )}
+                    {/* Avoid warning */}
+                    {ms.avoid && (
+                      <div className="flex gap-2 mt-2 p-2 bg-red-50 rounded-lg">
+                        <span className="text-sm flex-shrink-0">⚠️</span>
+                        <p className="text-sm text-red-700">{ms.avoid}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-center font-serif italic text-[#5C6B4A] mt-4 mb-6">
+              Every meal strengthens our bond 💚
+            </p>
+          </section>
+        )}
+
+        {/* Fallback: Generic per_member_guidance (when no family_member_scores) */}
+        {!claude?.family_member_scores?.length && perMemberGuidance && members.length > 0 && (
           <section className="mb-5">
             <h3 className="font-heading font-semibold text-olive-800 mb-3">For Your Family</h3>
             <div className="space-y-3">
@@ -430,7 +493,6 @@ export default function FamilyGuidanceResult() {
                 const conditionsLabel = member.health_conditions?.length ? member.health_conditions.join(', ') : '';
                 return (
                   <div key={member.id} className={`p-4 rounded-2xl ${colors.bg} ${colors.border} border-2`}>
-                    {/* Header: Avatar + Name + Badge */}
                     <div className="flex items-center gap-3 mb-3">
                       <div className={`w-12 h-12 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center text-xl font-bold text-neutral-700 flex-shrink-0`}>
                         {(member as { avatar?: string }).avatar ?? member.name?.charAt(0)?.toUpperCase() ?? '😊'}
@@ -445,14 +507,12 @@ export default function FamilyGuidanceResult() {
                         {colors.label}
                       </span>
                     </div>
-                    {/* Tip */}
                     {memberGuidance.tip && (
                       <div className="flex gap-2 mb-2">
                         <span className="text-sm flex-shrink-0">💡</span>
                         <p className="text-sm text-neutral-700 font-serif">{memberGuidance.tip}</p>
                       </div>
                     )}
-                    {/* Avoid warning */}
                     {memberGuidance.avoid && (
                       <div className="flex gap-2 mt-2 p-2 bg-red-50 rounded-lg">
                         <span className="text-sm flex-shrink-0">⚠️</span>
@@ -576,6 +636,17 @@ export default function FamilyGuidanceResult() {
             Scan Another Meal
           </Link>
         </div>
+
+        {/* MHP Nutritionist Quick Link */}
+        <a
+          href="https://www.myhealthpassport.in/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-center mt-4 mb-2 py-2.5 text-sm transition-opacity hover:opacity-100"
+          style={{ color: '#2d6a4f', opacity: 0.8 }}
+        >
+          <span role="img" aria-hidden>👨‍⚕️</span> Want personalized guidance? Talk to a nutritionist
+        </a>
       </main>
 
       {/* Toast */}

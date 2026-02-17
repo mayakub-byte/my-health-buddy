@@ -6,12 +6,24 @@ const PageHeader = ({ title, subtitle }: { title: string; subtitle?: string }) =
   const isHome =
     location.pathname === '/dashboard' || location.pathname === '/home';
 
+  // Determine safe back behavior — avoid going back to loading/scan flow
+  const handleBack = () => {
+    const dangerousPaths = ['/scan/', '/meal-correction', '/portion-confirm', '/results'];
+    const fromScanFlow = dangerousPaths.some((p) => location.pathname.startsWith(p));
+    if (fromScanFlow) {
+      // After a scan flow, always go home instead of back into loading screens
+      navigate('/dashboard', { replace: true });
+    } else {
+      navigate(-1);
+    }
+  };
+
   return (
     <div className="flex items-center gap-3 mb-4">
       {!isHome && (
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           aria-label="Go back"
           className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FDFBF7] border border-gray-100 flex-shrink-0"
         >
@@ -26,7 +38,7 @@ const PageHeader = ({ title, subtitle }: { title: string; subtitle?: string }) =
       {!isHome && (
         <button
           type="button"
-          onClick={() => navigate('/home')}
+          onClick={() => navigate('/dashboard')}
           aria-label="Go to home"
           className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FDFBF7] border border-gray-100 flex-shrink-0"
         >

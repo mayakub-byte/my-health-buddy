@@ -34,6 +34,16 @@ export interface MealAnalysisResponse {
   is_telugu_meal?: boolean;
   ayurvedic_note?: string;
 
+  // Per-member personalized scores (when member profiles are provided)
+  family_member_scores?: Array<{
+    name: string;
+    score: number;
+    traffic_light: string;
+    tip: string;
+    avoid: string | null;
+    reason: string;
+  }>;
+
   // Legacy format fields (for backward compatibility)
   food_name?: string;
   food_items?: { name: string; quantity: string }[];

@@ -145,6 +145,7 @@ export default function MealInput() {
   const [showMealModal, setShowMealModal] = useState(false);
   const [selectedTab, setSelectedTab] = useState<MealTime>(getCurrentMealTime());
   const [isListening, setIsListening] = useState(false);
+  const [voiceContext, setVoiceContext] = useState('');
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
 
@@ -225,6 +226,7 @@ export default function MealInput() {
           selectedMemberId: selectedMembers[0] ?? undefined,
           mealType: 'text' as const,
           mealTime,
+          voiceContext: voiceContext || undefined,
         },
       });
       return;
@@ -241,6 +243,7 @@ export default function MealInput() {
           selectedMemberId: selectedMembers[0] ?? undefined,
           mealType: 'photo' as const,
           mealTime,
+          voiceContext: voiceContext || undefined,
         },
       });
     }
@@ -487,6 +490,63 @@ export default function MealInput() {
           </div>
         )}
 
+        {/* Voice Context — optional clarification for AI */}
+        {(imagePreview || manualText.trim()) && (
+          <div className="mt-3 p-3 rounded-xl border border-dashed" style={{ borderColor: '#52b788', backgroundColor: '#f0f7f4' }}>
+            <p className="text-xs mb-2" style={{ color: '#2d6a4f' }}>
+              <span role="img" aria-hidden>🎤</span> Add context? (e.g. &quot;This is sourdough, not regular bread&quot; or &quot;Extra ghee added&quot;)
+            </p>
+            <div className="flex gap-2 items-start">
+              <input
+                type="text"
+                value={voiceContext}
+                onChange={(e) => setVoiceContext(e.target.value)}
+                placeholder="Tap to describe what AI might miss..."
+                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"
+                style={{ color: '#2D3319' }}
+              />
+              {(window.SpeechRecognition || window.webkitSpeechRecognition) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (isListening) {
+                      stopVoice();
+                    } else {
+                      // Use voice recognition for context
+                      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                      const recognition = new SpeechRecognition();
+                      recognition.lang = 'en-IN';
+                      recognition.interimResults = false;
+                      recognition.continuous = false;
+                      recognition.onresult = (event: SpeechRecognitionEvent) => {
+                        const transcript = event.results[0]?.[0]?.transcript || '';
+                        setVoiceContext((prev) => prev ? `${prev} ${transcript}` : transcript);
+                      };
+                      recognition.onerror = () => setIsListening(false);
+                      recognition.onend = () => setIsListening(false);
+                      recognition.start();
+                      setIsListening(true);
+                      setTimeout(() => { try { recognition.stop(); } catch {} }, 15000);
+                    }
+                  }}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    isListening ? 'bg-red-500 animate-pulse' : ''
+                  }`}
+                  style={!isListening ? { backgroundColor: '#52b788' } : {}}
+                  aria-label="Voice input for context"
+                >
+                  <Mic className="w-4 h-4 text-white" />
+                </button>
+              )}
+            </div>
+            {voiceContext && (
+              <p className="mt-2 text-xs italic" style={{ color: '#666' }}>
+                <span role="img" aria-hidden>📝</span> &quot;{voiceContext}&quot;
+              </p>
+            )}
+          </div>
+        )}
+
         <button
           onClick={handleAnalyze}
           disabled={!canAnalyze}
@@ -495,18 +555,60 @@ export default function MealInput() {
           LOG MEAL
         </button>
 
-        {/* Today's stats banner */}
-        <div className="mt-4 p-3 bg-beige-50 rounded-xl border border-beige-200">
-          <div className="flex justify-between items-center">
-            <span className="text-sm text-neutral-500">Today so far</span>
-            {filteredTodayMeals.length > 0 ? (
-              <span className="text-sm font-semibold text-olive-800">
-                {filteredTodayMeals.length} meal{filteredTodayMeals.length !== 1 ? 's' : ''} • {totalCalories} cal
+        {/* Today's stats card */}
+        <div className="mt-4 p-4 rounded-2xl border border-beige-200" style={{ backgroundColor: '#FDFBF7' }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-neutral-600">Today so far</span>
+            {filteredTodayMeals.length > 0 && (
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#f0f5eb', color: '#5C6B4A' }}>
+                {filteredTodayMeals.length} meal{filteredTodayMeals.length !== 1 ? 's' : ''}
               </span>
-            ) : (
-              <span className="text-sm text-neutral-500">No meals logged yet today ☀️</span>
             )}
           </div>
+          {filteredTodayMeals.length > 0 ? (
+            <div className="flex items-center gap-4">
+              <div className="text-center flex-1">
+                <p className="text-2xl font-bold" style={{ color: '#2D3319' }}>{totalCalories}</p>
+                <p className="text-xs text-neutral-500">calories</p>
+              </div>
+              <div className="w-px h-10 bg-beige-300" />
+              <div className="text-center flex-1">
+                <p className="text-2xl font-bold" style={{ color: '#5C6B4A' }}>
+                  {filteredTodayMeals.length < 3 ? '🟡' : '🟢'}
+                </p>
+                <p className="text-xs text-neutral-500">
+                  {filteredTodayMeals.length < 2 ? 'Log more meals' : filteredTodayMeals.length < 3 ? 'Almost there!' : 'On track!'}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-2">
+              <p className="text-sm text-neutral-500">No meals logged yet today</p>
+              <p className="text-xs mt-1" style={{ color: '#8B9E6B' }}>📸 Snap your first meal to get started!</p>
+            </div>
+          )}
+        </div>
+
+        {/* Quick Links: History + Weekly */}
+        <div className="mt-3 flex gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/history')}
+            className="flex-1 p-3 rounded-xl border border-beige-200 flex items-center gap-2 hover:bg-beige-100 transition-colors"
+            style={{ backgroundColor: '#FDFBF7' }}
+          >
+            <span className="text-lg" role="img" aria-hidden>📋</span>
+            <span className="text-xs font-medium text-neutral-700">View History</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/weekly')}
+            className="flex-1 p-3 rounded-xl border border-beige-200 flex items-center gap-2 hover:bg-beige-100 transition-colors"
+            style={{ backgroundColor: '#FDFBF7' }}
+          >
+            <span className="text-lg" role="img" aria-hidden>📊</span>
+            <span className="text-xs font-medium text-neutral-700">Weekly Progress</span>
+          </button>
         </div>
 
         {/* Last meal shortcut */}

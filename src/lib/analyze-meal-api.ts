@@ -7,9 +7,18 @@ import type { MealAnalysisResponse } from '../types/meal-analysis';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+export interface MemberProfile {
+  name: string;
+  age: number;
+  conditions: string[];
+  relationship?: string;
+}
+
 export async function analyzeMealImage(
   imageBase64: string,
-  mediaType: string = 'image/jpeg'
+  mediaType: string = 'image/jpeg',
+  memberProfiles?: MemberProfile[],
+  voiceContext?: string,
 ): Promise<MealAnalysisResponse> {
   const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
   const res = await fetch(url, {
@@ -18,7 +27,13 @@ export async function analyzeMealImage(
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ type: 'image', image_base64: imageBase64, media_type: mediaType }),
+    body: JSON.stringify({
+      type: 'image',
+      image_base64: imageBase64,
+      media_type: mediaType,
+      memberProfiles: memberProfiles ?? [],
+      voiceContext: voiceContext ?? '',
+    }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
@@ -29,7 +44,9 @@ export async function analyzeMealImage(
 
 export async function analyzeMealText(
   mealDescription: string,
-  portionSize: 'small' | 'medium' | 'large' = 'medium'
+  portionSize: 'small' | 'medium' | 'large' = 'medium',
+  memberProfiles?: MemberProfile[],
+  voiceContext?: string,
 ): Promise<MealAnalysisResponse> {
   const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
   const res = await fetch(url, {
@@ -38,7 +55,13 @@ export async function analyzeMealText(
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify({ type: 'text', mealDescription, portion: portionSize }),
+    body: JSON.stringify({
+      type: 'text',
+      mealDescription,
+      portion: portionSize,
+      memberProfiles: memberProfiles ?? [],
+      voiceContext: voiceContext ?? '',
+    }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));

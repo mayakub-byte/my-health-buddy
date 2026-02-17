@@ -14,6 +14,7 @@ export interface PhotoConfirmState {
   selectedMemberId?: string;
   selectedMembers?: string[];
   mealTime?: 'breakfast' | 'lunch' | 'snack' | 'dinner';
+  voiceContext?: string;
 }
 
 export default function PhotoConfirmation() {
