@@ -21,7 +21,6 @@ function getWeekKey(): string {
 interface GroceryItem {
   name: string;
   quantity: string;
-  cost: string;
 }
 
 interface GroceryCategory {
@@ -32,7 +31,6 @@ interface GroceryCategory {
 
 interface GroceryData {
   grocery_list: GroceryCategory[];
-  estimated_total: string;
   smart_tips: string[];
 }
 
@@ -46,6 +44,7 @@ export default function GroceryList() {
   const [groceryData, setGroceryData] = useState<GroceryData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<GroceryError>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
   const [checkedItems, setCheckedItems] = useState<string[]>(() => {
     try {
       const raw = sessionStorage.getItem(`${GROCERY_CHECKED_KEY}_${getWeekKey()}`);
@@ -117,40 +116,72 @@ export default function GroceryList() {
     }
   }, [groceryData?.grocery_list, totalItems, allSelected, persistChecked]);
 
+  const buildFallbackGroceryList = useCallback((mealNames: string[]): GroceryData => {
+    return {
+      grocery_list: [
+        {
+          category: 'Ingredients for your meals',
+          emoji: '🛒',
+          items: mealNames.map((name) => ({
+            name,
+            quantity: 'As needed',
+          })),
+        },
+      ],
+      smart_tips: [
+        'AI grocery suggestions are temporarily unavailable. This is a basic list from your meal names.',
+        'Try again later for AI-powered quantities and Telugu ingredient suggestions.',
+      ],
+    };
+  }, []);
+
   const fetchGroceryList = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setErrorDetail(null);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
+        const msg = 'Not signed in';
+        console.warn('GroceryList:', msg);
         setError('failed');
+        setErrorDetail(msg);
         setLoading(false);
         return;
       }
 
-      const weekStart = new Date();
-      weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-      weekStart.setHours(0, 0, 0, 0);
+      // Use last 14 days (not "this week") so we include meals logged recently
+      const rangeStart = new Date();
+      rangeStart.setDate(rangeStart.getDate() - 14);
+      rangeStart.setHours(0, 0, 0, 0);
 
       const { data: meals, error: mealsError } = await supabase
         .from('meal_history')
-        .select('*')
+        .select('id, food_name, created_at')
         .eq('user_id', user.id)
-        .gte('created_at', weekStart.toISOString());
+        .gte('created_at', rangeStart.toISOString())
+        .order('created_at', { ascending: false });
 
       if (mealsError) {
-        console.error('Grocery meal_history query failed:', mealsError.message);
+        const msg = `Meals query failed: ${mealsError.message}`;
+        console.error('GroceryList:', msg, mealsError);
         setError('failed');
+        setErrorDetail(mealsError.message);
         setLoading(false);
         return;
       }
 
       const mealNames =
-        meals?.map((m: { food_name?: string; analysis_result?: { meal_name?: string } }) =>
-          m.analysis_result?.meal_name ?? m.food_name ?? 'Unknown meal'
+        meals?.map((m: { food_name?: string }) =>
+          m.food_name ?? 'Unknown meal'
         ).filter(Boolean) ?? [];
 
       if (mealNames.length === 0) {
+        console.warn('GroceryList: No meals in range', {
+          userId: user.id,
+          rangeStart: rangeStart.toISOString(),
+          mealsReturned: meals?.length ?? 0,
+        });
         setError('no_meals');
         setLoading(false);
         return;
@@ -163,8 +194,13 @@ export default function GroceryList() {
       });
 
       if (fnError) {
-        console.error('Grocery function error:', fnError);
-        setError('failed');
+        const msg = fnError.message || String(fnError);
+        console.error('GroceryList: Edge function error:', msg, fnError);
+        setErrorDetail(msg);
+        // Fallback: show basic list from meal names when AI fails
+        setGroceryData(buildFallbackGroceryList(mealNames));
+        setExpandedCategories(['Ingredients for your meals']);
+        setError(null);
         setLoading(false);
         return;
       }
@@ -174,15 +210,22 @@ export default function GroceryList() {
         setGroceryData(parsed);
         setExpandedCategories(parsed.grocery_list.map((c) => c.category));
       } else {
-        setError('failed');
+        const msg = 'AI returned invalid format';
+        console.warn('GroceryList:', msg, data);
+        setErrorDetail(msg);
+        setGroceryData(buildFallbackGroceryList(mealNames));
+        setExpandedCategories(['Ingredients for your meals']);
+        setError(null);
       }
     } catch (err) {
-      console.error('Grocery list error:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('GroceryList error:', err);
       setError('failed');
+      setErrorDetail(msg);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [buildFallbackGroceryList]);
 
   useEffect(() => {
     if (hasFetchedRef.current) return;
@@ -203,7 +246,6 @@ export default function GroceryList() {
         text += '\n';
       }
     });
-    text += `💰 Estimated: ${groceryData.estimated_total}\n`;
     text += '— Generated by Arogya 🌿';
     return text;
   };
@@ -217,12 +259,11 @@ export default function GroceryList() {
         text += `${cat.category}:\n`;
         items.forEach((item) => {
           const prefix = checkedItems.includes(item.name) ? '[x] ' : '[ ] ';
-          text += `${prefix}${item.name} — ${item.quantity} — ${item.cost}\n`;
+          text += `${prefix}${item.name} — ${item.quantity}\n`;
         });
         text += '\n';
       }
     });
-    text += `Estimated Total: ${groceryData.estimated_total}\n`;
     return text;
   };
 
@@ -280,10 +321,15 @@ export default function GroceryList() {
             </Link>
           </div>
         ) : error === 'failed' ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center">
-            <p className="font-medium text-olive-800 mb-4">
+          <div className="py-16 flex flex-col items-center justify-center text-center px-4">
+            <p className="font-medium text-olive-800 mb-2">
               Something went wrong. Please try again.
             </p>
+            {errorDetail && (
+              <p className="text-sm text-neutral-500 mb-4 max-w-xs">
+                {errorDetail}
+              </p>
+            )}
             <button
               type="button"
               onClick={fetchGroceryList}
@@ -392,7 +438,6 @@ export default function GroceryList() {
                               {item.name}
                             </span>
                             <span className="text-xs text-neutral-500">{item.quantity}</span>
-                            <span className="text-xs font-medium text-olive-700">{item.cost}</span>
                           </label>
                         );
                       })}
@@ -404,18 +449,6 @@ export default function GroceryList() {
                 </div>
               );
             })}
-
-            {/* Total Card */}
-            <div
-              className="rounded-2xl p-4 text-white"
-              style={{ backgroundColor: '#5C6B4A' }}
-            >
-              <div className="flex justify-between items-center">
-                <span className="font-heading font-semibold">Estimated Total</span>
-                <span className="text-xl font-bold">{groceryData.estimated_total}</span>
-              </div>
-              <p className="text-xs text-white/80 mt-1">Approximate Hyderabad market prices</p>
-            </div>
 
             {/* Action Buttons */}
             <div className="flex gap-3">

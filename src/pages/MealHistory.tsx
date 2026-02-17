@@ -3,11 +3,12 @@
 // Past meal scans from meal_history
 // ============================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import PageHeader from '../components/PageHeader';
 import { useFamily } from '../hooks/useFamily';
+import { getHistoryHeader, getEmptyStateMessage, buildCopyContext } from '../utils/personalizedCopy';
 
 export type HistoryFilter = 'all' | 'today' | 'week' | 'month';
 
@@ -104,6 +105,7 @@ export default function MealHistory() {
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [weekOffset, setWeekOffset] = useState(0);
   const [monthOffset, setMonthOffset] = useState(0);
+  const [selectedMemberFilter, setSelectedMemberFilter] = useState<string | null>(null);
 
   useEffect(() => {
     loadHistory();
@@ -145,7 +147,10 @@ export default function MealHistory() {
     }
   };
 
-  const filteredMeals = filterMeals(meals, filter);
+  const memberFilteredMeals = selectedMemberFilter
+    ? meals.filter((m) => m.family_member_id === selectedMemberFilter)
+    : meals;
+  const filteredMeals = filterMeals(memberFilteredMeals, filter);
 
   const getMealDisplayName = (meal: MealHistoryRecord) =>
     meal.analysis_result?.meal_name ?? meal.food_name;
@@ -185,7 +190,7 @@ export default function MealHistory() {
         : [];
   const gridMeals =
     filter === 'week'
-      ? meals.filter((m) => {
+      ? memberFilteredMeals.filter((m) => {
           const d = new Date(m.created_at);
           const days = getWeekDays(weekOffset);
           const first = days[0]?.date;
@@ -197,7 +202,7 @@ export default function MealHistory() {
           return t >= dayStart && t <= dayEnd;
         })
       : filter === 'month'
-        ? meals.filter((m) => {
+        ? memberFilteredMeals.filter((m) => {
             const d = new Date(m.created_at);
             const days = getMonthDays(monthOffset);
             const first = days[0]?.date;
@@ -238,11 +243,73 @@ export default function MealHistory() {
       ? `${weekDaysForLabel[0].date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} – ${weekDaysForLabel[6].date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
       : '';
 
+  // Personalized header
+  const primaryName = members[0]?.name?.split(' ')[0] || 'there';
+  const thisWeekMeals = meals.filter((m) => {
+    const t = new Date(m.created_at).getTime();
+    const now = new Date();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime() - 7 * 24 * 60 * 60 * 1000;
+    return t >= weekStart;
+  });
+  const historySubtitle = useMemo(() => {
+    const ctx = buildCopyContext(
+      primaryName,
+      members.map((m) => ({ name: m.name, id: m.id })),
+      0,
+      { weeklyMealsCount: thisWeekMeals.length },
+    );
+    return getHistoryHeader(ctx);
+  }, [primaryName, members.length, thisWeekMeals.length]);
+
+  const emptyMessage = useMemo(() => {
+    const ctx = buildCopyContext(
+      primaryName,
+      members.map((m) => ({ name: m.name, id: m.id })),
+      0,
+    );
+    return getEmptyStateMessage(ctx);
+  }, [primaryName, members.length]);
+
   return (
     <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
       <header className="px-5 pt-6 pb-4">
-        <PageHeader title="Meal History" subtitle="Your family's meal log" />
+        <PageHeader title="Meal History" subtitle={historySubtitle} />
       </header>
+
+      {/* Per-member filter tabs */}
+      {members.length > 0 && (
+        <div className="px-5 py-2 flex gap-2 overflow-x-auto">
+          <button
+            onClick={() => setSelectedMemberFilter(null)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              selectedMemberFilter === null
+                ? 'bg-olive-500 text-white'
+                : 'bg-beige-50 border border-beige-300 text-neutral-600'
+            }`}
+          >
+            All
+          </button>
+          {members.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setSelectedMemberFilter(m.id)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                selectedMemberFilter === m.id
+                  ? 'bg-olive-500 text-white'
+                  : 'bg-beige-50 border border-beige-300 text-neutral-600'
+              }`}
+            >
+              <span
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                style={{ backgroundColor: m.avatar_color || '#5C6B4A' }}
+              >
+                {m.name?.charAt(0)?.toUpperCase()}
+              </span>
+              {m.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Week / Month navigation (shown when Week or Month filter + grid) */}
       {(filter === 'week' || filter === 'month') && (
@@ -343,7 +410,7 @@ export default function MealHistory() {
         ) : filteredMeals.length === 0 ? (
           <div className="text-center py-12">
             <span className="text-3xl" aria-hidden>🍽️</span>
-            <p className="text-gray-600 mt-2">No meals yet. Scan your first meal to see history here.</p>
+            <p className="text-gray-600 mt-2">{emptyMessage}</p>
             <Link
               to="/dashboard"
               className="mt-3 inline-block px-4 py-2 bg-[#5C6B4A] text-white rounded-full text-sm"

@@ -31,6 +31,7 @@ const HEALTH_OPTIONS: { label: string; value: HealthCondition }[] = [
   { label: 'Cholesterol', value: 'cholesterol' },
   { label: 'Thyroid', value: 'thyroid' },
   { label: 'Weight Management', value: 'weight_management' },
+  { label: 'Others', value: 'others' },
   { label: 'None', value: 'none' },
 ];
 
@@ -82,6 +83,7 @@ export default function Settings() {
   const [showFamily, setShowFamily] = useState(false);
   const [familyMembers, setFamilyMembers] = useState<FamilyMemberRow[]>([]);
   const [editingMember, setEditingMember] = useState<FamilyMemberRow | null>(null);
+  const [customConditionText, setCustomConditionText] = useState('');
   const [dietPref, setDietPref] = useState(() => localStorage.getItem('mhb_diet_pref') || 'all');
   const [reminderOn, setReminderOn] = useState(() => localStorage.getItem('mhb_reminders') === 'true');
   const [weeklyReportOn, setWeeklyReportOn] = useState(
@@ -228,6 +230,20 @@ export default function Settings() {
                                     ...editingMember,
                                     health_conditions: ['none'],
                                   });
+                                  setCustomConditionText('');
+                                } else if (opt.value === 'others') {
+                                  if (current.includes('others')) {
+                                    setEditingMember({
+                                      ...editingMember,
+                                      health_conditions: current.filter((c) => c !== 'others'),
+                                    });
+                                    setCustomConditionText('');
+                                  } else {
+                                    setEditingMember({
+                                      ...editingMember,
+                                      health_conditions: [...current.filter((c) => c !== 'none'), 'others'],
+                                    });
+                                  }
                                 } else {
                                   const filtered = current.filter((c) => c !== 'none');
                                   setEditingMember({
@@ -248,11 +264,26 @@ export default function Settings() {
                             </button>
                           ))}
                         </div>
+                        {(editingMember.health_conditions || []).includes('others') && (
+                          <input
+                            type="text"
+                            value={customConditionText}
+                            onChange={(e) => setCustomConditionText(e.target.value)}
+                            placeholder="Type your condition..."
+                            className="w-full px-3 py-2 mt-2 rounded-lg border border-gray-200 text-sm"
+                          />
+                        )}
 
                         <div className="flex gap-2 mt-2">
                           <button
                             type="button"
                             onClick={async () => {
+                              // Build final health conditions with custom condition
+                              const finalConditions = (editingMember.health_conditions ?? [])
+                                .filter((c) => c !== 'others');
+                              if ((editingMember.health_conditions ?? []).includes('others') && customConditionText.trim()) {
+                                finalConditions.push(customConditionText.trim());
+                              }
                               const { error } = await supabase
                                 .from('family_members')
                                 .update({
@@ -260,7 +291,7 @@ export default function Settings() {
                                   dob: editingMember.dob || null,
                                   age_group: getAgeGroup(editingMember.dob),
                                   relationship: editingMember.relationship || null,
-                                  health_conditions: editingMember.health_conditions ?? [],
+                                  health_conditions: finalConditions,
                                 })
                                 .eq('id', member.id);
                               if (!error) {
@@ -301,7 +332,15 @@ export default function Settings() {
                         <div className="flex gap-2">
                           <button
                             type="button"
-                            onClick={() => setEditingMember({ ...member })}
+                            onClick={() => {
+                              const knownVals = ['diabetes', 'pre_diabetic', 'bp', 'cholesterol', 'weight_management', 'thyroid', 'none', 'others'];
+                              const existingCustomCond = (member.health_conditions || []).find((c) => !knownVals.includes(c));
+                              const conditions = existingCustomCond
+                                ? [...(member.health_conditions || []).filter((c) => c !== existingCustomCond), 'others']
+                                : member.health_conditions || [];
+                              setCustomConditionText(existingCustomCond || '');
+                              setEditingMember({ ...member, health_conditions: conditions });
+                            }}
                             className="px-3 py-1.5 text-xs text-[#5C6B4A] border border-[#5C6B4A] rounded-full"
                             aria-label={`Edit ${member.name}`}
                           >

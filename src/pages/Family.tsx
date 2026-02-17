@@ -15,6 +15,7 @@ const HEALTH_CONDITIONS: { value: HealthCondition; label: string }[] = [
   { value: 'bp', label: 'High BP' },
   { value: 'cholesterol', label: 'Cholesterol' },
   { value: 'weight_management', label: 'Weight' },
+  { value: 'others', label: 'Others' },
   { value: 'none', label: 'None' },
 ];
 
@@ -123,13 +124,26 @@ function MemberCard({
 }) {
   const [name, setName] = useState(member.name);
   const [age, setAge] = useState(member.age || 0);
+  const knownValues = ['diabetes', 'pre_diabetic', 'bp', 'cholesterol', 'weight_management', 'thyroid', 'none', 'others'];
+  const existingCustom = (member.health_conditions || []).find((c) => !knownValues.includes(c));
   const [conditions, setConditions] = useState<HealthCondition[]>(
-    member.health_conditions || []
+    existingCustom
+      ? [...(member.health_conditions || []).filter((c) => c !== existingCustom), 'others']
+      : member.health_conditions || []
   );
+  const [customCondition, setCustomCondition] = useState(existingCustom || '');
 
   const toggleCondition = (condition: HealthCondition) => {
     if (condition === 'none') {
       setConditions(['none']);
+      setCustomCondition('');
+    } else if (condition === 'others') {
+      if (conditions.includes('others')) {
+        setConditions(conditions.filter((c) => c !== 'others'));
+        setCustomCondition('');
+      } else {
+        setConditions([...conditions.filter((c) => c !== 'none'), 'others']);
+      }
     } else {
       setConditions(
         conditions.includes(condition)
@@ -137,6 +151,14 @@ function MemberCard({
           : [...conditions.filter((c) => c !== 'none'), condition]
       );
     }
+  };
+
+  const getFinalConditions = (): HealthCondition[] => {
+    const result = conditions.filter((c) => c !== 'others');
+    if (conditions.includes('others') && customCondition.trim()) {
+      result.push(customCondition.trim() as HealthCondition);
+    }
+    return result;
   };
 
   if (isEditing) {
@@ -182,11 +204,20 @@ function MemberCard({
                 </button>
               ))}
             </div>
+            {conditions.includes('others') && (
+              <input
+                type="text"
+                value={customCondition}
+                onChange={(e) => setCustomCondition(e.target.value)}
+                placeholder="Type your condition (e.g., thyroid, uric acid)"
+                className="input-field mt-2 w-full"
+              />
+            )}
           </div>
 
           <div className="flex gap-2">
             <button
-              onClick={() => onSave({ name, age, health_conditions: conditions })}
+              onClick={() => onSave({ name, age, health_conditions: getFinalConditions() })}
               className="btn-primary flex-1 flex items-center justify-center gap-2"
             >
               <Check className="w-4 h-4" />
@@ -276,10 +307,19 @@ function AddMemberForm({
   const [name, setName] = useState('');
   const [age, setAge] = useState<number | undefined>();
   const [conditions, setConditions] = useState<HealthCondition[]>([]);
+  const [customCondition, setCustomCondition] = useState('');
 
   const toggleCondition = (condition: HealthCondition) => {
     if (condition === 'none') {
       setConditions(['none']);
+      setCustomCondition('');
+    } else if (condition === 'others') {
+      if (conditions.includes('others')) {
+        setConditions(conditions.filter((c) => c !== 'others'));
+        setCustomCondition('');
+      } else {
+        setConditions([...conditions.filter((c) => c !== 'none'), 'others']);
+      }
     } else {
       setConditions(
         conditions.includes(condition)
@@ -287,6 +327,14 @@ function AddMemberForm({
           : [...conditions.filter((c) => c !== 'none'), condition]
       );
     }
+  };
+
+  const getFinalConditions = (): HealthCondition[] => {
+    const result = conditions.filter((c) => c !== 'others');
+    if (conditions.includes('others') && customCondition.trim()) {
+      result.push(customCondition.trim() as HealthCondition);
+    }
+    return result;
   };
 
   return (
@@ -335,19 +383,28 @@ function AddMemberForm({
               </button>
             ))}
           </div>
+          {conditions.includes('others') && (
+            <input
+              type="text"
+              value={customCondition}
+              onChange={(e) => setCustomCondition(e.target.value)}
+              placeholder="Type your condition (e.g., thyroid, uric acid)"
+              className="input-field mt-2 w-full"
+            />
+          )}
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={() => {
               if (name.trim()) {
-                onSave({ name, age, health_conditions: conditions });
+                onSave({ name, age, health_conditions: getFinalConditions() });
               }
             }}
             disabled={!name.trim()}
             className="btn-primary flex-1"
           >
-            Add Member
+            Save
           </button>
           <button onClick={onCancel} className="btn-secondary">
             Cancel

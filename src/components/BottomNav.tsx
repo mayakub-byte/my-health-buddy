@@ -38,17 +38,20 @@ export default function BottomNav() {
               key={item.path}
               type="button"
               onClick={() => navigate(item.path)}
-              className={`flex flex-col items-center py-2 px-4 rounded-full transition-colors ${
-                isActive ? 'text-olive-600' : 'text-neutral-400 hover:text-olive-600'
-              }`}
+              className="flex flex-col items-center py-2 px-4 rounded-full transition-colors"
+              style={{ color: '#5C6B4A' }}
               aria-label={item.label}
             >
               <Icon
                 className={`w-6 h-6 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.5]'}`}
+                fill={isActive ? '#5C6B4A' : 'none'}
               />
-              <span className={`text-xs mt-1 ${isActive ? 'font-medium' : ''}`}>
+              <span className={`text-xs mt-1 ${isActive ? 'font-semibold' : 'font-normal'}`}>
                 {item.label}
               </span>
+              {isActive && (
+                <span className="w-1 h-1 rounded-full mt-0.5" style={{ backgroundColor: '#5C6B4A' }} />
+              )}
             </button>
           );
         })}

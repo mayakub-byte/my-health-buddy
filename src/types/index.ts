@@ -32,14 +32,16 @@ export interface FamilyMember {
   created_at: string;
 }
 
-export type HealthCondition = 
-  | 'diabetes' 
+export type HealthCondition =
+  | 'diabetes'
   | 'pre_diabetic'
-  | 'bp' 
-  | 'cholesterol' 
+  | 'bp'
+  | 'cholesterol'
   | 'weight_management'
   | 'thyroid'
-  | 'none';
+  | 'none'
+  | 'others'
+  | (string & {});
 
 export type DietaryPreference = 
   | 'vegetarian' 

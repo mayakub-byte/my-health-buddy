@@ -8,6 +8,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import { supabase } from '../lib/supabase';
+import { getMealAnalysisCelebration } from '../utils/personalizedCopy';
 import type { AnalysisLoadingState } from './AnalysisLoading';
 import type { FamilyMember } from '../types';
 import type { MealAnalysisResponse } from '../types/meal-analysis';
@@ -251,23 +252,35 @@ export default function FamilyGuidanceResult() {
         image_url = state.imagePreview;
       }
 
-      const family_member_id = state.selectedMemberId ?? selectedMember?.id ?? null;
       const guidanceText = Array.isArray(guidance) ? guidance.join(' ') : (guidance ?? '');
       const portion_size = state.portionSize ?? 'medium';
 
-      const row = {
+      // Derive a numeric score from traffic_light if health_scores not available
+      const derivedScore = healthScore
+        ? healthScore
+        : trafficLight === 'green' ? 80
+        : trafficLight === 'yellow' ? 55
+        : trafficLight === 'red' ? 25
+        : 0;
+
+      // Build rows for each selected member (multi-member support)
+      const memberIds = (state.selectedMembers && state.selectedMembers.length > 0)
+        ? state.selectedMembers
+        : [state.selectedMemberId ?? selectedMember?.id ?? null];
+
+      const rows = memberIds.map((memberId) => ({
         user_id,
-        family_member_id,
+        family_member_id: memberId,
         food_name: mealName ?? 'Meal',
         image_url: image_url || null,
         calories: calories ?? 0,
         macros: { carbs: macrosSafe.carbs, protein: macrosSafe.protein, fat: macrosSafe.fat },
-        health_score: healthScore ?? 0,
+        health_score: derivedScore,
         guidance: guidanceText || null,
         portion_size,
-      };
+      }));
 
-      const { error } = await supabase.from('meal_history').insert(row);
+      const { error } = await supabase.from('meal_history').insert(rows);
 
       if (error) {
         console.error('Supabase meal_history insert error:', error.message, error.details, error);
@@ -275,7 +288,8 @@ export default function FamilyGuidanceResult() {
         setTimeout(() => setToast(null), 3000);
         return;
       }
-      setToast({ message: 'Meal saved!', isSuccess: true });
+      const savedCount = rows.length;
+      setToast({ message: savedCount > 1 ? `Meal saved for ${savedCount} members!` : 'Meal saved!', isSuccess: true });
       setTimeout(() => {
         setToast(null);
         navigate('/dashboard', { replace: true });
@@ -360,6 +374,16 @@ export default function FamilyGuidanceResult() {
             {/* Traffic Light Reason */}
             {trafficLightReason && (
               <p className="text-xs text-neutral-600 mt-3 italic">{trafficLightReason}</p>
+            )}
+
+            {/* Personalized celebration */}
+            {selectedMember && !fromHistory && (
+              <p className="text-sm font-medium mt-3 px-2 py-2 rounded-lg" style={{ backgroundColor: '#f0f5eb', color: '#5C6B4A' }}>
+                {getMealAnalysisCelebration(
+                  selectedMember.name,
+                  healthScore ?? (trafficLight === 'green' ? 80 : trafficLight === 'yellow' ? 55 : 25)
+                )}
+              </p>
             )}
           </div>
         </section>

@@ -1,69 +1,69 @@
 // ============================================
 // AROGYA / MY HEALTH BUDDY - Landing Page
-// Warm, nurturing Indian family wellness
+// Punchy, mobile-first landing for new users
 // ============================================
 
 import { Link } from 'react-router-dom';
 
-const FEATURE_CARDS = [
-  { title: 'Holistic Health', sub: 'for All Ages', icon: '🌿' },
-  { title: 'Connect & Share', sub: 'Moments', icon: '❤️' },
-  { title: 'Personalized', sub: 'Family Hub', icon: '🏠' },
+const FEATURES = [
+  { emoji: '\uD83D\uDCF8', label: 'AI Meal Scanner' },
+  { emoji: '\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67', label: 'Family Tracking' },
+  { emoji: '\uD83D\uDED2', label: 'Smart Grocery Lists' },
 ];
 
 export default function Landing() {
-
   return (
-    <div className="min-h-screen bg-beige flex flex-col overflow-x-hidden max-w-md mx-auto w-full">
-      <header className="pt-10 pb-6 px-5 text-center flex-1 flex flex-col justify-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-olive-500 shadow-card mb-5 mx-auto cursor-default" aria-hidden>
-          <span className="text-4xl">🍽️</span>
+    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#F4F1EA' }}>
+      {/* Top section with food illustration */}
+      <section className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-6 text-center">
+        {/* Food emoji circle */}
+        <div className="relative w-32 h-32 mb-8">
+          <div className="absolute inset-0 rounded-full" style={{ backgroundColor: 'rgba(139,158,107,0.2)' }} />
+          <span className="absolute text-4xl" style={{ top: '8px', left: '50%', transform: 'translateX(-50%)' }}>{'\uD83C\uDF5B'}</span>
+          <span className="absolute text-3xl" style={{ top: '50%', right: '2px', transform: 'translateY(-50%)' }}>{'\uD83E\uDD57'}</span>
+          <span className="absolute text-4xl" style={{ bottom: '8px', left: '50%', transform: 'translateX(-50%)' }}>{'\uD83C\uDF72'}</span>
+          <span className="absolute text-3xl" style={{ top: '50%', left: '2px', transform: 'translateY(-50%)' }}>{'\uD83E\uDD58'}</span>
         </div>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-olive-800 mb-1">
-          Your Family&apos;s Wellness Journey, Simplified
-        </h1>
-        <p className="text-neutral-600 text-sm sm:text-base mb-6">
-          Nourishing health and happiness, together. A gentle guide to holistic health for every member of your family.
-        </p>
-      </header>
 
-      <section className="px-5 mb-8">
-        <div className="grid grid-cols-3 gap-3">
-          {FEATURE_CARDS.map((card, i) => (
-            <div
-              key={i}
-              className="card text-center py-4 cursor-default"
-              role="presentation"
+        <h1 className="font-serif text-2xl sm:text-3xl font-bold mb-3" style={{ color: '#2D3319' }}>
+          What if your kitchen knew exactly what your family needs?
+        </h1>
+        <p className="text-sm sm:text-base mb-8" style={{ color: '#6B7B5E' }}>
+          Snap a meal. Get instant nutrition scores. Track your whole family&apos;s health — effortlessly.
+        </p>
+
+        {/* Feature pills */}
+        <div className="flex flex-wrap justify-center gap-2 mb-8">
+          {FEATURES.map((f) => (
+            <span
+              key={f.label}
+              className="px-3 py-1.5 rounded-full text-xs font-medium border"
+              style={{
+                backgroundColor: '#FDFBF7',
+                borderColor: '#8B9E6B',
+                color: '#5C6B4A',
+              }}
             >
-              <span className="text-2xl mb-2 block" aria-hidden>{card.icon}</span>
-              <p className="font-heading font-semibold text-olive-800 text-sm">{card.title}</p>
-              <p className="text-neutral-500 text-xs mt-0.5">{card.sub}</p>
-            </div>
+              {f.emoji} {f.label}
+            </span>
           ))}
         </div>
       </section>
 
-      <section className="flex-1 flex items-center justify-center px-5 py-6 cursor-default" aria-hidden>
-        <div className="w-40 h-40 rounded-2xl bg-beige-200/60 flex items-center justify-center border border-beige-300">
-          <span className="text-6xl">👨‍👩‍👧‍👦</span>
-        </div>
-      </section>
-
-      <footer className="mt-auto px-5 pb-10 pt-4 space-y-3 max-w-md mx-auto w-full">
+      {/* Bottom CTA section */}
+      <footer className="px-6 pb-10 pt-4 space-y-3">
         <Link
-          to="/goals"
-          className="btn-primary w-full flex items-center justify-center py-3.5 rounded-full text-base font-semibold"
+          to="/signup"
+          className="w-full flex items-center justify-center py-3.5 rounded-full text-base font-semibold text-white transition-colors"
+          style={{ backgroundColor: '#5C6B4A' }}
         >
-          Get Started
+          Start your first scan &rarr;
         </Link>
-        <Link
-          to="/login"
-          className="w-full flex items-center justify-center py-3.5 rounded-full text-base font-semibold border-2 border-olive-500 text-olive-600 hover:bg-olive-50 active:bg-olive-100 transition-colors"
-        >
-          Login to Web
-        </Link>
-        <p className="text-center text-xs text-neutral-500 pt-2">
-          Available on iOS &amp; Android
+        <p className="text-center text-sm" style={{ color: '#6B7B5E' }}>
+          Already have an account?{' '}
+          <Link to="/login" className="font-semibold underline" style={{ color: '#5C6B4A' }}>
+            Welcome back
+          </Link>
         </p>
       </footer>
     </div>

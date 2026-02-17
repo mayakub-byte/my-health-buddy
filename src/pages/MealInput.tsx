@@ -3,12 +3,13 @@
 // Main home screen after login: snap meal or describe, then analyze
 // ============================================
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Camera, X, Mic } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import PageHeader from '../components/PageHeader';
 import { supabase } from '../lib/supabase';
+import { getDashboardGreeting, buildCopyContext } from '../utils/personalizedCopy';
 
 // TypeScript declarations for Web Speech API
 interface SpeechRecognition extends EventTarget {
@@ -120,6 +121,7 @@ interface TodayMealRecord {
   food_name: string;
   calories: number | null;
   created_at: string;
+  family_member_id: string | null;
 }
 
 export default function MealInput() {
@@ -180,7 +182,7 @@ export default function MealInput() {
         todayStart.setHours(0, 0, 0, 0);
         const { data, error } = await supabase
           .from('meal_history')
-          .select('id, food_name, calories, created_at')
+          .select('id, food_name, calories, created_at, family_member_id')
           .eq('user_id', user.id)
           .gte('created_at', todayStart.toISOString())
           .order('created_at', { ascending: false });
@@ -259,22 +261,36 @@ export default function MealInput() {
 
     const recognition = new SpeechRecognition();
     recognition.lang = 'en-IN';
-    recognition.interimResults = false;
-    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.continuous = true;
+
+    let finalTranscript = '';
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript;
-      setManualText(transcript);
-      setIsListening(false);
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        if (result.isFinal) {
+          finalTranscript += result[0].transcript;
+        } else {
+          interim += result[0].transcript;
+        }
+      }
+      setManualText(finalTranscript + interim);
     };
 
     recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       console.error('Speech recognition error:', event.error);
-      setToast('Voice input failed. Please try again.');
+      if (event.error !== 'no-speech') {
+        setToast('Voice input failed. Please try again.');
+      }
       setIsListening(false);
     };
 
     recognition.onend = () => {
+      if (finalTranscript) {
+        setManualText(finalTranscript);
+      }
       setIsListening(false);
     };
 
@@ -282,6 +298,13 @@ export default function MealInput() {
       recognition.start();
       setIsListening(true);
       recognitionRef.current = recognition;
+      // Auto-stop after 30 seconds
+      setTimeout(() => {
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+          recognitionRef.current = null;
+        }
+      }, 30000);
     } catch (err) {
       console.error('Failed to start recognition:', err);
       setToast('Failed to start voice input');
@@ -313,8 +336,23 @@ export default function MealInput() {
   });
 
   const canAnalyze = !!imageFile || manualText.trim().length > 0;
-  const totalCalories = todayMeals.reduce((sum, m) => sum + (m.calories ?? 0), 0);
-  const lastMeal = todayMeals[0] ?? null;
+  // Filter today's meals by selected members
+  const filteredTodayMeals = selectedMembers.length > 0
+    ? todayMeals.filter((m) => m.family_member_id && selectedMembers.includes(m.family_member_id))
+    : todayMeals;
+  const totalCalories = filteredTodayMeals.reduce((sum, m) => sum + (m.calories ?? 0), 0);
+  const lastMeal = filteredTodayMeals[0] ?? null;
+
+  // Personalized greeting
+  const primaryName = members[0]?.name?.split(' ')[0] || 'there';
+  const greeting = useMemo(() => {
+    const ctx = buildCopyContext(
+      primaryName,
+      members.map((m) => ({ name: m.name, id: m.id })),
+      filteredTodayMeals.length,
+    );
+    return getDashboardGreeting(ctx);
+  }, [primaryName, members.length, filteredTodayMeals.length]);
 
   return (
     <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
@@ -382,7 +420,7 @@ export default function MealInput() {
       </section>
 
       <header className="px-5 pb-3">
-        <PageHeader title="What did you cook today?" subtitle={today} />
+        <PageHeader title={greeting} subtitle={today} />
       </header>
 
       <main className="flex-1 px-5">
@@ -461,9 +499,9 @@ export default function MealInput() {
         <div className="mt-4 p-3 bg-beige-50 rounded-xl border border-beige-200">
           <div className="flex justify-between items-center">
             <span className="text-sm text-neutral-500">Today so far</span>
-            {todayMeals.length > 0 ? (
+            {filteredTodayMeals.length > 0 ? (
               <span className="text-sm font-semibold text-olive-800">
-                {todayMeals.length} meal{todayMeals.length !== 1 ? 's' : ''} • {totalCalories} cal
+                {filteredTodayMeals.length} meal{filteredTodayMeals.length !== 1 ? 's' : ''} • {totalCalories} cal
               </span>
             ) : (
               <span className="text-sm text-neutral-500">No meals logged yet today ☀️</span>

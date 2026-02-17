@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useFamily } from '../hooks/useFamily';
 import PageHeader from '../components/PageHeader';
 
 interface MealRecord {
@@ -152,11 +153,13 @@ function detectGaps(
 
 export default function Weekly() {
   const navigate = useNavigate();
-  const [meals, setMeals] = useState<MealRecord[]>([]);
+  const { members } = useFamily();
+  const [allMeals, setAllMeals] = useState<MealRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [weekOffset, setWeekOffset] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+  const [selectedMemberFilter, setSelectedMemberFilter] = useState<string | null>(null);
 
   const now = new Date();
   const weekStart = new Date(now);
@@ -185,11 +188,11 @@ export default function Weekly() {
       if (userError) {
         console.error('Weekly getUser failed:', userError.message);
         setFetchError(userError.message);
-        setMeals([]);
+        setAllMeals([]);
         return;
       }
       if (!user) {
-        setMeals([]);
+        setAllMeals([]);
         return;
       }
 
@@ -204,18 +207,23 @@ export default function Weekly() {
       if (error) {
         console.error('Weekly meal_history query failed:', error.message);
         setFetchError(error.message);
-        setMeals([]);
+        setAllMeals([]);
         return;
       }
-      setMeals((data as MealRecord[]) || []);
+      setAllMeals((data as MealRecord[]) || []);
     } catch (err) {
       console.error('Error loading weekly meals:', err);
       setFetchError(err instanceof Error ? err.message : 'Failed to load');
-      setMeals([]);
+      setAllMeals([]);
     } finally {
       setLoading(false);
     }
   };
+
+  // Filter meals by selected member
+  const meals = selectedMemberFilter
+    ? allMeals.filter((m) => m.family_member_id === selectedMemberFilter)
+    : allMeals;
 
   // Group meals by day and order Sun–Sat
   const mealsByDay: Record<string, MealRecord[]> = {};
@@ -291,6 +299,41 @@ export default function Weekly() {
       <header className="px-4 pt-6 pb-2">
         <PageHeader title="This Week" subtitle="Weekly nutrition snapshot" />
       </header>
+
+      {/* Per-member filter tabs */}
+      {members.length > 0 && (
+        <div className="px-4 py-2 flex gap-2 overflow-x-auto">
+          <button
+            onClick={() => setSelectedMemberFilter(null)}
+            className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              selectedMemberFilter === null
+                ? 'bg-olive-500 text-white'
+                : 'bg-beige-50 border border-beige-300 text-neutral-600'
+            }`}
+          >
+            All
+          </button>
+          {members.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setSelectedMemberFilter(m.id)}
+              className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
+                selectedMemberFilter === m.id
+                  ? 'bg-olive-500 text-white'
+                  : 'bg-beige-50 border border-beige-300 text-neutral-600'
+              }`}
+            >
+              <span
+                className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
+                style={{ backgroundColor: m.avatar_color || '#5C6B4A' }}
+              >
+                {m.name?.charAt(0)?.toUpperCase()}
+              </span>
+              {m.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* SECTION 1: Week Navigation */}
       <section className="px-4 py-3 flex items-center justify-between">
