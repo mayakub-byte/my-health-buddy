@@ -149,7 +149,7 @@ export default function Settings() {
           <button
             type="button"
             onClick={() => setShowFamily(!showFamily)}
-            className="w-full flex items-center justify-between p-4 bg-[#FDFBF7] rounded-xl border border-gray-100"
+            className="w-full flex items-center justify-between p-4 bg-[#ffffff] rounded-xl border border-gray-100"
           >
             <div className="flex items-center gap-3">
               <span className="text-xl" aria-hidden>👨‍👩‍👧‍👦</span>
@@ -177,7 +177,7 @@ export default function Settings() {
                         .join(', ')
                     : '';
                 return (
-                  <div key={member.id} className="p-4 bg-[#FDFBF7] rounded-xl border border-gray-100">
+                  <div key={member.id} className="p-4 bg-[#ffffff] rounded-xl border border-gray-100">
                     {isEditing ? (
                       <div className="space-y-3">
                         <input
@@ -256,7 +256,7 @@ export default function Settings() {
                               }}
                               className={`px-3 py-1.5 rounded-full text-xs font-medium ${
                                 (editingMember.health_conditions || []).includes(opt.value)
-                                  ? 'bg-[#5C6B4A] text-white'
+                                  ? 'bg-[#5a7c65] text-white'
                                   : 'bg-white border border-gray-200 text-gray-600'
                               }`}
                             >
@@ -303,7 +303,7 @@ export default function Settings() {
                                 setEditingMember(null);
                               }
                             }}
-                            className="flex-1 py-2 bg-[#5C6B4A] text-white rounded-full text-sm font-medium"
+                            className="flex-1 py-2 bg-[#5a7c65] text-white rounded-full text-sm font-medium"
                           >
                             Save
                           </button>
@@ -341,7 +341,7 @@ export default function Settings() {
                               setCustomConditionText(existingCustomCond || '');
                               setEditingMember({ ...member, health_conditions: conditions });
                             }}
-                            className="px-3 py-1.5 text-xs text-[#5C6B4A] border border-[#5C6B4A] rounded-full"
+                            className="px-3 py-1.5 text-xs text-[#5a7c65] border border-[#5a7c65] rounded-full"
                             aria-label={`Edit ${member.name}`}
                           >
                             Edit
@@ -422,7 +422,7 @@ export default function Settings() {
           </button>
 
           {showPrefs && (
-            <div className="space-y-5 p-4 bg-[#FDFBF7] rounded-xl mt-2 mb-3">
+            <div className="space-y-5 p-4 bg-[#ffffff] rounded-xl mt-2 mb-3">
               {/* Dietary Preference */}
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Dietary Preference</p>
@@ -441,8 +441,8 @@ export default function Settings() {
                       }}
                       className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition ${
                         dietPref === opt.key
-                          ? 'bg-[#5C6B4A] text-white shadow-sm'
-                          : 'bg-[#FDFBF7] border border-gray-200 text-gray-600'
+                          ? 'bg-[#5a7c65] text-white shadow-sm'
+                          : 'bg-[#ffffff] border border-gray-200 text-gray-600'
                       }`}
                     >
                       {opt.label}
@@ -464,7 +464,7 @@ export default function Settings() {
                     setReminderOn(newVal);
                     localStorage.setItem('mhb_reminders', String(newVal));
                   }}
-                  className={`relative w-12 h-7 rounded-full transition-colors ${reminderOn ? 'bg-[#5C6B4A]' : 'bg-gray-300'}`}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${reminderOn ? 'bg-[#5a7c65]' : 'bg-gray-300'}`}
                 >
                   <div
                     className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200 ${reminderOn ? 'left-6' : 'left-1'}`}
@@ -486,7 +486,7 @@ export default function Settings() {
                     localStorage.setItem('mhb_weekly_report', String(newVal));
                   }}
                   className={`relative w-12 h-7 rounded-full transition-colors ${
-                    weeklyReportOn ? 'bg-[#5C6B4A]' : 'bg-gray-300'
+                    weeklyReportOn ? 'bg-[#5a7c65]' : 'bg-gray-300'
                   }`}
                 >
                   <div
@@ -514,8 +514,8 @@ export default function Settings() {
                       }}
                       className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition ${
                         units === opt.key
-                          ? 'bg-[#5C6B4A] text-white shadow-sm'
-                          : 'bg-[#FDFBF7] border border-gray-200 text-gray-600'
+                          ? 'bg-[#5a7c65] text-white shadow-sm'
+                          : 'bg-[#ffffff] border border-gray-200 text-gray-600'
                       }`}
                     >
                       {opt.label}
@@ -540,7 +540,7 @@ export default function Settings() {
               {FAQS.map((faq, i) => (
                 <div
                   key={i}
-                  className="bg-[#FDFBF7] rounded-xl overflow-hidden border border-gray-100"
+                  className="bg-[#ffffff] rounded-xl overflow-hidden border border-gray-100"
                 >
                   <button
                     type="button"

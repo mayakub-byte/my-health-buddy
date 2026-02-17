@@ -1,6 +1,6 @@
 // ============================================
 // AROGYA / MY HEALTH BUDDY - Landing Page
-// Punchy, mobile-first landing for new users
+// Warm, mobile-first landing with serif headings
 // ============================================
 
 import { Link } from 'react-router-dom';
@@ -13,22 +13,29 @@ const FEATURES = [
 
 export default function Landing() {
   return (
-    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#F4F1EA' }}>
+    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
       {/* Top section with food illustration */}
       <section className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-6 text-center">
         {/* Food emoji circle */}
         <div className="relative w-32 h-32 mb-8">
-          <div className="absolute inset-0 rounded-full" style={{ backgroundColor: 'rgba(139,158,107,0.2)' }} />
+          <div className="absolute inset-0 rounded-full" style={{ backgroundColor: 'rgba(90, 124, 101, 0.15)' }} />
           <span className="absolute text-4xl" style={{ top: '8px', left: '50%', transform: 'translateX(-50%)' }}>{'\uD83C\uDF5B'}</span>
           <span className="absolute text-3xl" style={{ top: '50%', right: '2px', transform: 'translateY(-50%)' }}>{'\uD83E\uDD57'}</span>
           <span className="absolute text-4xl" style={{ bottom: '8px', left: '50%', transform: 'translateX(-50%)' }}>{'\uD83C\uDF72'}</span>
           <span className="absolute text-3xl" style={{ top: '50%', left: '2px', transform: 'translateY(-50%)' }}>{'\uD83E\uDD58'}</span>
         </div>
 
-        <h1 className="font-serif text-2xl sm:text-3xl font-bold mb-3" style={{ color: '#2D3319' }}>
+        <h1 style={{
+          fontFamily: "'DM Serif Display', Georgia, serif",
+          fontSize: '1.625rem',
+          fontWeight: 700,
+          color: '#2c3e2d',
+          marginBottom: 12,
+          lineHeight: 1.3,
+        }}>
           What if your kitchen knew exactly what your family needs?
         </h1>
-        <p className="text-sm sm:text-base mb-8" style={{ color: '#6B7B5E' }}>
+        <p className="text-sm sm:text-base mb-8" style={{ color: '#7a8c7e' }}>
           Snap a meal. Get instant nutrition scores. Track your whole family&apos;s health — effortlessly.
         </p>
 
@@ -37,11 +44,11 @@ export default function Landing() {
           {FEATURES.map((f) => (
             <span
               key={f.label}
-              className="px-3 py-1.5 rounded-full text-xs font-medium border"
+              className="px-3 py-1.5 rounded-full text-xs font-medium"
               style={{
-                backgroundColor: '#FDFBF7',
-                borderColor: '#8B9E6B',
-                color: '#5C6B4A',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e8e2d8',
+                color: '#5a7c65',
               }}
             >
               {f.emoji} {f.label}
@@ -55,14 +62,14 @@ export default function Landing() {
         <Link
           to="/signup"
           className="w-full flex items-center justify-center py-3.5 rounded-full text-base font-semibold text-white transition-colors"
-          style={{ backgroundColor: '#5C6B4A' }}
+          style={{ backgroundColor: '#5a7c65' }}
         >
           Start your first scan &rarr;
         </Link>
         <Link
           to="/login"
           className="w-full flex items-center justify-center py-3 rounded-full text-base font-medium transition-colors"
-          style={{ border: '1.5px solid #5C6B4A', color: '#5C6B4A' }}
+          style={{ border: '1.5px solid #5a7c65', color: '#5a7c65' }}
         >
           Already have an account? Log in
         </Link>

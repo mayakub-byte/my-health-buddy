@@ -11,7 +11,6 @@ const PageHeader = ({ title, subtitle }: { title: string; subtitle?: string }) =
     const dangerousPaths = ['/scan/', '/meal-correction', '/portion-confirm', '/results'];
     const fromScanFlow = dangerousPaths.some((p) => location.pathname.startsWith(p));
     if (fromScanFlow) {
-      // After a scan flow, always go home instead of back into loading screens
       navigate('/dashboard', { replace: true });
     } else {
       navigate(-1);
@@ -25,24 +24,26 @@ const PageHeader = ({ title, subtitle }: { title: string; subtitle?: string }) =
           type="button"
           onClick={handleBack}
           aria-label="Go back"
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FDFBF7] border border-gray-100 flex-shrink-0"
+          className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0"
+          style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
         >
-          <span className="text-gray-600" aria-hidden>←</span>
+          <span style={{ color: '#5a7c65' }} aria-hidden>←</span>
         </button>
       )}
       {isHome && <span className="text-2xl" aria-hidden>🍽️</span>}
       <div className="flex-1">
-        <h1 className="font-serif text-xl font-bold text-gray-800">{title}</h1>
-        {subtitle && <p className="text-xs text-gray-500">{subtitle}</p>}
+        <h1 className="font-serif text-xl font-bold" style={{ color: '#2c3e2d' }}>{title}</h1>
+        {subtitle && <p className="text-xs" style={{ color: '#7a8c7e' }}>{subtitle}</p>}
       </div>
       {!isHome && (
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
           aria-label="Go to home"
-          className="w-10 h-10 flex items-center justify-center rounded-full bg-[#FDFBF7] border border-gray-100 flex-shrink-0"
+          className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0"
+          style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
         >
-          <span className="text-gray-600" aria-hidden>🏠</span>
+          <span style={{ color: '#5a7c65' }} aria-hidden>🏠</span>
         </button>
       )}
     </div>

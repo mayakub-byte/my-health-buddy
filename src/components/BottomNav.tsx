@@ -1,5 +1,6 @@
 // ============================================
 // MY HEALTH BUDDY - Bottom Navigation
+// Warm sage active pill, no gray icons
 // ============================================
 
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -24,7 +25,10 @@ export default function BottomNav() {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#FDFBF7] border-t border-gray-200 px-6 safe-area-bottom z-50 flex items-center">
+    <nav
+      className="fixed bottom-0 left-0 right-0 h-16 border-t px-6 safe-area-bottom z-50 flex items-center"
+      style={{ backgroundColor: '#faf8f3', borderColor: 'var(--border-warm, #e8e2d8)' }}
+    >
       <div className="flex justify-around items-center w-full max-w-md mx-auto">
         {NAV_ITEMS.map((item) => {
           const isActive =
@@ -38,20 +42,28 @@ export default function BottomNav() {
               key={item.path}
               type="button"
               onClick={() => navigate(item.path)}
-              className="flex flex-col items-center py-2 px-4 rounded-full transition-colors"
-              style={{ color: '#5C6B4A' }}
+              className="flex flex-col items-center py-1.5 px-4 transition-all"
+              style={{
+                background: isActive ? 'rgba(90, 124, 101, 0.12)' : 'transparent',
+                borderRadius: isActive ? 20 : 0,
+                color: isActive ? '#3d5a47' : '#7a8c7e',
+              }}
               aria-label={item.label}
             >
               <Icon
-                className={`w-6 h-6 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.5]'}`}
-                fill={isActive ? '#5C6B4A' : 'none'}
+                className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : 'stroke-[1.5]'}`}
+                fill={isActive ? '#3d5a47' : 'none'}
               />
-              <span className={`text-xs mt-1 ${isActive ? 'font-semibold' : 'font-normal'}`}>
+              <span
+                className="mt-0.5"
+                style={{
+                  fontSize: 10,
+                  fontWeight: isActive ? 600 : 400,
+                  color: isActive ? '#3d5a47' : '#7a8c7e',
+                }}
+              >
                 {item.label}
               </span>
-              {isActive && (
-                <span className="w-1 h-1 rounded-full mt-0.5" style={{ backgroundColor: '#5C6B4A' }} />
-              )}
             </button>
           );
         })}

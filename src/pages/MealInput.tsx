@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import { Camera, X, Mic } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import PageHeader from '../components/PageHeader';
+import MemberAvatar from '../components/MemberAvatar';
 import { supabase } from '../lib/supabase';
 import { getDashboardGreeting, buildCopyContext } from '../utils/personalizedCopy';
 
@@ -358,10 +359,10 @@ export default function MealInput() {
   }, [primaryName, members.length, filteredTodayMeals.length]);
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
+    <div className="min-h-screen flex flex-col pb-24 max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
       {/* Who's eating? — ABOVE heading */}
       <section className="px-5 pt-6 mb-4">
-        <p className="text-sm font-medium text-neutral-600 mb-2">Who&apos;s eating?</p>
+        <p className="text-sm font-medium mb-2" style={{ color: '#7a8c7e' }}>Who&apos;s eating?</p>
         <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide -mx-5 px-5">
           {members.map((member) => (
             <button
@@ -370,21 +371,22 @@ export default function MealInput() {
               onClick={() => toggleMember(member.id)}
               className={`flex flex-col items-center min-w-[64px] p-2 rounded-xl transition-all flex-shrink-0 ${
                 selectedMembers.includes(member.id)
-                  ? 'border-2 border-olive-500 bg-beige-50 shadow-sm'
-                  : 'border border-beige-300 opacity-50'
+                  ? 'shadow-sm'
+                  : 'opacity-50'
               }`}
+              style={{
+                border: selectedMembers.includes(member.id) ? '2px solid #5a7c65' : '1px solid #e8e2d8',
+                backgroundColor: selectedMembers.includes(member.id) ? '#ffffff' : 'transparent',
+              }}
             >
-              <div
-                className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold text-white mb-1"
-                style={{ backgroundColor: member.avatar_color || '#5C6B4A' }}
-              >
-                {member.name?.charAt(0)?.toUpperCase() || '?'}
+              <div className="mb-1">
+                <MemberAvatar name={member.name} relationship={member.relationship} size={40} />
               </div>
-              <span className="text-xs font-medium text-neutral-700 truncate max-w-[56px]">
+              <span className="text-xs font-medium truncate max-w-[56px]" style={{ color: '#2c3e2d' }}>
                 {member.name}
               </span>
               {selectedMembers.includes(member.id) && (
-                <span className="text-xs text-emerald-600 mt-0.5">✓</span>
+                <span className="text-xs mt-0.5" style={{ color: '#5a7c65' }}>✓</span>
               )}
             </button>
           ))}
@@ -492,8 +494,8 @@ export default function MealInput() {
 
         {/* Voice Context — optional clarification for AI */}
         {(imagePreview || manualText.trim()) && (
-          <div className="mt-3 p-3 rounded-xl border border-dashed" style={{ borderColor: '#52b788', backgroundColor: '#f0f7f4' }}>
-            <p className="text-xs mb-2" style={{ color: '#2d6a4f' }}>
+          <div className="mt-3 p-3 rounded-xl border border-dashed" style={{ borderColor: '#a8c4a0', backgroundColor: '#f5f0e8' }}>
+            <p className="text-xs mb-2" style={{ color: '#3d5a47' }}>
               <span role="img" aria-hidden>🎤</span> Add context? (e.g. &quot;This is sourdough, not regular bread&quot; or &quot;Extra ghee added&quot;)
             </p>
             <div className="flex gap-2 items-start">
@@ -532,7 +534,7 @@ export default function MealInput() {
                   className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                     isListening ? 'bg-red-500 animate-pulse' : ''
                   }`}
-                  style={!isListening ? { backgroundColor: '#52b788' } : {}}
+                  style={!isListening ? { backgroundColor: '#5a7c65' } : {}}
                   aria-label="Voice input for context"
                 >
                   <Mic className="w-4 h-4 text-white" />
@@ -556,11 +558,11 @@ export default function MealInput() {
         </button>
 
         {/* Today's stats card */}
-        <div className="mt-4 p-4 rounded-2xl border border-beige-200" style={{ backgroundColor: '#FDFBF7' }}>
+        <div className="mt-4 card-warm" style={{ padding: 16 }}>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-neutral-600">Today so far</span>
+            <span className="text-sm font-medium" style={{ color: '#7a8c7e' }}>Today so far</span>
             {filteredTodayMeals.length > 0 && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#f0f5eb', color: '#5C6B4A' }}>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#f5f0e8', color: '#5a7c65' }}>
                 {filteredTodayMeals.length} meal{filteredTodayMeals.length !== 1 ? 's' : ''}
               </span>
             )}
@@ -568,23 +570,23 @@ export default function MealInput() {
           {filteredTodayMeals.length > 0 ? (
             <div className="flex items-center gap-4">
               <div className="text-center flex-1">
-                <p className="text-2xl font-bold" style={{ color: '#2D3319' }}>{totalCalories}</p>
-                <p className="text-xs text-neutral-500">calories</p>
+                <p className="text-2xl font-bold" style={{ fontFamily: "'DM Serif Display', Georgia, serif", color: '#2c3e2d' }}>{totalCalories}</p>
+                <p className="text-xs" style={{ color: '#7a8c7e' }}>calories</p>
               </div>
-              <div className="w-px h-10 bg-beige-300" />
+              <div className="w-px h-10" style={{ backgroundColor: '#e8e2d8' }} />
               <div className="text-center flex-1">
-                <p className="text-2xl font-bold" style={{ color: '#5C6B4A' }}>
+                <p className="text-2xl font-bold" style={{ color: '#5a7c65' }}>
                   {filteredTodayMeals.length < 3 ? '🟡' : '🟢'}
                 </p>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs" style={{ color: '#7a8c7e' }}>
                   {filteredTodayMeals.length < 2 ? 'Log more meals' : filteredTodayMeals.length < 3 ? 'Almost there!' : 'On track!'}
                 </p>
               </div>
             </div>
           ) : (
             <div className="text-center py-2">
-              <p className="text-sm text-neutral-500">No meals logged yet today</p>
-              <p className="text-xs mt-1" style={{ color: '#8B9E6B' }}>📸 Snap your first meal to get started!</p>
+              <p className="text-sm" style={{ color: '#7a8c7e' }}>No meals logged yet today</p>
+              <p className="text-xs mt-1" style={{ color: '#a8c4a0' }}>📸 Snap your first meal to get started!</p>
             </div>
           )}
         </div>
@@ -594,20 +596,20 @@ export default function MealInput() {
           <button
             type="button"
             onClick={() => navigate('/history')}
-            className="flex-1 p-3 rounded-xl border border-beige-200 flex items-center gap-2 hover:bg-beige-100 transition-colors"
-            style={{ backgroundColor: '#FDFBF7' }}
+            className="flex-1 p-3 rounded-xl flex items-center gap-2 hover:bg-beige-100 transition-colors"
+            style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
           >
             <span className="text-lg" role="img" aria-hidden>📋</span>
-            <span className="text-xs font-medium text-neutral-700">View History</span>
+            <span className="text-xs font-medium" style={{ color: '#2c3e2d' }}>View History</span>
           </button>
           <button
             type="button"
             onClick={() => navigate('/weekly')}
-            className="flex-1 p-3 rounded-xl border border-beige-200 flex items-center gap-2 hover:bg-beige-100 transition-colors"
-            style={{ backgroundColor: '#FDFBF7' }}
+            className="flex-1 p-3 rounded-xl flex items-center gap-2 hover:bg-beige-100 transition-colors"
+            style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
           >
             <span className="text-lg" role="img" aria-hidden>📊</span>
-            <span className="text-xs font-medium text-neutral-700">Weekly Progress</span>
+            <span className="text-xs font-medium" style={{ color: '#2c3e2d' }}>Weekly Progress</span>
           </button>
         </div>
 

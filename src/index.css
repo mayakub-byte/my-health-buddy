@@ -2,7 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Arogya — mobile-first 375px, warm cream #F4F1EA, olive #5C6B4A, accent #C4A96A */
+/* Arogya — mobile-first 375px, warm cream #faf8f3, sage #5a7c65, accent #c4956a */
+:root {
+  --bg-warm: #faf8f3;
+  --bg-card: #ffffff;
+  --primary: #5a7c65;
+  --primary-dark: #3d5a47;
+  --primary-light: #a8c4a0;
+  --accent-gold: #c4956a;
+  --accent-terra: #b87a56;
+  --text-main: #2c3e2d;
+  --text-muted: #7a8c7e;
+  --border-warm: #e8e2d8;
+  --surface-warm: #f5f0e8;
+}
+
 @layer base {
   html {
     font-family: 'Inter', system-ui, sans-serif;
@@ -14,7 +28,7 @@
 
 @layer components {
   .font-heading {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'DM Serif Display', Georgia, serif;
   }
   .btn-primary {
     @apply min-h-[48px] rounded-full font-semibold
@@ -45,6 +59,13 @@
   }
   .card {
     @apply bg-beige-50 rounded-2xl shadow-sm border border-beige-200 p-5;
+  }
+  .card-warm {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid var(--border-warm);
+    box-shadow: 0 2px 12px rgba(90, 70, 50, 0.06);
+    padding: 16px;
   }
   .input-field {
     @apply w-full min-h-[48px] px-4 py-3 rounded-full border border-beige-300
@@ -78,6 +99,8 @@
   }
 }
 
+/* ===== GLOBAL ANIMATIONS ===== */
+
 @keyframes fadeOpacity {
   0%, 100% { opacity: 0.7; }
   50% { opacity: 1; }
@@ -87,6 +110,26 @@
   0% { transform: translateX(-100%); opacity: 0.5; }
   50% { transform: translateX(0); opacity: 1; }
   100% { transform: translateX(100%); opacity: 0.5; }
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes leafPulse {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.7; }
+  50% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes scoreGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px rgba(90, 124, 101, 0.2)); }
+  50% { filter: drop-shadow(0 0 8px rgba(90, 124, 101, 0.4)); }
 }
 
 .scrollbar-hide::-webkit-scrollbar {

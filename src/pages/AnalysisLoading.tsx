@@ -29,15 +29,7 @@ export default function AnalysisLoading() {
   const { members } = useFamily();
 
   const [filePreview, setFilePreview] = useState<string | null>(null);
-  const [messageIndex, setMessageIndex] = useState(0);
   const [analysisResult, setAnalysisResult] = useState<MealAnalysisResponse | null>(null);
-
-  const loadingMessages = [
-    'Understanding your meal... 🍽️',
-    'Checking nutrition for your family... 👨‍👩‍👧‍👦',
-    'Finding smart cooking tips... 🧑‍🍳',
-    'Almost ready with your results... ✨',
-  ];
   const [apiError, setApiError] = useState<string | null>(null);
   const analysisStarted = useRef(false);
   const analysisResultRef = useRef<MealAnalysisResponse | null>(null);
@@ -50,13 +42,6 @@ export default function AnalysisLoading() {
   const selectedMember = state.selectedMemberId
     ? members.find((m) => m.id === state.selectedMemberId)
     : members[0];
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % loadingMessages.length);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
 
   useEffect(() => {
     // Allow text-only flow OR photo flow
@@ -195,13 +180,14 @@ export default function AnalysisLoading() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#F4F1EA' }}>
+    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
       <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         {apiError ? (
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
+            className="flex items-center justify-center w-10 h-10 rounded-full border text-neutral-600 hover:bg-beige-100 shadow-card"
+            style={{ borderColor: '#e8e2d8' }}
             aria-label="Back to dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -210,13 +196,14 @@ export default function AnalysisLoading() {
           <button
             type="button"
             disabled
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-400 cursor-not-allowed"
+            className="flex items-center justify-center w-10 h-10 rounded-full border text-neutral-400 cursor-not-allowed"
+            style={{ borderColor: '#e8e2d8' }}
             aria-label="Back (disabled during analysis)"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
         )}
-        <h1 className="font-serif text-lg font-bold text-olive-800">{apiError ? 'Something went wrong' : 'Analyzing Your Meal'}</h1>
+        <h1 className="font-serif text-lg font-bold" style={{ color: '#3d5a47' }}>{apiError ? 'Something went wrong' : 'Analyzing Your Meal'}</h1>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-5 py-8">
@@ -234,7 +221,8 @@ export default function AnalysisLoading() {
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-3 rounded-full border-2 border-olive-500 text-olive-600 font-semibold hover:bg-olive-50"
+                  className="px-6 py-3 rounded-full border-2 font-semibold hover:bg-olive-50"
+                  style={{ borderColor: '#5a7c65', color: '#5a7c65' }}
                 >
                   Back to Dashboard
                 </button>
@@ -242,50 +230,60 @@ export default function AnalysisLoading() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 w-full">
-            {/* Bouncing food emojis */}
-            <div className="flex gap-5 mb-8">
-              <span className="text-4xl animate-bounce" style={{ animationDelay: '0ms', animationDuration: '1.5s' }}>🥗</span>
-              <span className="text-4xl animate-bounce" style={{ animationDelay: '300ms', animationDuration: '1.5s' }}>🍚</span>
-              <span className="text-4xl animate-bounce" style={{ animationDelay: '600ms', animationDuration: '1.5s' }}>🥘</span>
+            {/* Pulsing botanical leaf */}
+            <div style={{
+              fontSize: 56,
+              animation: 'leafPulse 2s ease-in-out infinite',
+              marginBottom: 24,
+            }}>
+              🌿
             </div>
-            {/* Rotating message */}
-            <p className="font-serif italic text-[#5C6B4A] text-lg text-center min-h-[56px] flex items-center justify-center">
-              {loadingMessages[messageIndex]}
+
+            {/* Serif loading text */}
+            <p style={{
+              fontFamily: "'DM Serif Display', Georgia, serif",
+              fontSize: 18,
+              color: '#3d5a47',
+              fontStyle: 'italic',
+              margin: '0 0 8px',
+              textAlign: 'center',
+            }}>
+              Understanding how this meal
             </p>
-            {/* Subtle progress bar with shimmer */}
-            <div className="w-48 h-1.5 bg-gray-200 rounded-full mt-8 overflow-hidden">
-              <div
-                className="h-full bg-[#5C6B4A] rounded-full shimmer-bar"
-                style={{ width: '60%' }}
-              />
+            <p style={{
+              fontFamily: "'DM Serif Display', Georgia, serif",
+              fontSize: 18,
+              color: '#5a7c65',
+              fontStyle: 'italic',
+              textAlign: 'center',
+            }}>
+              nourishes your family...
+            </p>
+
+            {/* Subtle dots animation */}
+            <div style={{ marginTop: 20, color: '#a8c4a0', fontSize: 14, letterSpacing: 4 }}>
+              <span style={{ animation: 'dotPulse 1.5s infinite', animationDelay: '0s' }}>●</span>
+              <span style={{ animation: 'dotPulse 1.5s infinite', animationDelay: '0.3s' }}>●</span>
+              <span style={{ animation: 'dotPulse 1.5s infinite', animationDelay: '0.6s' }}>●</span>
             </div>
+
             {/* Warm subtext */}
-            <p className="text-xs text-gray-400 mt-4">This usually takes 5-10 seconds</p>
+            <p className="text-xs mt-6" style={{ color: '#7a8c7e' }}>This usually takes 5-10 seconds</p>
+
             {selectedMember && (
-              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl card mt-8 w-full max-w-sm">
+              <div className="flex items-center gap-3 px-4 py-3 rounded-2xl mt-8 w-full max-w-sm card-warm">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
-                  style={{ backgroundColor: selectedMember.avatar_color || '#4A5D3A' }}
+                  style={{ backgroundColor: selectedMember.avatar_color || '#5a7c65' }}
                 >
                   {selectedMember.name?.charAt(0)?.toUpperCase() || '?'}
                 </div>
-                <span className="text-neutral-800 font-medium">{selectedMember.name}</span>
+                <span className="font-medium" style={{ color: '#2c3e2d' }}>{selectedMember.name}</span>
               </div>
             )}
           </div>
         )}
       </main>
-
-      <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); opacity: 0.5; }
-          50% { transform: translateX(0); opacity: 1; }
-          100% { transform: translateX(100%); opacity: 0.5; }
-        }
-        .shimmer-bar {
-          animation: shimmer 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }

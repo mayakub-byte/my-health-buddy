@@ -370,7 +370,7 @@ export default function MealHistory() {
               type="button"
               onClick={() => setViewMode('list')}
               className={`flex-1 py-1.5 text-xs rounded-md transition ${
-                viewMode === 'list' ? 'bg-[#FDFBF7] shadow-sm font-medium' : 'text-gray-500'
+                viewMode === 'list' ? 'bg-[#ffffff] shadow-sm font-medium' : 'text-gray-500'
               }`}
               aria-label="List view"
             >
@@ -380,7 +380,7 @@ export default function MealHistory() {
               type="button"
               onClick={() => setViewMode('grid')}
               className={`flex-1 py-1.5 text-xs rounded-md transition ${
-                viewMode === 'grid' ? 'bg-[#FDFBF7] shadow-sm font-medium' : 'text-gray-500'
+                viewMode === 'grid' ? 'bg-[#ffffff] shadow-sm font-medium' : 'text-gray-500'
               }`}
               aria-label="Calendar view"
             >
@@ -402,7 +402,7 @@ export default function MealHistory() {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-3 px-4 py-2 bg-[#5C6B4A] text-white rounded-full text-sm"
+              className="mt-3 px-4 py-2 bg-[#5a7c65] text-white rounded-full text-sm"
             >
               Try Again
             </button>
@@ -413,7 +413,7 @@ export default function MealHistory() {
             <p className="text-gray-600 mt-2">{emptyMessage}</p>
             <Link
               to="/dashboard"
-              className="mt-3 inline-block px-4 py-2 bg-[#5C6B4A] text-white rounded-full text-sm"
+              className="mt-3 inline-block px-4 py-2 bg-[#5a7c65] text-white rounded-full text-sm"
             >
               Scan a meal
             </Link>
@@ -422,8 +422,8 @@ export default function MealHistory() {
           <div className="overflow-x-auto -mx-4 px-4 pb-4">
             <table className="w-full min-w-[400px]">
               <thead>
-                <tr className="bg-[#5C6B4A] text-white text-xs">
-                  <th className="py-2 px-2 text-left rounded-tl-lg sticky left-0 bg-[#5C6B4A] min-w-[100px] z-10">
+                <tr className="bg-[#5a7c65] text-white text-xs">
+                  <th className="py-2 px-2 text-left rounded-tl-lg sticky left-0 bg-[#5a7c65] min-w-[100px] z-10">
                     Day
                   </th>
                   <th className="py-2 px-2 text-left min-w-[100px]">Breakfast</th>
@@ -434,7 +434,7 @@ export default function MealHistory() {
               <tbody>
                 {daysToShow.map((day) => (
                   <tr key={day.date.toISOString()} className="border-b border-gray-100">
-                    <td className="py-2 px-2 text-xs font-semibold text-gray-700 sticky left-0 bg-[#F4F1EA] min-w-[100px] z-10">
+                    <td className="py-2 px-2 text-xs font-semibold text-gray-700 sticky left-0 bg-[#faf8f3] min-w-[100px] z-10">
                       {day.label}
                     </td>
                     {GRID_MEAL_TIMES.map((mealTime) => {

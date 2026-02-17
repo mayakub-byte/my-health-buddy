@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { useFamily } from '../hooks/useFamily';
 import PageHeader from '../components/PageHeader';
 import ScoreCircle from '../components/ScoreCircle';
+import MemberAvatar from '../components/MemberAvatar';
 import {
   calculateFamilyScore,
   calculateAvgCalories,
@@ -116,7 +117,7 @@ export default function MonthlyOverview() {
   const recommendations = getRecommendations();
 
   return (
-    <div className="min-h-screen pb-24 max-w-md mx-auto w-full" style={{ backgroundColor: '#F4F1EA' }}>
+    <div className="min-h-screen pb-24 max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
       <header className="px-4 pt-6 pb-2">
         <PageHeader title="Monthly Overview" subtitle="Family health at a glance" />
       </header>
@@ -127,17 +128,17 @@ export default function MonthlyOverview() {
           type="button"
           onClick={() => setMonthOffset((o) => o - 1)}
           className="w-12 h-12 rounded-full flex items-center justify-center border border-beige-300 transition-colors hover:bg-olive-50"
-          style={{ color: '#5C6B4A' }}
+          style={{ color: '#5a7c65' }}
         >←</button>
         <div className="text-center">
-          <p className="font-serif font-semibold text-xl" style={{ color: '#2D3319' }}>{monthLabel}</p>
-          <p className="text-xs mt-0.5" style={{ color: '#6B7B5E' }}>{meals.length} meals logged</p>
+          <p className="font-serif font-semibold text-xl" style={{ color: '#2c3e2d' }}>{monthLabel}</p>
+          <p className="text-xs mt-0.5" style={{ color: '#7a8c7e' }}>{meals.length} meals logged</p>
         </div>
         <button
           type="button"
           onClick={() => setMonthOffset((o) => o + 1)}
           className="w-12 h-12 rounded-full flex items-center justify-center border border-beige-300 transition-colors hover:bg-olive-50"
-          style={{ color: '#5C6B4A' }}
+          style={{ color: '#5a7c65' }}
         >→</button>
       </section>
 
@@ -148,16 +149,16 @@ export default function MonthlyOverview() {
       ) : meals.length === 0 ? (
         <main className="px-4 py-8 flex flex-col items-center justify-center text-center">
           <div className="text-5xl mb-4">📊</div>
-          <p className="font-serif text-lg font-semibold mb-2" style={{ color: '#2D3319' }}>No data for this month</p>
-          <p className="text-sm mb-6" style={{ color: '#6B7B5E' }}>Start scanning meals to see your monthly overview!</p>
-          <button onClick={() => navigate('/dashboard')} className="py-3 px-6 rounded-full font-semibold text-white" style={{ backgroundColor: '#5C6B4A' }}>
+          <p className="font-serif text-lg font-semibold mb-2" style={{ color: '#2c3e2d' }}>No data for this month</p>
+          <p className="text-sm mb-6" style={{ color: '#7a8c7e' }}>Start scanning meals to see your monthly overview!</p>
+          <button onClick={() => navigate('/dashboard')} className="py-3 px-6 rounded-full font-semibold text-white" style={{ backgroundColor: '#5a7c65' }}>
             Scan a Meal
           </button>
         </main>
       ) : (
         <main className="px-4 py-4 space-y-5">
           {/* SECTION 1: Family Score */}
-          <section className="rounded-2xl p-5" style={{ backgroundColor: '#FDFBF7' }}>
+          <section className="rounded-2xl p-5" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
             <div className="flex items-center justify-center mb-2">
               <ScoreCircle
                 score={familyScore}
@@ -170,36 +171,31 @@ export default function MonthlyOverview() {
             <div className="grid grid-cols-3 gap-3 mt-4">
               <div className="text-center">
                 <p className="text-xs text-neutral-500">Meals</p>
-                <p className="text-lg font-bold" style={{ color: '#2D3319' }}>{meals.length}</p>
+                <p className="text-lg font-bold" style={{ color: '#2c3e2d' }}>{meals.length}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-neutral-500">Avg Cal</p>
-                <p className="text-lg font-bold" style={{ color: '#2D3319' }}>{avgCalories}</p>
+                <p className="text-lg font-bold" style={{ color: '#2c3e2d' }}>{avgCalories}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-neutral-500">Score</p>
-                <p className="text-lg font-bold" style={{ color: '#2D3319' }}>{familyScore}%</p>
+                <p className="text-lg font-bold" style={{ color: '#2c3e2d' }}>{familyScore}%</p>
               </div>
             </div>
           </section>
 
           {/* SECTION 2: Individual Member Scores */}
           {members.length > 0 && (
-            <section className="rounded-2xl p-5" style={{ backgroundColor: '#FDFBF7' }}>
-              <h2 className="font-serif font-semibold mb-4" style={{ color: '#2D3319' }}>Individual Scores</h2>
+            <section className="rounded-2xl p-5" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
+              <h2 className="font-serif font-semibold mb-4" style={{ color: '#2c3e2d' }}>Individual Scores</h2>
               <div className="space-y-3">
                 {members.map((member) => {
                   const memberScore = getMemberScore(meals, member.id);
                   const memberMeals = meals.filter((m) => m.family_member_id === member.id);
                   const scoreColor = memberScore >= 70 ? '#10B981' : memberScore >= 40 ? '#F59E0B' : '#EF4444';
                   return (
-                    <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: '#F4F1EA' }}>
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                        style={{ backgroundColor: member.avatar_color || '#5C6B4A' }}
-                      >
-                        {member.name?.charAt(0)?.toUpperCase() || '?'}
-                      </div>
+                    <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: '#f5f0e8' }}>
+                      <MemberAvatar name={member.name} relationship={member.relationship} size={40} />
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm text-neutral-800">{member.name}</p>
                         <p className="text-xs text-neutral-500">{memberMeals.length} meals logged</p>
@@ -225,8 +221,8 @@ export default function MonthlyOverview() {
 
           {/* SECTION 3: Monthly Trend Line Chart */}
           {weeklyTrend.length > 0 && (
-            <section className="rounded-2xl p-5" style={{ backgroundColor: '#FDFBF7' }}>
-              <h2 className="font-serif font-semibold mb-3" style={{ color: '#2D3319' }}>Weekly Trend</h2>
+            <section className="rounded-2xl p-5" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
+              <h2 className="font-serif font-semibold mb-3" style={{ color: '#2c3e2d' }}>Weekly Trend</h2>
               <div className="flex justify-center">
                 <svg
                   width={chartWidth}
@@ -243,7 +239,7 @@ export default function MonthlyOverview() {
                   {points.length > 1 && (
                     <path
                       d={`${pathD} L ${points[points.length - 1].x},${chartHeight - chartPadding} L ${points[0].x},${chartHeight - chartPadding} Z`}
-                      fill="#8B9E6B"
+                      fill="#a8c4a0"
                       fillOpacity="0.15"
                     />
                   )}
@@ -253,7 +249,7 @@ export default function MonthlyOverview() {
                     <path
                       d={pathD}
                       fill="none"
-                      stroke="#5C6B4A"
+                      stroke="#5a7c65"
                       strokeWidth="2.5"
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -263,11 +259,11 @@ export default function MonthlyOverview() {
                   {/* Points */}
                   {points.map((p, i) => (
                     <g key={i}>
-                      <circle cx={p.x} cy={p.y} r="5" fill="#5C6B4A" stroke="#FDFBF7" strokeWidth="2" />
-                      <text x={p.x} y={p.y - 10} textAnchor="middle" fill="#5C6B4A" fontSize="10" fontWeight="bold">
+                      <circle cx={p.x} cy={p.y} r="5" fill="#5a7c65" stroke="#FDFBF7" strokeWidth="2" />
+                      <text x={p.x} y={p.y - 10} textAnchor="middle" fill="#5a7c65" fontSize="10" fontWeight="bold">
                         {p.score}
                       </text>
-                      <text x={p.x} y={chartHeight + 15} textAnchor="middle" fill="#6B7B5E" fontSize="9">
+                      <text x={p.x} y={chartHeight + 15} textAnchor="middle" fill="#7a8c7e" fontSize="9">
                         {p.label}
                       </text>
                     </g>
@@ -278,8 +274,8 @@ export default function MonthlyOverview() {
           )}
 
           {/* SECTION 4: Macro Breakdown */}
-          <section className="rounded-2xl p-5" style={{ backgroundColor: '#FDFBF7' }}>
-            <h2 className="font-serif font-semibold mb-3" style={{ color: '#2D3319' }}>Monthly Macro Split</h2>
+          <section className="rounded-2xl p-5" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
+            <h2 className="font-serif font-semibold mb-3" style={{ color: '#2c3e2d' }}>Monthly Macro Split</h2>
             <div className="flex h-6 rounded-full overflow-hidden bg-gray-100 mb-2">
               <div style={{ width: `${carbsPct}%` }} className="bg-amber-400" />
               <div style={{ width: `${proteinPct}%` }} className="bg-emerald-500" />
@@ -293,13 +289,13 @@ export default function MonthlyOverview() {
           </section>
 
           {/* SECTION 5: Recommendations */}
-          <section className="rounded-2xl p-5" style={{ backgroundColor: '#FDFBF7' }}>
-            <h2 className="font-serif font-semibold mb-3" style={{ color: '#2D3319' }}>Recommendations</h2>
+          <section className="rounded-2xl p-5" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
+            <h2 className="font-serif font-semibold mb-3" style={{ color: '#2c3e2d' }}>Recommendations</h2>
             <div className="space-y-3">
               {recommendations.map((rec, i) => (
-                <div key={i} className="flex gap-3 items-start p-3 rounded-xl" style={{ backgroundColor: '#f0f5eb' }}>
+                <div key={i} className="flex gap-3 items-start p-3 rounded-xl" style={{ backgroundColor: '#f5f0e8' }}>
                   <span className="text-xl flex-shrink-0">{rec.emoji}</span>
-                  <p className="text-sm" style={{ color: '#2D3319' }}>{rec.text}</p>
+                  <p className="text-sm" style={{ color: '#2c3e2d' }}>{rec.text}</p>
                 </div>
               ))}
             </div>
@@ -374,7 +370,7 @@ export default function MonthlyOverview() {
               type="button"
               onClick={() => navigate('/weekly')}
               className="w-full py-3.5 rounded-full font-semibold text-white"
-              style={{ backgroundColor: '#5C6B4A' }}
+              style={{ backgroundColor: '#5a7c65' }}
             >
               View Weekly Details
             </button>
@@ -382,7 +378,7 @@ export default function MonthlyOverview() {
               type="button"
               onClick={() => navigate('/dashboard')}
               className="w-full py-3.5 rounded-full font-semibold border-2 transition-colors hover:bg-olive-50"
-              style={{ borderColor: '#5C6B4A', color: '#5C6B4A' }}
+              style={{ borderColor: '#5a7c65', color: '#5a7c65' }}
             >
               Back to Dashboard
             </button>

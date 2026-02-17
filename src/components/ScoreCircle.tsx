@@ -1,7 +1,9 @@
 // ============================================
 // MY HEALTH BUDDY - SVG Score Circle Component
-// Circular progress indicator for health scores
+// Animated circular progress with count-up & glow
 // ============================================
+
+import { useState, useEffect, useRef } from 'react';
 
 interface ScoreCircleProps {
   score: number; // 0-100
@@ -10,6 +12,7 @@ interface ScoreCircleProps {
   label?: string;
   sublabel?: string;
   showEmoji?: boolean;
+  animate?: boolean;
 }
 
 export default function ScoreCircle({
@@ -19,16 +22,54 @@ export default function ScoreCircle({
   label,
   sublabel,
   showEmoji = true,
+  animate = true,
 }: ScoreCircleProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const clampedScore = Math.max(0, Math.min(100, score));
-  const dashOffset = circumference - (clampedScore / 100) * circumference;
+  const targetOffset = circumference - (clampedScore / 100) * circumference;
+
+  const [displayScore, setDisplayScore] = useState(animate ? 0 : clampedScore);
+  const [currentOffset, setCurrentOffset] = useState(animate ? circumference : targetOffset);
+  const animStarted = useRef(false);
+
+  useEffect(() => {
+    if (!animate || animStarted.current) return;
+    animStarted.current = true;
+
+    // Delay to let the component mount, then animate
+    const delay = setTimeout(() => {
+      setCurrentOffset(targetOffset);
+    }, 100);
+
+    // Count-up number
+    let start = 0;
+    const duration = 1200;
+    const stepTime = clampedScore > 0 ? duration / clampedScore : duration;
+    const timer = setInterval(() => {
+      start++;
+      setDisplayScore(start);
+      if (start >= clampedScore) clearInterval(timer);
+    }, stepTime);
+
+    return () => {
+      clearTimeout(delay);
+      clearInterval(timer);
+    };
+  }, [animate, clampedScore, targetOffset, circumference]);
+
+  // Non-animated mode
+  useEffect(() => {
+    if (!animate) {
+      setDisplayScore(clampedScore);
+      setCurrentOffset(targetOffset);
+    }
+  }, [animate, clampedScore, targetOffset]);
 
   const getColor = (s: number) => {
-    if (s >= 70) return { stroke: '#10B981', bg: '#D1FAE5', text: '#065F46' }; // emerald
-    if (s >= 40) return { stroke: '#F59E0B', bg: '#FEF3C7', text: '#92400E' }; // amber
-    return { stroke: '#EF4444', bg: '#FEE2E2', text: '#991B1B' }; // red
+    if (s >= 70) return { stroke: '#5a7c65', bg: '#e8f0e5', text: '#3d5a47' }; // sage green
+    if (s >= 40) return { stroke: '#c4956a', bg: '#fdf3eb', text: '#8a6840' }; // warm amber
+    return { stroke: '#c45c5c', bg: '#fce8e8', text: '#8b3a3a' }; // warm red
   };
 
   const getEmoji = (s: number) => {
@@ -42,14 +83,19 @@ export default function ScoreCircle({
   return (
     <div className="flex flex-col items-center">
       <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="transform -rotate-90">
+        <svg
+          width={size}
+          height={size}
+          className="transform -rotate-90"
+          style={{ animation: animate ? 'scoreGlow 2s ease-in-out 1.2s 1' : undefined }}
+        >
           {/* Background circle */}
           <circle
             cx={size / 2}
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#E5E7EB"
+            stroke="var(--border-warm, #e8e2d8)"
             strokeWidth={strokeWidth}
           />
           {/* Progress arc */}
@@ -62,23 +108,33 @@ export default function ScoreCircle({
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
+            strokeDashoffset={currentOffset}
+            style={{
+              transition: animate ? 'stroke-dashoffset 1.2s ease-out' : 'stroke-dashoffset 0.8s ease-out',
+              filter: `drop-shadow(0 0 6px ${colors.stroke}40)`,
+            }}
           />
         </svg>
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           {showEmoji && <span className="text-lg mb-0.5">{getEmoji(clampedScore)}</span>}
-          <span className="text-2xl font-bold" style={{ color: colors.text }}>
-            {clampedScore}
+          <span
+            className="font-bold"
+            style={{
+              color: colors.text,
+              fontFamily: "'DM Serif Display', Georgia, serif",
+              fontSize: size >= 140 ? '2rem' : '1.5rem',
+            }}
+          >
+            {displayScore}
           </span>
         </div>
       </div>
       {label && (
-        <p className="text-sm font-semibold text-neutral-800 mt-2">{label}</p>
+        <p className="text-sm font-semibold mt-2" style={{ color: 'var(--text-main, #2c3e2d)' }}>{label}</p>
       )}
       {sublabel && (
-        <p className="text-xs text-neutral-500 mt-0.5">{sublabel}</p>
+        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted, #7a8c7e)' }}>{sublabel}</p>
       )}
     </div>
   );

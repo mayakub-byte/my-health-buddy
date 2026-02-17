@@ -9,9 +9,17 @@ import { ArrowLeft } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import { supabase } from '../lib/supabase';
 import { getMealAnalysisCelebration } from '../utils/personalizedCopy';
+import MemberAvatar from '../components/MemberAvatar';
 import type { AnalysisLoadingState } from './AnalysisLoading';
 import type { FamilyMember } from '../types';
 import type { MealAnalysisResponse } from '../types/meal-analysis';
+
+const getResultTagline = (score: number): string => {
+  if (score >= 80) return "Beautiful! Every meal like this strengthens your family\u2019s bond \uD83D\uDC9A";
+  if (score >= 60) return "Good effort! Small shifts today, big health wins tomorrow \uD83C\uDF31";
+  if (score >= 40) return "Every family meal is a step forward \u2014 let\u2019s make the next one count \uD83E\uDD1D";
+  return "No judgment \u2014 just a gentle nudge towards a healthier plate \uD83C\uDF43";
+};
 
 export interface HistoryResultState {
   fromHistory: true;
@@ -304,26 +312,28 @@ export default function FamilyGuidanceResult() {
   };
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col pb-8 max-w-md mx-auto w-full">
+    <div className="min-h-screen flex flex-col pb-8 max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
       <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         <Link
           to="/dashboard"
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
+          className="flex items-center justify-center w-10 h-10 rounded-full border text-neutral-600 hover:bg-beige-100 shadow-card"
+          style={{ borderColor: '#e8e2d8' }}
           aria-label="Back to dashboard"
         >
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <h1 className="font-serif text-xl font-bold text-olive-800">Our Family Mealtime Journey</h1>
+        <h1 className="font-serif text-xl font-bold" style={{ color: '#3d5a47' }}>Our Family Mealtime Journey</h1>
       </header>
 
       <main className="flex-1 px-5 py-6 overflow-y-auto">
         {/* SECTION 1: Quick Verdict */}
         <section className="mb-5">
-          <div className="card p-5 text-center">
+          <div className="card-warm p-5 text-center">
             {/* Traffic Light Circle */}
             {trafficLight && (
               <div className="flex justify-center mb-4">
-                <div className={`w-20 h-20 rounded-full ${getTrafficLightColor(trafficLight)} flex items-center justify-center shadow-lg`}>
+                <div className={`w-20 h-20 rounded-full ${getTrafficLightColor(trafficLight)} flex items-center justify-center`}
+                  style={{ boxShadow: '0 4px 16px rgba(90, 70, 50, 0.12)' }}>
                   <span className="text-4xl">
                     {trafficLight === 'green' ? '🟢' : trafficLight === 'yellow' ? '🟡' : '🔴'}
                   </span>
@@ -333,7 +343,22 @@ export default function FamilyGuidanceResult() {
 
             {/* Quick Verdict */}
             {quickVerdict && (
-              <p className="font-heading text-lg text-olive-800 mb-4">{quickVerdict}</p>
+              <p className="font-heading text-lg mb-2" style={{ color: '#3d5a47' }}>{quickVerdict}</p>
+            )}
+
+            {/* Emotional tagline */}
+            {(healthScore != null || trafficLight) && (
+              <p style={{
+                fontFamily: "'DM Serif Display', Georgia, serif",
+                fontSize: '14px',
+                color: '#5a7c65',
+                textAlign: 'center',
+                margin: '8px 16px 12px',
+                fontStyle: 'italic',
+                lineHeight: 1.5,
+              }}>
+                {getResultTagline(healthScore ?? (trafficLight === 'green' ? 80 : trafficLight === 'yellow' ? 55 : 25))}
+              </p>
             )}
 
             {/* Meal Photo + Name */}
@@ -391,15 +416,15 @@ export default function FamilyGuidanceResult() {
         {/* SECTION 2: Tips While You Cook */}
         {beforeCookingTips.length > 0 && (
           <section className="mb-5">
-            <div className="card p-5">
+            <div className="card-warm" style={{ padding: 20 }}>
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-2xl" aria-hidden>🌿</span>
-                <h3 className="font-heading font-semibold text-olive-800">Tips While You Cook</h3>
+                <h3 className="font-heading font-semibold" style={{ color: '#3d5a47' }}>Tips While You Cook</h3>
               </div>
               <ul className="space-y-2">
                 {beforeCookingTips.map((tip, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-neutral-700">
-                    <span className="text-olive-500 mt-0.5 flex-shrink-0">•</span>
+                  <li key={i} className="flex gap-2 text-sm" style={{ color: '#2c3e2d' }}>
+                    <span style={{ color: '#5a7c65' }} className="mt-0.5 flex-shrink-0">•</span>
                     <span>{tip}</span>
                   </li>
                 ))}
@@ -411,63 +436,69 @@ export default function FamilyGuidanceResult() {
         {/* SECTION 3: For Your Family — Per-Member Personalized Scores */}
         {claude?.family_member_scores && claude.family_member_scores.length > 0 && (
           <section className="mb-5">
-            <h3 className="font-heading font-semibold text-olive-800 mb-3">For Your Family</h3>
+            <h3 className="font-heading font-semibold mb-3" style={{ color: '#3d5a47' }}>For Your Family</h3>
             <div className="space-y-3">
               {claude.family_member_scores.map((ms, idx) => {
                 const matchedMember = members.find((m) => m.name.toLowerCase() === ms.name.toLowerCase());
-                const lightColors: Record<string, { bg: string; border: string; badge: string; label: string }> = {
-                  green: { bg: 'bg-emerald-50', border: 'border-emerald-200', badge: 'bg-emerald-100 text-emerald-700', label: 'Great!' },
-                  yellow: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', label: 'Watch' },
-                  red: { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', label: 'Careful' },
-                };
-                const lightKey = (ms.traffic_light || 'green') as 'green' | 'yellow' | 'red';
-                const colors = lightColors[lightKey] || lightColors.green;
+                const scoreColor = ms.score >= 70 ? '#5a7c65' : ms.score >= 40 ? '#c4956a' : '#c45c5c';
                 const ageGroupLabel = matchedMember?.age_group ? matchedMember.age_group.charAt(0).toUpperCase() + matchedMember.age_group.slice(1) : '';
                 const conditionsLabel = matchedMember?.health_conditions?.filter((c) => c !== 'none').join(', ') || '';
                 return (
-                  <div key={idx} className={`p-4 rounded-2xl ${colors.bg} ${colors.border} border-2`}>
-                    {/* Header: Avatar + Name + Score + Badge */}
+                  <div
+                    key={idx}
+                    className="card-warm"
+                    style={{
+                      opacity: 0,
+                      animation: `fadeSlideIn 0.5s ease-out forwards`,
+                      animationDelay: `${0.3 + idx * 0.15}s`,
+                    }}
+                  >
+                    {/* Header: Avatar + Name + Score */}
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-12 h-12 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center flex-shrink-0`}>
-                        <span className="text-lg font-bold" style={{ color: ms.score >= 70 ? '#10B981' : ms.score >= 40 ? '#F59E0B' : '#EF4444' }}>
-                          {ms.score}
-                        </span>
-                      </div>
+                      <MemberAvatar
+                        name={ms.name}
+                        relationship={matchedMember?.relationship}
+                        size={44}
+                      />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-neutral-800">{ms.name}</p>
-                        <p className="text-xs text-neutral-500">
-                          {[ageGroupLabel, conditionsLabel].filter(Boolean).join(' • ')}
+                        <p className="font-semibold" style={{ color: '#2c3e2d' }}>{ms.name}</p>
+                        <p className="text-xs" style={{ color: '#7a8c7e' }}>
+                          {[ageGroupLabel, conditionsLabel].filter(Boolean).join(' \u2022 ')}
                         </p>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors.badge}`}>
-                        {ms.score}/100
+                      <span
+                        className="font-bold"
+                        style={{
+                          fontFamily: "'DM Serif Display', Georgia, serif",
+                          fontSize: 24,
+                          color: scoreColor,
+                        }}
+                      >
+                        {ms.score}
                       </span>
                     </div>
                     {/* Reason */}
                     {ms.reason && (
-                      <p className="text-xs text-neutral-500 italic mb-2">{ms.reason}</p>
+                      <p className="text-xs italic mb-2" style={{ color: '#7a8c7e' }}>{ms.reason}</p>
                     )}
                     {/* Tip */}
                     {ms.tip && (
-                      <div className="flex gap-2 mb-2">
+                      <div className="flex gap-2 mb-2" style={{ background: '#f5f0e8', borderRadius: 10, padding: 10 }}>
                         <span className="text-sm flex-shrink-0">💡</span>
-                        <p className="text-sm text-neutral-700 font-serif">{ms.tip}</p>
+                        <p className="text-sm font-serif" style={{ color: '#3d5a47' }}>{ms.tip}</p>
                       </div>
                     )}
                     {/* Avoid warning */}
                     {ms.avoid && (
-                      <div className="flex gap-2 mt-2 p-2 bg-red-50 rounded-lg">
+                      <div className="flex gap-2 mt-2 p-2.5 rounded-lg" style={{ background: '#fef0ef' }}>
                         <span className="text-sm flex-shrink-0">⚠️</span>
-                        <p className="text-sm text-red-700">{ms.avoid}</p>
+                        <p className="text-sm" style={{ color: '#8b3a3a' }}>{ms.avoid}</p>
                       </div>
                     )}
                   </div>
                 );
               })}
             </div>
-            <p className="text-center font-serif italic text-[#5C6B4A] mt-4 mb-6">
-              Every meal strengthens our bond 💚
-            </p>
           </section>
         )}
 
@@ -574,22 +605,28 @@ export default function FamilyGuidanceResult() {
           </section>
         )}
 
-        {/* SECTION 4: Telugu Food Swaps */}
+        {/* SECTION 4: Telugu Food Swaps — styled as cards */}
         {culturallyAppropriateSwaps.length > 0 && (
           <section className="mb-5">
-            <div className="card p-5">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-2xl" aria-hidden>🔄</span>
-                <h3 className="font-heading font-semibold text-olive-800">Telugu Food Swaps</h3>
-              </div>
-              <ul className="space-y-2">
-                {culturallyAppropriateSwaps.map((swap, i) => (
-                  <li key={i} className="flex gap-2 text-sm text-neutral-700">
-                    <span className="text-olive-500 mt-0.5 flex-shrink-0">•</span>
-                    <span>{swap}</span>
-                  </li>
-                ))}
-              </ul>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-2xl" aria-hidden>🔄</span>
+              <h3 className="font-heading font-semibold" style={{ color: '#3d5a47' }}>Telugu Food Swaps</h3>
+            </div>
+            <div className="space-y-2.5">
+              {culturallyAppropriateSwaps.map((swap, i) => (
+                <div key={i} style={{
+                  background: 'var(--surface-warm, #f5f0e8)',
+                  borderRadius: 12,
+                  padding: 14,
+                  borderLeft: '3px solid var(--accent-gold, #c4956a)',
+                  display: 'flex',
+                  gap: 10,
+                  alignItems: 'flex-start',
+                }}>
+                  <span style={{ fontSize: 20 }}>🔄</span>
+                  <p className="text-sm" style={{ color: '#2c3e2d', margin: 0 }}>{swap}</p>
+                </div>
+              ))}
             </div>
           </section>
         )}
@@ -643,7 +680,7 @@ export default function FamilyGuidanceResult() {
           target="_blank"
           rel="noopener noreferrer"
           className="block text-center mt-4 mb-2 py-2.5 text-sm transition-opacity hover:opacity-100"
-          style={{ color: '#2d6a4f', opacity: 0.8 }}
+          style={{ color: '#5a7c65', opacity: 0.8 }}
         >
           <span role="img" aria-hidden>👨‍⚕️</span> Want personalized guidance? Talk to a nutritionist
         </a>
