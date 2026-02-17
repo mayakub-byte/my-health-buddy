@@ -1,6 +1,30 @@
 // Claude Vision meal analysis response shape
+
+// New: Detailed detected dish with confidence scoring
+export interface DetectedDish {
+  name: string;
+  name_telugu?: string | null;
+  confidence: 'high' | 'medium' | 'low';
+  confidence_pct?: number;
+  alternatives?: Array<{
+    name: string;
+    reason: string;
+  }>;
+  portion: string;
+  estimated_calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g: number;
+  visual_cues?: string;
+}
+
 export interface MealAnalysisResponse {
-  // New format fields (from updated prompt)
+  // New: Enhanced detection with confidence
+  detected_dishes?: DetectedDish[];
+  verification_questions?: string[];
+
+  // Standard format fields (from updated prompt)
   meal_name?: string;
   meal_name_telugu?: string;
   dishes?: Array<{

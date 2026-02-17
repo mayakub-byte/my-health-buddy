@@ -14,11 +14,18 @@ export interface MemberProfile {
   relationship?: string;
 }
 
+export interface FoodProfile {
+  recentMeals?: string[];
+  preferredCuisine?: string;
+  commonDishes?: string[];
+}
+
 export async function analyzeMealImage(
   imageBase64: string,
   mediaType: string = 'image/jpeg',
   memberProfiles?: MemberProfile[],
   voiceContext?: string,
+  foodProfile?: FoodProfile,
 ): Promise<MealAnalysisResponse> {
   const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
   const res = await fetch(url, {
@@ -33,6 +40,7 @@ export async function analyzeMealImage(
       media_type: mediaType,
       memberProfiles: memberProfiles ?? [],
       voiceContext: voiceContext ?? '',
+      foodProfile: foodProfile ?? undefined,
     }),
   });
   if (!res.ok) {
@@ -47,6 +55,7 @@ export async function analyzeMealText(
   portionSize: 'small' | 'medium' | 'large' = 'medium',
   memberProfiles?: MemberProfile[],
   voiceContext?: string,
+  foodProfile?: FoodProfile,
 ): Promise<MealAnalysisResponse> {
   const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
   const res = await fetch(url, {
@@ -61,11 +70,42 @@ export async function analyzeMealText(
       portion: portionSize,
       memberProfiles: memberProfiles ?? [],
       voiceContext: voiceContext ?? '',
+      foodProfile: foodProfile ?? undefined,
     }),
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error || 'Analysis failed');
+  }
+  return await res.json() as MealAnalysisResponse;
+}
+
+export async function reAnalyzeWithCorrection(
+  correctionText: string,
+  originalDishes: Array<{ name: string; portion: string; estimated_calories: number }>,
+  memberProfiles?: MemberProfile[],
+  imageBase64?: string,
+  mediaType?: string,
+): Promise<MealAnalysisResponse> {
+  const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    },
+    body: JSON.stringify({
+      type: 'correction',
+      correction_text: correctionText,
+      original_dishes: originalDishes,
+      image_base64: imageBase64 ?? undefined,
+      media_type: mediaType ?? undefined,
+      memberProfiles: memberProfiles ?? [],
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error((err as { error?: string }).error || 'Correction analysis failed');
   }
   return await res.json() as MealAnalysisResponse;
 }

@@ -8,16 +8,87 @@ const corsHeaders = {
 
 const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY');
 
-const FOOD_RECOGNITION_PROMPT = `You are a friendly, culturally-aware Telugu family nutrition companion. 
-You analyze food photos and provide practical, small modifications — 
-NOT lectures about calories.
+const FOOD_RECOGNITION_PROMPT = `You are a world-class food recognition AI and a culturally-aware Telugu family nutrition companion.
 
-CONTEXT: You're helping a busy working mother in urban Hyderabad/Telangana 
-who cooks ONE meal for the entire family. She already knows what she's cooking. 
+YOUR PRIMARY JOB: Identify EXACTLY what food is in this image with high accuracy.
+YOUR SECONDARY JOB: Provide practical, small modifications — NOT lectures about calories.
+
+CONTEXT: You're helping a busy working mother in urban Hyderabad/Telangana
+who cooks ONE meal for the entire family. She already knows what she's cooking.
 She wants validation + small, actionable tweaks she can implement NOW.
 
-ANALYZE the food photo and respond with this EXACT JSON structure:
+═══════════════════════════════════════════
+STEP 1: FOOD RECOGNITION (BE PRECISE)
+═══════════════════════════════════════════
+
+VISUAL ANALYSIS RULES:
+- Look at COLOR, TEXTURE, SHAPE, CONTAINER, GARNISH, and STEAM/MOISTURE
+- Identify EACH distinct dish separately (a thali may have 4-6 items)
+- For each dish, assess your confidence: high (>85%), medium (60-85%), low (<60%)
+- If confidence is medium or low, provide 2-3 alternatives with reasoning
+
+COMMON MISIDENTIFICATION TRAPS — BE CAREFUL:
+- Green chutney (mint/coriander) vs guacamole vs palak paste
+- Falafel vs vada vs aloo tikki vs dal vada
+- Naan vs pita vs kulcha vs parotta
+- Sambar vs rasam vs dal vs curry (look at thickness and color)
+- Idli vs appam vs puttu (shape and texture matter)
+- Dosa vs crepe vs uttapam (look at thickness, holes, toppings)
+- Biryani vs pulao vs fried rice (look at layering, color, spices visible)
+- Chapati vs roti vs phulka vs paratha (look at layers, oil sheen, thickness)
+- Paneer vs tofu vs cheese (look at texture, browning pattern)
+- Upma vs poha vs sevai (look at grain shape and color)
+
+BREAD TYPE DISAMBIGUATION:
+If bread is detected, specify EXACTLY which type:
+- Chapati/Roti (thin, round, dry-cooked, slight char marks)
+- Paratha (layered, flaky, oil/ghee sheen, golden-brown)
+- Naan (teardrop shape, charred spots from tandoor, thicker)
+- Kulcha (round naan-like, often stuffed, softer)
+- Puri (small, round, puffed, deep-fried, golden)
+- Bhature (large, puffed, deep-fried, slightly crispy)
+- Parotta/Porotta (layered, torn look, Kerala/South Indian style)
+- Dosa (thin, crispy, large, fermented rice-lentil batter)
+- Pesarattu (green moong dal dosa, speckled)
+- Appam (bowl-shaped, lacy edges, soft center)
+
+GLOBAL CUISINE SUPPORT:
+Recognize foods from ALL cuisines accurately:
+- South Indian: idli, dosa, vada, uttapam, pesarattu, appam, puttu, upma
+- Telugu: pappu, kura, pulusu, pachadi, perugu, gongura, gutti vankaya
+- North Indian: roti, paratha, dal makhani, paneer dishes, chole, rajma
+- Chinese/Indo-Chinese: fried rice, noodles, manchurian, chilli chicken
+- Continental: pasta, pizza, burgers, sandwiches, salads
+- Middle Eastern: hummus, falafel, shawarma, pita
+- South East Asian: pad thai, sushi, ramen, pho
+- Street food: pani puri, chaat, samosa, vada pav, dosa variations
+
+═══════════════════════════════════════════
+STEP 2: RESPOND WITH THIS EXACT JSON
+═══════════════════════════════════════════
 {
+  "detected_dishes": [
+    {
+      "name": "Specific dish name",
+      "name_telugu": "తెలుగు పేరు or null if not Telugu",
+      "confidence": "high/medium/low",
+      "confidence_pct": 92,
+      "alternatives": [
+        {"name": "Alternative dish name", "reason": "Why it could be this instead"}
+      ],
+      "portion": "small/medium/large",
+      "estimated_calories": 250,
+      "protein_g": 8,
+      "carbs_g": 40,
+      "fat_g": 6,
+      "fiber_g": 3,
+      "visual_cues": "Golden brown, layered texture, oil sheen suggests paratha not roti"
+    }
+  ],
+  "verification_questions": [
+    "Is the green paste mint chutney or something else?",
+    "Is this made with oil or ghee?"
+  ],
   "meal_name": "Descriptive meal name",
   "meal_name_telugu": "తెలుగు పేరు",
   "dishes": [
@@ -52,7 +123,7 @@ ANALYZE the food photo and respond with this EXACT JSON structure:
       "avoid": "Skip the pickle — high sodium"
     },
     "hypertension": {
-      "traffic_light": "red", 
+      "traffic_light": "red",
       "tip": "Skip pickle, add cucumber raita instead",
       "avoid": "Papad has high sodium"
     },
@@ -86,46 +157,62 @@ ANALYZE the food photo and respond with this EXACT JSON structure:
   "ayurvedic_note": "Specific note about this meal's properties"
 }
 
-CRITICAL RULES:
-1. ACCURATE CALORIES — use real nutritional data:
+═══════════════════════════════════════════
+CRITICAL RULES
+═══════════════════════════════════════════
+
+1. ACCURATE FOOD IDENTIFICATION:
+   - When unsure, say so! Use "medium" or "low" confidence
+   - ALWAYS provide alternatives for medium/low confidence items
+   - Include visual_cues explaining WHY you identified each dish
+   - verification_questions: Ask 1-3 clarifying questions if ANY item is ambiguous
+
+2. ACCURATE CALORIES — use real nutritional data:
    - 1 idli = 60-70 kcal, 1 dosa = 120-150 kcal
    - 1 cup rice = 200-240 kcal, 1 roti = 100-120 kcal
+   - 1 paratha = 200-260 kcal (higher than roti due to oil/ghee)
    - Chicken biryani (1 serving) = 500-700 kcal
    - Mutton biryani (1 serving) = 600-800 kcal
    - Sambar (1 cup) = 120-150 kcal
    - Dal (1 cup) = 150-180 kcal
+   - 1 puri = 100-120 kcal (deep-fried)
+   - Paneer curry (1 cup) = 300-400 kcal
+   - Curd rice (1 cup) = 200-250 kcal
 
-2. CULTURALLY APPROPRIATE suggestions only:
+3. CULTURALLY APPROPRIATE suggestions only:
    ✅ Brown rice, ragi, jowar, bajra, pesarattu, gongura, palak
    ❌ Quinoa, kale, chia seeds, avocado, tofu
 
-3. SMALL MODIFICATIONS only — never suggest completely different meals:
+4. SMALL MODIFICATIONS only — never suggest completely different meals:
    ✅ "Add almonds to chutney while grinding"
-   ✅ "Reduce rice portion by 1/4 cup" 
+   ✅ "Reduce rice portion by 1/4 cup"
    ✅ "Skip pickle for BP patient"
    ❌ "Replace biryani with salad"
    ❌ "Don't eat rice, switch to quinoa"
 
-4. FRIENDLY TONE — like a knowledgeable friend, not a strict nutritionist
+5. FRIENDLY TONE — like a knowledgeable friend, not a strict nutritionist
    ✅ "Great choice! Just add some dal for extra protein"
    ❌ "This meal is deficient in protein and exceeds carbohydrate limits"
 
-5. TRAFFIC LIGHT must be accurate:
+6. TRAFFIC LIGHT must be accurate:
    🟢 Green: Balanced, within healthy range
    🟡 Yellow: Acceptable but one area needs attention
    🔴 Red: Multiple nutritional concerns
 
-6. per_member_guidance: Only include guidance types relevant to the
+7. per_member_guidance: Only include guidance types relevant to the
    detected meal. Always include "general_adult" and "child".
    Include condition-specific ones only when relevant.
 
-7. before_cooking_tips: Frame as things to do WHILE cooking, not after.
+8. before_cooking_tips: Frame as things to do WHILE cooking, not after.
    These should be implementable RIGHT NOW.
 
-8. If FAMILY_MEMBER_PROFILES are provided below, ALSO return a "family_member_scores"
-   array with a SEPARATE entry per named member. Each member gets their OWN score and
-   suggestion based on their age and health conditions. A diabetic elder eating rice
-   should score MUCH LOWER than a growing child eating the same meal.`;
+9. detected_dishes vs dishes: "detected_dishes" has full confidence + alternatives info.
+   "dishes" is the simplified nutrition-only array (for backward compat). Keep BOTH in sync.
+
+10. If FAMILY_MEMBER_PROFILES are provided below, ALSO return a "family_member_scores"
+    array with a SEPARATE entry per named member. Each member gets their OWN score and
+    suggestion based on their age and health conditions. A diabetic elder eating rice
+    should score MUCH LOWER than a growing child eating the same meal.`;
 
 function buildMemberBlock(memberProfiles: any[]): string {
   if (!memberProfiles || memberProfiles.length === 0) return '';
@@ -166,6 +253,47 @@ USER VOICE CONTEXT: "${voiceContext.trim()}"
 The user has provided additional context about this meal. Use this to correct any AI misidentification and adjust the analysis accordingly. For example, if the user says "this is sourdough bread, not regular bread" — trust the user's correction.`;
 }
 
+function buildFoodProfileBlock(foodProfile: any): string {
+  if (!foodProfile) return '';
+  const { recentMeals, preferredCuisine, commonDishes } = foodProfile;
+  const parts: string[] = [];
+  if (preferredCuisine) {
+    parts.push(`Preferred cuisine: ${preferredCuisine}`);
+  }
+  if (commonDishes && Array.isArray(commonDishes) && commonDishes.length > 0) {
+    parts.push(`Commonly eaten dishes: ${commonDishes.join(', ')}`);
+  }
+  if (recentMeals && Array.isArray(recentMeals) && recentMeals.length > 0) {
+    parts.push(`Recent meals this week: ${recentMeals.slice(0, 10).join(', ')}`);
+  }
+  if (parts.length === 0) return '';
+  return `
+
+USER FOOD PROFILE (use this to improve dish identification — if a family regularly eats Telugu meals, an ambiguous item is more likely to be a Telugu dish):
+${parts.join('\n')}`;
+}
+
+const CORRECTION_PROMPT = `You are re-analyzing a meal based on USER CORRECTIONS.
+The AI previously detected certain foods, but the user has corrected the identification.
+
+ORIGINAL AI DETECTION:
+{ORIGINAL_DISHES}
+
+USER CORRECTION: "{USER_CORRECTION}"
+
+RULES:
+1. TRUST THE USER'S CORRECTION over the original AI detection
+2. Re-calculate ALL nutrition values based on the corrected food items
+3. Keep the same JSON response format as the original analysis
+4. Update detected_dishes with corrected items (set confidence to "high" for user-confirmed items)
+5. Recalculate total_calories, macros, traffic_light, and all guidance
+6. Keep any items the user did NOT correct — only change what they specified
+7. If the user says "remove X" — remove that item entirely
+8. If the user says "add Y" — add it as a new detected dish
+9. If the user says "X is actually Y" — replace X with Y and recalculate
+
+Respond with the COMPLETE updated JSON (same structure as original analysis).`;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -177,7 +305,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { type, image_base64, media_type, mealDescription, portion, mealNames, memberCount, memberProfiles, voiceContext } = body;
+    const { type, image_base64, media_type, mealDescription, portion, mealNames, memberCount, memberProfiles, voiceContext, foodProfile } = body;
 
     // Grocery list generation
     if (type === 'grocery') {
@@ -280,7 +408,7 @@ Respond ONLY with this JSON (no other text, no markdown):
         throw new Error('No meal description provided');
       }
 
-      const textPrompt = `${FOOD_RECOGNITION_PROMPT}${buildMemberBlock(memberProfiles)}${buildVoiceBlock(voiceContext)}
+      const textPrompt = `${FOOD_RECOGNITION_PROMPT}${buildMemberBlock(memberProfiles)}${buildFoodProfileBlock(foodProfile)}${buildVoiceBlock(voiceContext)}
 
 IMPORTANT: Analyze this meal based on the TEXT DESCRIPTION only (no image):
 Meal description: "${mealDescription}"
@@ -298,6 +426,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
+          temperature: 0,
           messages: [{
             role: 'user',
             content: textPrompt
@@ -326,12 +455,67 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
       });
     }
 
+    // Correction re-analysis
+    if (type === 'correction') {
+      const { correction_text, original_dishes, image_base64: corrImg, media_type: corrMedia } = body;
+      if (!correction_text) {
+        throw new Error('No correction text provided');
+      }
+      const originalDishesStr = JSON.stringify(original_dishes || [], null, 2);
+      const correctionPrompt = CORRECTION_PROMPT
+        .replace('{ORIGINAL_DISHES}', originalDishesStr)
+        .replace('{USER_CORRECTION}', correction_text.trim());
+
+      const fullCorrectionPrompt = `${correctionPrompt}${buildMemberBlock(memberProfiles)}`;
+
+      // Build message content — include image if available for visual re-verification
+      const messageContent: any[] = [];
+      if (corrImg) {
+        messageContent.push({
+          type: 'image',
+          source: { type: 'base64', media_type: corrMedia || 'image/jpeg', data: corrImg }
+        });
+      }
+      messageContent.push({ type: 'text', text: fullCorrectionPrompt });
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_API_KEY,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 4096,
+          temperature: 0,
+          messages: [{ role: 'user', content: messageContent }]
+        })
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Claude correction API error:', response.status, errText);
+        throw new Error(`Claude API error: ${response.status}`);
+      }
+      const data = await response.json();
+      const textContent = data.content.find((c: any) => c.type === 'text');
+      if (!textContent?.text) throw new Error('No text in Claude response');
+      let jsonText = textContent.text.trim();
+      if (jsonText.startsWith('```')) {
+        jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+      }
+      const parsed = JSON.parse(jsonText);
+      return new Response(JSON.stringify(parsed), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     // Image-based analysis (legacy support)
     if (!image_base64) {
       throw new Error('No image provided');
     }
 
-    const fullImagePrompt = `${FOOD_RECOGNITION_PROMPT}${buildMemberBlock(memberProfiles)}${buildVoiceBlock(voiceContext)}`;
+    const fullImagePrompt = `${FOOD_RECOGNITION_PROMPT}${buildMemberBlock(memberProfiles)}${buildFoodProfileBlock(foodProfile)}${buildVoiceBlock(voiceContext)}`;
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -343,6 +527,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
+        temperature: 0,
         messages: [{
           role: 'user',
           content: [
