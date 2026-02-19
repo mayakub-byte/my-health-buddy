@@ -51,8 +51,8 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const durationRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const durationRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const cleanup = useCallback(() => {
     // Stop all tracks

@@ -4,7 +4,8 @@
 // ============================================
 
 import { Mic, Square, Loader2 } from 'lucide-react';
-import { useVoiceRecorder, UseVoiceRecorderOptions } from '../hooks/useVoiceRecorder';
+import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import type { UseVoiceRecorderOptions } from '../hooks/useVoiceRecorder';
 
 interface VoiceRecorderButtonProps extends UseVoiceRecorderOptions {
   /** Button size: 'sm' (32px), 'md' (40px), 'lg' (48px) */

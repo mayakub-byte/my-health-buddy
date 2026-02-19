@@ -4,14 +4,15 @@
 // alternatives, voice/text correction, re-analysis
 // ============================================
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, X, Plus, Edit2, Check, Mic, MicOff, AlertTriangle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
+import { ArrowLeft, X, Plus, Edit2, Check, AlertTriangle, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import type { MealAnalysisResponse } from '../types/meal-analysis';
 import type { DetectedDish } from '../types/meal-analysis';
 import { reAnalyzeWithCorrection } from '../lib/analyze-meal-api';
 import type { MemberProfile } from '../lib/analyze-meal-api';
 import { useFamily } from '../hooks/useFamily';
+import { VoiceRecorderButton } from '../components/VoiceRecorderButton';
 
 interface DetectedItem {
   id: string;
@@ -66,10 +67,6 @@ export default function MealCorrection() {
   const [correctionText, setCorrectionText] = useState('');
   const [isReAnalyzing, setIsReAnalyzing] = useState(false);
   const [showCorrectionInput, setShowCorrectionInput] = useState(false);
-
-  // Voice correction state
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
 
   // Verification questions from AI
   const verificationQuestions = claude?.verification_questions ?? [];
@@ -130,31 +127,6 @@ export default function MealCorrection() {
       navigate('/dashboard', { replace: true });
     }
   }, [claude, state, navigate]);
-
-  // Voice recognition setup
-  const startListening = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.lang = 'en-IN';
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setCorrectionText((prev) => prev ? `${prev} ${transcript}` : transcript);
-      setIsListening(false);
-    };
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-  };
-
-  const stopListening = () => {
-    recognitionRef.current?.stop();
-    setIsListening(false);
-  };
 
   // Select an alternative for a dish
   function selectAlternative(itemId: string, altName: string) {
@@ -674,26 +646,13 @@ export default function MealCorrection() {
                 style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', color: '#2c3e2d' }}
                 onKeyDown={(e) => e.key === 'Enter' && handleReAnalyze()}
               />
-              <button
-                type="button"
-                onClick={isListening ? stopListening : startListening}
-                className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{
-                  backgroundColor: isListening ? '#c62828' : '#5a7c65',
-                  color: '#ffffff',
-                  minWidth: 48,
-                  minHeight: 48,
-                }}
-                aria-label={isListening ? 'Stop recording' : 'Start voice correction'}
-              >
-                {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </button>
+              <VoiceRecorderButton
+                size="lg"
+                showDuration={false}
+                onTranscript={(text) => setCorrectionText((prev) => prev ? `${prev} ${text}` : text)}
+                onError={(err) => console.error('Voice correction error:', err)}
+              />
             </div>
-            {isListening && (
-              <p className="text-xs mb-2 animate-pulse" style={{ color: '#c62828' }}>
-                🎙️ Listening... speak your correction
-              </p>
-            )}
             {correctionText && (
               <button
                 type="button"

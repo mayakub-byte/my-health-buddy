@@ -5,64 +5,13 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, X, Mic } from 'lucide-react';
+import { Camera, X } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import PageHeader from '../components/PageHeader';
 import MemberAvatar from '../components/MemberAvatar';
+import { VoiceRecorderButton } from '../components/VoiceRecorderButton';
 import { supabase } from '../lib/supabase';
 import { getDashboardGreeting, buildCopyContext } from '../utils/personalizedCopy';
-
-// TypeScript declarations for Web Speech API
-interface SpeechRecognition extends EventTarget {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  start(): void;
-  stop(): void;
-  abort(): void;
-  onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-}
-
-interface SpeechRecognitionEvent {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
-
-interface SpeechRecognitionResultList {
-  length: number;
-  item(index: number): SpeechRecognitionResult;
-  [index: number]: SpeechRecognitionResult;
-}
-
-interface SpeechRecognitionResult {
-  length: number;
-  item(index: number): SpeechRecognitionAlternative;
-  [index: number]: SpeechRecognitionAlternative;
-  isFinal: boolean;
-}
-
-interface SpeechRecognitionAlternative {
-  transcript: string;
-  confidence: number;
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message: string;
-}
-
-declare global {
-  interface Window {
-    SpeechRecognition: {
-      new (): SpeechRecognition;
-    };
-    webkitSpeechRecognition: {
-      new (): SpeechRecognition;
-    };
-  }
-}
 
 const TELUGU_MEALS = {
   breakfast: [
@@ -145,9 +94,7 @@ export default function MealInput() {
   const [toast, setToast] = useState<string | null>(null);
   const [showMealModal, setShowMealModal] = useState(false);
   const [selectedTab, setSelectedTab] = useState<MealTime>(getCurrentMealTime());
-  const [isListening, setIsListening] = useState(false);
   const [voiceContext, setVoiceContext] = useState('');
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
 
 
   useEffect(() => {
@@ -255,83 +202,6 @@ export default function MealInput() {
     setShowMealModal(false);
     // User can then add photo or go straight to "LOG MEAL"
   };
-
-  const startVoice = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setToast('Voice input not supported in your browser');
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-IN';
-    recognition.interimResults = true;
-    recognition.continuous = true;
-
-    let finalTranscript = '';
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let interim = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        const result = event.results[i];
-        if (result.isFinal) {
-          finalTranscript += result[0].transcript;
-        } else {
-          interim += result[0].transcript;
-        }
-      }
-      setManualText(finalTranscript + interim);
-    };
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error !== 'no-speech') {
-        setToast('Voice input failed. Please try again.');
-      }
-      setIsListening(false);
-    };
-
-    recognition.onend = () => {
-      if (finalTranscript) {
-        setManualText(finalTranscript);
-      }
-      setIsListening(false);
-    };
-
-    try {
-      recognition.start();
-      setIsListening(true);
-      recognitionRef.current = recognition;
-      // Auto-stop after 30 seconds
-      setTimeout(() => {
-        if (recognitionRef.current) {
-          recognitionRef.current.stop();
-          recognitionRef.current = null;
-        }
-      }, 30000);
-    } catch (err) {
-      console.error('Failed to start recognition:', err);
-      setToast('Failed to start voice input');
-      setIsListening(false);
-    }
-  };
-
-  const stopVoice = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-    setIsListening(false);
-  };
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-      }
-    };
-  }, []);
 
   const today = new Date().toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -441,23 +311,14 @@ export default function MealInput() {
             aria-label="Describe your meal"
           />
           {/* Voice Input Button */}
-          {(window.SpeechRecognition || window.webkitSpeechRecognition) && (
-            <button
-              type="button"
-              onClick={isListening ? stopVoice : startVoice}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                isListening
-                  ? 'bg-red-500 text-white animate-pulse'
-                  : 'bg-olive-500 text-white hover:bg-olive-600'
-              }`}
-              aria-label={isListening ? 'Stop recording' : 'Start voice input'}
-            >
-              <Mic className="w-5 h-5" />
-              {isListening && (
-                <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-75" />
-              )}
-            </button>
-          )}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <VoiceRecorderButton
+              size="md"
+              showDuration={false}
+              onTranscript={(text) => setManualText((prev) => prev ? `${prev} ${text}` : text)}
+              onError={(err) => setToast(err)}
+            />
+          </div>
         </div>
 
         <div className="flex gap-3 mt-3">
@@ -507,39 +368,12 @@ export default function MealInput() {
                 className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"
                 style={{ color: '#2D3319' }}
               />
-              {(window.SpeechRecognition || window.webkitSpeechRecognition) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (isListening) {
-                      stopVoice();
-                    } else {
-                      // Use voice recognition for context
-                      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                      const recognition = new SpeechRecognition();
-                      recognition.lang = 'en-IN';
-                      recognition.interimResults = false;
-                      recognition.continuous = false;
-                      recognition.onresult = (event: SpeechRecognitionEvent) => {
-                        const transcript = event.results[0]?.[0]?.transcript || '';
-                        setVoiceContext((prev) => prev ? `${prev} ${transcript}` : transcript);
-                      };
-                      recognition.onerror = () => setIsListening(false);
-                      recognition.onend = () => setIsListening(false);
-                      recognition.start();
-                      setIsListening(true);
-                      setTimeout(() => { try { recognition.stop(); } catch {} }, 15000);
-                    }
-                  }}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    isListening ? 'bg-red-500 animate-pulse' : ''
-                  }`}
-                  style={!isListening ? { backgroundColor: '#5a7c65' } : {}}
-                  aria-label="Voice input for context"
-                >
-                  <Mic className="w-4 h-4 text-white" />
-                </button>
-              )}
+              <VoiceRecorderButton
+                size="md"
+                showDuration={false}
+                onTranscript={(text) => setVoiceContext((prev) => prev ? `${prev} ${text}` : text)}
+                onError={(err) => console.error('Voice error:', err)}
+              />
             </div>
             {voiceContext && (
               <p className="mt-2 text-xs italic" style={{ color: '#666' }}>
