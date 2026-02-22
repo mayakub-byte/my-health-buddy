@@ -157,7 +157,7 @@ export default function PortionConfirmation() {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-brand-border text-brand-text hover:bg-brand-light shadow-card"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -176,13 +176,13 @@ export default function PortionConfirmation() {
       <div className="px-5 mb-4">
         <div className="rounded-2xl p-4 flex items-center gap-3" style={{ backgroundColor: '#FDFBF7' }}>
           {imagePreview && (
-            <div className="w-14 h-14 rounded-xl overflow-hidden border border-beige-300 flex-shrink-0">
+            <div className="w-14 h-14 rounded-xl overflow-hidden border border-brand-border flex-shrink-0">
               <img src={imagePreview} alt="Meal" className="w-full h-full object-cover" />
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h2 className="font-serif font-bold text-olive-800 truncate">{mealName}</h2>
-            <p className="text-xs text-neutral-500">
+            <h2 className="font-serif font-bold text-brand-dark truncate">{mealName}</h2>
+            <p className="text-xs text-brand-text">
               {relevantMembers.length} member{relevantMembers.length !== 1 ? 's' : ''} eating
             </p>
           </div>
@@ -219,8 +219,8 @@ export default function PortionConfirmation() {
                   {member.name?.charAt(0)?.toUpperCase() || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-neutral-800">{member.name}</p>
-                  <p className="text-xs text-neutral-500">
+                  <p className="font-semibold text-brand-dark">{member.name}</p>
+                  <p className="text-xs text-brand-text">
                     {portion.skipMeal
                       ? 'Skipping this meal'
                       : `${PORTION_SIZES.find((s) => s.value === portion.portionSize)?.label} • ${portion.servings} serving${portion.servings > 1 ? 's' : ''} • ${OIL_OPTIONS.find((o) => o.value === portion.oilLevel)?.label}`}
@@ -245,7 +245,7 @@ export default function PortionConfirmation() {
                 <div className="px-4 pb-4 space-y-4 border-t" style={{ borderColor: '#e5e5e5' }}>
                   {/* Portion Size */}
                   <div className="pt-3">
-                    <p className="text-sm font-medium text-neutral-700 mb-2">Portion Size</p>
+                    <p className="text-sm font-medium text-brand-dark mb-2">Portion Size</p>
                     <div className="grid grid-cols-3 gap-2">
                       {PORTION_SIZES.map((size) => (
                         <button
@@ -254,12 +254,12 @@ export default function PortionConfirmation() {
                           onClick={() => updatePortion(member.id, { portionSize: size.value })}
                           className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all ${
                             portion.portionSize === size.value
-                              ? 'border-olive-500 bg-olive-50/50'
-                              : 'border-beige-200 hover:border-olive-300'
+                              ? 'border-brand-green bg-brand-light/50'
+                              : 'border-brand-border hover:border-brand-border'
                           }`}
                         >
                           <span className="text-xl mb-1">{size.emoji}</span>
-                          <span className="text-xs font-medium text-neutral-700">{size.label}</span>
+                          <span className="text-xs font-medium text-brand-dark">{size.label}</span>
                         </button>
                       ))}
                     </div>
@@ -267,22 +267,22 @@ export default function PortionConfirmation() {
 
                   {/* Servings */}
                   <div>
-                    <p className="text-sm font-medium text-neutral-700 mb-2">Servings</p>
+                    <p className="text-sm font-medium text-brand-dark mb-2">Servings</p>
                     <div className="flex items-center gap-4">
                       <button
                         type="button"
                         onClick={() => updatePortion(member.id, { servings: Math.max(1, portion.servings - 1) })}
                         disabled={portion.servings <= 1}
-                        className="w-10 h-10 rounded-full border-2 border-beige-300 flex items-center justify-center text-lg font-medium text-neutral-600 disabled:opacity-40"
+                        className="w-10 h-10 rounded-full border-2 border-brand-border flex items-center justify-center text-lg font-medium text-brand-text disabled:opacity-40"
                       >
                         −
                       </button>
-                      <span className="text-lg font-semibold text-olive-800 w-8 text-center">{portion.servings}</span>
+                      <span className="text-lg font-semibold text-brand-dark w-8 text-center">{portion.servings}</span>
                       <button
                         type="button"
                         onClick={() => updatePortion(member.id, { servings: Math.min(5, portion.servings + 1) })}
                         disabled={portion.servings >= 5}
-                        className="w-10 h-10 rounded-full border-2 border-beige-300 flex items-center justify-center text-lg font-medium text-neutral-600 disabled:opacity-40"
+                        className="w-10 h-10 rounded-full border-2 border-brand-border flex items-center justify-center text-lg font-medium text-brand-text disabled:opacity-40"
                       >
                         +
                       </button>
@@ -291,7 +291,7 @@ export default function PortionConfirmation() {
 
                   {/* Oil Level */}
                   <div>
-                    <p className="text-sm font-medium text-neutral-700 mb-2">Oil Level</p>
+                    <p className="text-sm font-medium text-brand-dark mb-2">Oil Level</p>
                     <div className="flex gap-2">
                       {OIL_OPTIONS.map((oil) => (
                         <button
@@ -300,8 +300,8 @@ export default function PortionConfirmation() {
                           onClick={() => updatePortion(member.id, { oilLevel: oil.value })}
                           className={`flex-1 py-2.5 px-3 rounded-xl text-center text-sm font-medium transition-all border-2 ${
                             portion.oilLevel === oil.value
-                              ? 'border-olive-500 bg-olive-50/50 text-olive-800'
-                              : 'border-beige-200 text-neutral-600 hover:border-olive-300'
+                              ? 'border-brand-green bg-brand-light/50 text-brand-dark'
+                              : 'border-brand-border text-brand-text hover:border-brand-border'
                           }`}
                         >
                           {oil.emoji}
@@ -314,7 +314,7 @@ export default function PortionConfirmation() {
 
                   {/* Cooking Style */}
                   <div>
-                    <p className="text-sm font-medium text-neutral-700 mb-2">Cooking Style</p>
+                    <p className="text-sm font-medium text-brand-dark mb-2">Cooking Style</p>
                     <div className="flex flex-wrap gap-2">
                       {COOKING_STYLES.map((style) => (
                         <button
@@ -323,8 +323,8 @@ export default function PortionConfirmation() {
                           onClick={() => updatePortion(member.id, { cookingStyle: style.value })}
                           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
                             portion.cookingStyle === style.value
-                              ? 'border-olive-500 bg-olive-50 text-olive-800'
-                              : 'border-beige-200 text-neutral-600 hover:border-olive-300'
+                              ? 'border-brand-green bg-brand-light text-brand-dark'
+                              : 'border-brand-border text-brand-text hover:border-brand-border'
                           }`}
                         >
                           {style.emoji} {style.label}
@@ -335,7 +335,7 @@ export default function PortionConfirmation() {
 
                   {/* Add-ons */}
                   <div>
-                    <p className="text-sm font-medium text-neutral-700 mb-2">Add-ons</p>
+                    <p className="text-sm font-medium text-brand-dark mb-2">Add-ons</p>
                     <div className="flex flex-wrap gap-2">
                       {COMMON_ADDONS.map((addon) => (
                         <button
@@ -344,8 +344,8 @@ export default function PortionConfirmation() {
                           onClick={() => toggleAddOn(member.id, addon.name)}
                           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all border ${
                             portion.addOns.includes(addon.name)
-                              ? 'border-olive-500 bg-olive-50 text-olive-800'
-                              : 'border-beige-200 text-neutral-600 hover:border-olive-300'
+                              ? 'border-brand-green bg-brand-light text-brand-dark'
+                              : 'border-brand-border text-brand-text hover:border-brand-border'
                           }`}
                         >
                           {addon.emoji} {addon.name}
@@ -360,7 +360,7 @@ export default function PortionConfirmation() {
                       <p className="text-xs font-medium mb-1" style={{ color: '#5C6B4A' }}>
                         Health note for {member.name}
                       </p>
-                      <p className="text-xs text-neutral-600">
+                      <p className="text-xs text-brand-text">
                         {getHealthNote(member)}
                       </p>
                     </div>
@@ -374,7 +374,7 @@ export default function PortionConfirmation() {
                   <button
                     type="button"
                     onClick={() => updatePortion(member.id, { skipMeal: !portion.skipMeal })}
-                    className="text-xs text-neutral-500 underline"
+                    className="text-xs text-brand-text underline"
                   >
                     {portion.skipMeal ? 'Include in this meal' : 'Skip this meal for ' + member.name}
                   </button>
@@ -386,8 +386,8 @@ export default function PortionConfirmation() {
 
         {/* Quick Apply All */}
         {relevantMembers.length > 1 && (
-          <div className="rounded-2xl p-4 border border-dashed border-beige-300" style={{ backgroundColor: '#FDFBF7' }}>
-            <p className="text-sm font-medium text-neutral-700 mb-2">Quick: Apply to all</p>
+          <div className="rounded-2xl p-4 border border-dashed border-brand-border" style={{ backgroundColor: '#FDFBF7' }}>
+            <p className="text-sm font-medium text-brand-dark mb-2">Quick: Apply to all</p>
             <div className="flex gap-2">
               {PORTION_SIZES.map((size) => (
                 <button
@@ -398,7 +398,7 @@ export default function PortionConfirmation() {
                       prev.map((p) => (p.skipMeal ? p : { ...p, portionSize: size.value }))
                     );
                   }}
-                  className="flex-1 py-2 rounded-xl border border-beige-200 text-center text-xs font-medium text-neutral-600 hover:border-olive-400 hover:bg-olive-50/50 transition-all"
+                  className="flex-1 py-2 rounded-xl border border-brand-border text-center text-xs font-medium text-brand-text hover:border-brand-green hover:bg-brand-light/50 transition-all"
                 >
                   {size.emoji} {size.label}
                 </button>

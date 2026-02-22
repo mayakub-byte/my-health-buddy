@@ -271,7 +271,7 @@ export default function MealHistory() {
   }, [primaryName, members.length]);
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
+    <div className="min-h-screen bg-brand-light flex flex-col pb-24 max-w-md mx-auto w-full">
       <header className="px-5 pt-6 pb-4">
         <PageHeader title="Meal History" subtitle={historySubtitle} />
       </header>
@@ -283,8 +283,8 @@ export default function MealHistory() {
             onClick={() => setSelectedMemberFilter(null)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               selectedMemberFilter === null
-                ? 'bg-olive-500 text-white'
-                : 'bg-beige-50 border border-beige-300 text-neutral-600'
+                ? 'bg-brand-light0 text-white'
+                : 'bg-brand-light border border-brand-border text-brand-text'
             }`}
           >
             All
@@ -295,8 +295,8 @@ export default function MealHistory() {
               onClick={() => setSelectedMemberFilter(m.id)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
                 selectedMemberFilter === m.id
-                  ? 'bg-olive-500 text-white'
-                  : 'bg-beige-50 border border-beige-300 text-neutral-600'
+                  ? 'bg-brand-light0 text-white'
+                  : 'bg-brand-light border border-brand-border text-brand-text'
               }`}
             >
               <span
@@ -319,12 +319,12 @@ export default function MealHistory() {
             onClick={() =>
               filter === 'week' ? setWeekOffset((o) => o - 1) : setMonthOffset((o) => o - 1)
             }
-            className="p-2 rounded-full text-olive-600 hover:bg-olive-50"
+            className="p-2 rounded-full text-brand-text hover:bg-brand-light"
             aria-label={filter === 'week' ? 'Previous week' : 'Previous month'}
           >
             <span aria-hidden>&lt;</span>
           </button>
-          <span className="text-sm font-medium text-neutral-700">
+          <span className="text-sm font-medium text-brand-dark">
             {filter === 'week'
               ? weekRangeLabel
               : (() => {
@@ -338,7 +338,7 @@ export default function MealHistory() {
             onClick={() =>
               filter === 'week' ? setWeekOffset((o) => o + 1) : setMonthOffset((o) => o + 1)
             }
-            className="p-2 rounded-full text-olive-600 hover:bg-olive-50"
+            className="p-2 rounded-full text-brand-text hover:bg-brand-light"
             aria-label={filter === 'week' ? 'Next week' : 'Next month'}
           >
             <span aria-hidden>&gt;</span>
@@ -353,8 +353,8 @@ export default function MealHistory() {
             onClick={() => setFilter(f.value)}
             className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               filter === f.value
-                ? 'bg-olive-500 text-white'
-                : 'bg-beige-50 border border-beige-300 text-neutral-600 hover:border-olive-400'
+                ? 'bg-brand-light0 text-white'
+                : 'bg-brand-light border border-brand-border text-brand-text hover:border-brand-green'
             }`}
           >
             {f.label}
@@ -402,7 +402,7 @@ export default function MealHistory() {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-3 px-4 py-2 bg-[#5a7c65] text-white rounded-full text-sm"
+              className="mt-3 px-4 py-2 bg-[#6ab08c] text-white rounded-full text-sm"
             >
               Try Again
             </button>
@@ -413,7 +413,7 @@ export default function MealHistory() {
             <p className="text-gray-600 mt-2">{emptyMessage}</p>
             <Link
               to="/dashboard"
-              className="mt-3 inline-block px-4 py-2 bg-[#5a7c65] text-white rounded-full text-sm"
+              className="mt-3 inline-block px-4 py-2 bg-[#6ab08c] text-white rounded-full text-sm"
             >
               Scan a meal
             </Link>
@@ -422,8 +422,8 @@ export default function MealHistory() {
           <div className="overflow-x-auto -mx-4 px-4 pb-4">
             <table className="w-full min-w-[400px]">
               <thead>
-                <tr className="bg-[#5a7c65] text-white text-xs">
-                  <th className="py-2 px-2 text-left rounded-tl-lg sticky left-0 bg-[#5a7c65] min-w-[100px] z-10">
+                <tr className="bg-[#6ab08c] text-white text-xs">
+                  <th className="py-2 px-2 text-left rounded-tl-lg sticky left-0 bg-[#6ab08c] min-w-[100px] z-10">
                     Day
                   </th>
                   <th className="py-2 px-2 text-left min-w-[100px]">Breakfast</th>
@@ -434,7 +434,7 @@ export default function MealHistory() {
               <tbody>
                 {daysToShow.map((day) => (
                   <tr key={day.date.toISOString()} className="border-b border-gray-100">
-                    <td className="py-2 px-2 text-xs font-semibold text-gray-700 sticky left-0 bg-[#faf8f3] min-w-[100px] z-10">
+                    <td className="py-2 px-2 text-xs font-semibold text-gray-700 sticky left-0 bg-[#f4f6f4] min-w-[100px] z-10">
                       {day.label}
                     </td>
                     {GRID_MEAL_TIMES.map((mealTime) => {
@@ -504,7 +504,7 @@ export default function MealHistory() {
                     state={resultState}
                     className="w-full card p-4 flex items-center gap-4 text-left hover:shadow-card-hover transition-shadow active:opacity-90 block"
                   >
-                    <div className="w-14 h-14 rounded-xl bg-beige-100 overflow-hidden flex-shrink-0">
+                    <div className="w-14 h-14 rounded-xl bg-brand-light overflow-hidden flex-shrink-0">
                       {meal.image_url ? (
                         <img src={meal.image_url} alt="" className="w-full h-full object-cover" />
                       ) : (
@@ -512,15 +512,15 @@ export default function MealHistory() {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-olive-800 truncate">{meal.food_name}</p>
-                      <p className="text-xs text-neutral-500 mt-0.5">{formatDateTime(meal.created_at)}</p>
-                      <p className="text-sm text-neutral-600 mt-1">
+                      <p className="font-semibold text-brand-dark truncate">{meal.food_name}</p>
+                      <p className="text-xs text-brand-text mt-0.5">{formatDateTime(meal.created_at)}</p>
+                      <p className="text-sm text-brand-text mt-1">
                         {meal.calories ?? '—'} kcal <span className="text-neutral-400 mx-1">·</span> {memberName(meal.family_member_id)}
                       </p>
                     </div>
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
-                        color === 'red' ? 'bg-red-100 text-red-700' : color === 'orange' ? 'bg-orange-100 text-orange-700' : 'bg-olive-100 text-olive-700'
+                        color === 'red' ? 'bg-red-100 text-red-700' : color === 'orange' ? 'bg-orange-100 text-orange-700' : 'bg-brand-gray text-brand-dark'
                       }`}
                     >
                       {score}

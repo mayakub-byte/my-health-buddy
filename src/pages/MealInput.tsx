@@ -229,7 +229,7 @@ export default function MealInput() {
   }, [primaryName, members.length, filteredTodayMeals.length]);
 
   return (
-    <div className="min-h-screen flex flex-col pb-24 max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
+    <div className="min-h-screen flex flex-col pb-24 max-w-md mx-auto w-full" style={{ backgroundColor: '#f4f6f4' }}>
       {/* Who's eating? — ABOVE heading */}
       <section className="px-5 pt-6 mb-4">
         <p className="text-sm font-medium mb-2" style={{ color: '#7a8c7e' }}>Who&apos;s eating?</p>
@@ -245,32 +245,32 @@ export default function MealInput() {
                   : 'opacity-50'
               }`}
               style={{
-                border: selectedMembers.includes(member.id) ? '2px solid #5a7c65' : '1px solid #e8e2d8',
+                border: selectedMembers.includes(member.id) ? '2px solid #6ab08c' : '1px solid #e8e2d8',
                 backgroundColor: selectedMembers.includes(member.id) ? '#ffffff' : 'transparent',
               }}
             >
               <div className="mb-1">
                 <MemberAvatar name={member.name} relationship={member.relationship} size={40} />
               </div>
-              <span className="text-xs font-medium truncate max-w-[56px]" style={{ color: '#2c3e2d' }}>
+              <span className="text-xs font-medium truncate max-w-[56px]" style={{ color: '#143628' }}>
                 {member.name}
               </span>
               {selectedMembers.includes(member.id) && (
-                <span className="text-xs mt-0.5" style={{ color: '#5a7c65' }}>✓</span>
+                <span className="text-xs mt-0.5" style={{ color: '#6ab08c' }}>✓</span>
               )}
             </button>
           ))}
           <button
             type="button"
             onClick={() => navigate('/family', { state: { addMember: true } })}
-            className="flex flex-col items-center justify-center min-w-[64px] p-2 rounded-xl border-2 border-dashed border-beige-300 opacity-60 hover:opacity-100 flex-shrink-0"
+            className="flex flex-col items-center justify-center min-w-[64px] p-2 rounded-xl border-2 border-dashed border-brand-border opacity-60 hover:opacity-100 flex-shrink-0"
           >
             <span className="text-xl mb-1">+</span>
-            <span className="text-xs text-neutral-500">Add</span>
+            <span className="text-xs text-brand-text">Add</span>
           </button>
         </div>
         {members.length === 0 && (
-          <p className="text-sm text-neutral-500 py-2">No family members yet</p>
+          <p className="text-sm text-brand-text py-2">No family members yet</p>
         )}
       </section>
 
@@ -284,8 +284,8 @@ export default function MealInput() {
               onClick={() => setMealTime(mt.key)}
               className={`flex-1 py-2 px-1 rounded-full text-xs font-medium transition-all ${
                 mealTime === mt.key
-                  ? 'bg-olive-500 text-white shadow-sm'
-                  : 'bg-beige-50 text-neutral-600 border border-beige-300'
+                  ? 'bg-brand-light0 text-white shadow-sm'
+                  : 'bg-brand-light text-brand-text border border-brand-border'
               }`}
             >
               {mt.emoji} {mt.label}
@@ -325,7 +325,7 @@ export default function MealInput() {
           <button
             type="button"
             onClick={() => setShowMealModal(true)}
-            className="flex-1 py-3 rounded-full border-2 border-beige-300 bg-beige-50 text-neutral-600 font-medium hover:border-olive-400 hover:bg-olive-50/50 transition-colors"
+            className="flex-1 py-3 rounded-full border-2 border-brand-border bg-brand-light text-brand-text font-medium hover:border-brand-green hover:bg-brand-light/50 transition-colors"
           >
             Choose common meal
           </button>
@@ -340,7 +340,7 @@ export default function MealInput() {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex-1 py-3 rounded-full border-2 border-beige-300 bg-beige-50 text-neutral-600 font-medium hover:border-olive-400 hover:bg-olive-50/50 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-3 rounded-full border-2 border-brand-border bg-brand-light text-brand-text font-medium hover:border-brand-green hover:bg-brand-light/50 transition-colors flex items-center justify-center gap-2"
           >
             <Camera className="w-5 h-5" />
             Add photo (optional)
@@ -348,7 +348,7 @@ export default function MealInput() {
         </div>
 
         {imagePreview && (
-          <div className="mt-4 rounded-2xl overflow-hidden border border-beige-300 shadow-card aspect-[4/3] max-h-48">
+          <div className="mt-4 rounded-2xl overflow-hidden border border-brand-border shadow-card aspect-[4/3] max-h-48">
             <img src={imagePreview} alt="Your meal" className="w-full h-full object-cover" />
           </div>
         )}
@@ -396,7 +396,7 @@ export default function MealInput() {
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium" style={{ color: '#7a8c7e' }}>Today so far</span>
             {filteredTodayMeals.length > 0 && (
-              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#f5f0e8', color: '#5a7c65' }}>
+              <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ backgroundColor: '#f5f0e8', color: '#6ab08c' }}>
                 {filteredTodayMeals.length} meal{filteredTodayMeals.length !== 1 ? 's' : ''}
               </span>
             )}
@@ -404,12 +404,12 @@ export default function MealInput() {
           {filteredTodayMeals.length > 0 ? (
             <div className="flex items-center gap-4">
               <div className="text-center flex-1">
-                <p className="text-2xl font-bold" style={{ fontFamily: "'DM Serif Display', Georgia, serif", color: '#2c3e2d' }}>{totalCalories}</p>
+                <p className="text-2xl font-bold" style={{ fontFamily: "'DM Serif Display', Georgia, serif", color: '#143628' }}>{totalCalories}</p>
                 <p className="text-xs" style={{ color: '#7a8c7e' }}>calories</p>
               </div>
               <div className="w-px h-10" style={{ backgroundColor: '#e8e2d8' }} />
               <div className="text-center flex-1">
-                <p className="text-2xl font-bold" style={{ color: '#5a7c65' }}>
+                <p className="text-2xl font-bold" style={{ color: '#6ab08c' }}>
                   {filteredTodayMeals.length < 3 ? '🟡' : '🟢'}
                 </p>
                 <p className="text-xs" style={{ color: '#7a8c7e' }}>
@@ -430,20 +430,20 @@ export default function MealInput() {
           <button
             type="button"
             onClick={() => navigate('/history')}
-            className="flex-1 p-3 rounded-xl flex items-center gap-2 hover:bg-beige-100 transition-colors"
+            className="flex-1 p-3 rounded-xl flex items-center gap-2 hover:bg-brand-light transition-colors"
             style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
           >
             <span className="text-lg" role="img" aria-hidden>📋</span>
-            <span className="text-xs font-medium" style={{ color: '#2c3e2d' }}>View History</span>
+            <span className="text-xs font-medium" style={{ color: '#143628' }}>View History</span>
           </button>
           <button
             type="button"
             onClick={() => navigate('/weekly')}
-            className="flex-1 p-3 rounded-xl flex items-center gap-2 hover:bg-beige-100 transition-colors"
+            className="flex-1 p-3 rounded-xl flex items-center gap-2 hover:bg-brand-light transition-colors"
             style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
           >
             <span className="text-lg" role="img" aria-hidden>📊</span>
-            <span className="text-xs font-medium" style={{ color: '#2c3e2d' }}>Weekly Progress</span>
+            <span className="text-xs font-medium" style={{ color: '#143628' }}>Weekly Progress</span>
           </button>
         </div>
 
@@ -452,12 +452,12 @@ export default function MealInput() {
           <button
             type="button"
             onClick={() => setManualText(lastMeal.food_name)}
-            className="mt-3 w-full p-3 bg-[#FDFBF7] rounded-xl border border-beige-200 flex items-center gap-3 text-left hover:bg-beige-100 transition-colors"
+            className="mt-3 w-full p-3 bg-[#FDFBF7] rounded-xl border border-brand-border flex items-center gap-3 text-left hover:bg-brand-light transition-colors"
           >
             <span className="text-2xl">🔄</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-800 truncate">{lastMeal.food_name}</p>
-              <p className="text-xs text-neutral-500">Tap to log similar meal</p>
+              <p className="text-sm font-medium text-brand-dark truncate">{lastMeal.food_name}</p>
+              <p className="text-xs text-brand-text">Tap to log similar meal</p>
             </div>
             <span className="text-xs text-neutral-400 flex-shrink-0">{lastMeal.calories ?? 0} cal</span>
           </button>
@@ -489,21 +489,21 @@ export default function MealInput() {
               }
             }}
           />
-          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-beige-50 rounded-t-3xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto animate-slide-up">
-            <div className="sticky top-0 bg-beige-50 border-b border-beige-300 px-5 py-4 flex items-center justify-between z-10">
-              <h2 className="font-heading text-lg font-bold text-olive-800">Choose a Telugu Meal</h2>
+          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-light rounded-t-3xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto animate-slide-up">
+            <div className="sticky top-0 bg-brand-light border-b border-brand-border px-5 py-4 flex items-center justify-between z-10">
+              <h2 className="font-heading text-lg font-bold text-brand-dark">Choose a Telugu Meal</h2>
               <button
                 type="button"
                 onClick={() => setShowMealModal(false)}
-                className="p-2 rounded-full hover:bg-beige-200 transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
+                className="p-2 rounded-full hover:bg-brand-light transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
                 aria-label="Close"
               >
-                <X className="w-5 h-5 text-neutral-600" />
+                <X className="w-5 h-5 text-brand-text" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="sticky top-[73px] bg-beige-50 border-b border-beige-300 px-5 py-2 flex gap-2 overflow-x-auto z-10">
+            <div className="sticky top-[73px] bg-brand-light border-b border-brand-border px-5 py-2 flex gap-2 overflow-x-auto z-10">
               {(['breakfast', 'lunch', 'dinner', 'snacks'] as MealTime[]).map((tab) => (
                 <button
                   key={tab}
@@ -511,8 +511,8 @@ export default function MealInput() {
                   onClick={() => setSelectedTab(tab)}
                   className={`flex-shrink-0 px-4 py-2 rounded-full font-medium text-sm transition-colors min-h-[48px] ${
                     selectedTab === tab
-                      ? 'bg-olive-500 text-white'
-                      : 'bg-beige-100 text-neutral-600 hover:bg-beige-200'
+                      ? 'bg-brand-light0 text-white'
+                      : 'bg-brand-light text-brand-text hover:bg-brand-light'
                   }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -533,8 +533,8 @@ export default function MealInput() {
                     <div className="flex items-start gap-2">
                       <span className="text-2xl flex-shrink-0">{meal.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-olive-800 mb-0.5">{meal.name}</p>
-                        <p className="text-xs text-neutral-600">{meal.telugu}</p>
+                        <p className="text-sm font-semibold text-brand-dark mb-0.5">{meal.name}</p>
+                        <p className="text-xs text-brand-text">{meal.telugu}</p>
                       </div>
                     </div>
                   </button>

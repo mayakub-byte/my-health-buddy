@@ -22,7 +22,7 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
   body {
-    @apply bg-beige text-charcoal;
+    @apply bg-brand-light text-brand-dark;
   }
 }
 
@@ -32,33 +32,33 @@
   }
   .btn-primary {
     @apply min-h-[48px] rounded-full font-semibold
-           bg-olive-500 text-white
-           hover:bg-olive-600 active:bg-olive-700
+           bg-brand-green text-white
+           hover:bg-[#599A7A] active:bg-[#4d866a]
            transition-colors duration-200
-           disabled:bg-neutral-300 disabled:cursor-not-allowed
+           disabled:bg-gray-300 disabled:cursor-not-allowed
            inline-flex items-center justify-center px-6 py-3;
   }
   .btn-secondary {
     @apply min-h-[48px] rounded-full font-semibold
-           bg-transparent border-2 border-olive-500 text-olive-600
-           hover:bg-olive-50 active:bg-olive-100
+           bg-transparent border-2 border-brand-green text-brand-green
+           hover:bg-brand-green/10 active:bg-brand-green/20
            transition-colors duration-200
            inline-flex items-center justify-center px-6 py-3;
   }
   .btn-gold {
     @apply min-h-[48px] rounded-full font-semibold
-           bg-gold-500 text-white
-           hover:bg-gold-600 active:bg-gold-700
+           bg-brand-dark text-white
+           hover:bg-[#0c2219] active:bg-[#081711]
            transition-colors duration-200
            inline-flex items-center justify-center px-6 py-3;
   }
   .btn-ghost {
-    @apply text-neutral-600 px-4 py-2 rounded-full font-medium min-h-[48px] inline-flex items-center justify-center
-           hover:bg-beige-200 active:bg-beige-300
+    @apply text-brand-text px-4 py-2 rounded-full font-medium min-h-[48px] inline-flex items-center justify-center
+           hover:bg-brand-gray active:bg-[#d5e0d8]
            transition-colors duration-200;
   }
   .card {
-    @apply bg-beige-50 rounded-2xl shadow-sm border border-beige-200 p-5;
+    @apply bg-white rounded-2xl shadow-sm border border-brand-border p-5;
   }
   .card-warm {
     background: #ffffff;
@@ -68,10 +68,10 @@
     padding: 16px;
   }
   .input-field {
-    @apply w-full min-h-[48px] px-4 py-3 rounded-full border border-beige-300
-           focus:border-olive-500 focus:ring-2 focus:ring-olive-100
+    @apply w-full min-h-[48px] px-4 py-3 rounded-full border border-brand-border
+           focus:border-brand-green focus:ring-2 focus:ring-brand-green/20
            outline-none transition-all duration-200
-           placeholder:text-neutral-400 bg-white;
+           placeholder:text-gray-400 bg-white;
   }
   .label {
     @apply block text-sm font-medium text-charcoal mb-1.5;
@@ -81,21 +81,21 @@
            text-xl font-bold text-white;
   }
   .score-great {
-    @apply bg-olive-500;
+    @apply bg-brand-green;
   }
   .score-good {
-    @apply bg-gold-500;
+    @apply bg-[#eab308];
   }
   .score-needs-attention {
-    @apply bg-accent-500;
+    @apply bg-[#ef4444];
   }
   .health-tag {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-           bg-olive-100 text-olive-700;
+           bg-brand-gray text-brand-text;
   }
   .warning-tag {
     @apply inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium
-           bg-accent-100 text-accent-700;
+           bg-[#fee2e2] text-[#b91c1c];
   }
 }
 

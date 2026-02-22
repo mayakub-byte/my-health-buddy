@@ -13,10 +13,10 @@ export default function NotFound() {
       style={{ backgroundColor: '#F4F1EA' }}
     >
       <span className="text-6xl mb-4" aria-hidden>🔍</span>
-      <h1 className="font-serif text-2xl font-bold text-olive-800 mb-2">
+      <h1 className="font-serif text-2xl font-bold text-brand-dark mb-2">
         Page not found
       </h1>
-      <p className="text-neutral-600 text-sm text-center mb-6">
+      <p className="text-brand-text text-sm text-center mb-6">
         The page you&apos;re looking for doesn&apos;t exist.
       </p>
       <button

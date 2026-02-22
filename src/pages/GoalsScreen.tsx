@@ -50,10 +50,10 @@ export default function GoalsScreen() {
       className="min-h-screen flex flex-col px-5 pt-10 pb-8 max-w-md mx-auto w-full"
       style={{ backgroundColor: '#F4F1EA' }}
     >
-      <h1 className="font-serif text-2xl font-bold text-olive-800 mb-1">
+      <h1 className="font-serif text-2xl font-bold text-brand-dark mb-1">
         What are your goals?
       </h1>
-      <p className="text-neutral-600 text-sm mb-6">
+      <p className="text-brand-text text-sm mb-6">
         Select all that apply. We&apos;ll personalize your experience.
       </p>
 
@@ -66,7 +66,7 @@ export default function GoalsScreen() {
             className={`w-full flex items-center gap-3 p-4 rounded-2xl border-2 transition-colors text-left ${
               selected.includes(opt.id)
                 ? 'border-[#5C6B4A] bg-[#5C6B4A]/10'
-                : 'border-gray-200 bg-[#FDFBF7] hover:border-olive-300'
+                : 'border-gray-200 bg-[#FDFBF7] hover:border-brand-border'
             }`}
           >
             <span className="text-2xl" aria-hidden>{opt.icon}</span>

@@ -269,10 +269,10 @@ export default function Results() {
 
         {/* Family Scores - THE WOW MOMENT! */}
         <div>
-          <h2 className="text-xl font-bold text-neutral-800 mb-1">
+          <h2 className="text-xl font-bold text-brand-dark mb-1">
             Scores for {family?.name}
           </h2>
-          <p className="text-neutral-500 text-sm mb-4">
+          <p className="text-brand-text text-sm mb-4">
             Same meal, personalized for each member
           </p>
 
@@ -297,14 +297,14 @@ export default function Results() {
         {/* One Small Change */}
         <div className="bg-gradient-to-r from-primary-50 to-green-50 rounded-2xl p-5">
           <div className="flex items-start gap-3">
-            <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <Lightbulb className="w-5 h-5 text-primary-600" />
+            <div className="w-10 h-10 bg-brand-gray rounded-full flex items-center justify-center flex-shrink-0">
+              <Lightbulb className="w-5 h-5 text-brand-text" />
             </div>
             <div>
-              <h3 className="font-semibold text-primary-800 mb-1">
+              <h3 className="font-semibold text-brand-dark mb-1">
                 One small change for everyone
               </h3>
-              <p className="text-sm text-primary-700">
+              <p className="text-sm text-brand-dark">
                 Add a small bowl of curd (50g) to boost protein and probiotics for the whole family! 🥛
               </p>
             </div>
@@ -347,8 +347,8 @@ function ScoreCard({
 
         {/* Name & Insight */}
         <div className="flex-1 text-left">
-          <h3 className="font-semibold text-neutral-800">{member.name}</h3>
-          <p className="text-sm text-neutral-500">{score.key_insight}</p>
+          <h3 className="font-semibold text-brand-dark">{member.name}</h3>
+          <p className="text-sm text-brand-text">{score.key_insight}</p>
         </div>
 
         {/* Score Badge */}
@@ -373,43 +373,43 @@ function ScoreCard({
           {/* Macros */}
           <div className="grid grid-cols-4 gap-2 text-center mb-4">
             <div className="rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
-              <p className="text-lg font-bold text-neutral-800">
+              <p className="text-lg font-bold text-brand-dark">
                 {Math.round(score.macros.carbs)}g
               </p>
-              <p className="text-xs text-neutral-500">Carbs</p>
+              <p className="text-xs text-brand-text">Carbs</p>
             </div>
             <div className="rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
-              <p className="text-lg font-bold text-neutral-800">
+              <p className="text-lg font-bold text-brand-dark">
                 {Math.round(score.macros.protein)}g
               </p>
-              <p className="text-xs text-neutral-500">Protein</p>
+              <p className="text-xs text-brand-text">Protein</p>
             </div>
             <div className="rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
-              <p className="text-lg font-bold text-neutral-800">
+              <p className="text-lg font-bold text-brand-dark">
                 {Math.round(score.macros.fat)}g
               </p>
-              <p className="text-xs text-neutral-500">Fat</p>
+              <p className="text-xs text-brand-text">Fat</p>
             </div>
             <div className="rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
-              <p className="text-lg font-bold text-neutral-800">
+              <p className="text-lg font-bold text-brand-dark">
                 {Math.round(score.macros.fiber)}g
               </p>
-              <p className="text-xs text-neutral-500">Fiber</p>
+              <p className="text-xs text-brand-text">Fiber</p>
             </div>
           </div>
 
           {/* Suggestions */}
           <div>
-            <h4 className="text-sm font-medium text-neutral-700 mb-2">
+            <h4 className="text-sm font-medium text-brand-dark mb-2">
               Suggestions for {member.name}
             </h4>
             <ul className="space-y-2">
               {score.suggestions.map((suggestion, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-2 text-sm text-neutral-600"
+                  className="flex items-start gap-2 text-sm text-brand-text"
                 >
-                  <span className="text-primary-500">•</span>
+                  <span className="text-brand-text">•</span>
                   {suggestion}
                 </li>
               ))}

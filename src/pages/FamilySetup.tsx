@@ -211,12 +211,12 @@ export default function FamilySetup() {
   };
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col pb-28 max-w-md mx-auto w-full">
+    <div className="min-h-screen bg-brand-light flex flex-col pb-28 max-w-md mx-auto w-full">
       <div className="px-5 pt-6 pb-4">
         <div className="flex items-center gap-3 mb-4">
           <Link
             to="/onboarding"
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-brand-border text-brand-text hover:bg-brand-light shadow-card"
             aria-label="Go back"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -226,15 +226,15 @@ export default function FamilySetup() {
               {[1, 2, 3].map((step) => (
                 <div
                   key={step}
-                  className={`h-1.5 flex-1 rounded-full ${step <= 2 ? 'bg-olive-500' : 'bg-beige-300'}`}
+                  className={`h-1.5 flex-1 rounded-full ${step <= 2 ? 'bg-brand-light0' : 'bg-brand-light'}`}
                 />
               ))}
             </div>
-            <p className="text-xs text-neutral-500 mt-1.5">Step 2 of 3</p>
+            <p className="text-xs text-brand-text mt-1.5">Step 2 of 3</p>
           </div>
         </div>
-        <h1 className="font-serif text-xl font-bold text-olive-800">Settle In, Family</h1>
-        <p className="text-neutral-600 text-sm mt-0.5">Who&apos;s joining the household?</p>
+        <h1 className="font-serif text-xl font-bold text-brand-dark">Settle In, Family</h1>
+        <p className="text-brand-text text-sm mt-0.5">Who&apos;s joining the household?</p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 py-4 pb-24">
@@ -271,7 +271,7 @@ export default function FamilySetup() {
               <button
                 type="button"
                 onClick={() => setEmojiOpen((o) => !o)}
-                className="w-12 h-12 rounded-full bg-beige-100 border border-beige-300 flex items-center justify-center text-2xl hover:bg-beige-200"
+                className="w-12 h-12 rounded-full bg-brand-light border border-brand-border flex items-center justify-center text-2xl hover:bg-brand-light"
               >
                 {form.avatarEmoji}
               </button>
@@ -290,7 +290,7 @@ export default function FamilySetup() {
                     }
                   }}
                 />
-                  <div className="absolute left-0 top-full mt-1 p-2 bg-beige-50 rounded-xl border border-beige-300 shadow-card z-20 grid grid-cols-4 gap-1">
+                  <div className="absolute left-0 top-full mt-1 p-2 bg-brand-light rounded-xl border border-brand-border shadow-card z-20 grid grid-cols-4 gap-1">
                     {AVATAR_EMOJIS.map((emoji) => (
                       <button
                         key={emoji}
@@ -299,7 +299,7 @@ export default function FamilySetup() {
                           updateForm({ avatarEmoji: emoji });
                           setEmojiOpen(false);
                         }}
-                        className="w-9 h-9 flex items-center justify-center text-xl rounded hover:bg-beige-200"
+                        className="w-9 h-9 flex items-center justify-center text-xl rounded hover:bg-brand-light"
                       >
                         {emoji}
                       </button>
@@ -321,17 +321,17 @@ export default function FamilySetup() {
           </div>
           <div className="space-y-3">
             <div>
-              <label className="text-sm font-medium text-neutral-700">Date of Birth</label>
+              <label className="text-sm font-medium text-brand-dark">Date of Birth</label>
               <input
                 type="date"
                 value={form.dob || ''}
                 onChange={(e) => updateForm({ dob: e.target.value })}
                 max={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 rounded-xl border border-beige-300 bg-beige-50 focus:border-olive-500 focus:ring-1 focus:ring-olive-500 outline-none transition-all mt-1"
+                className="w-full px-4 py-3 rounded-xl border border-brand-border bg-brand-light focus:border-brand-green focus:ring-1 focus:ring-olive-500 outline-none transition-all mt-1"
               />
             </div>
             <div>
-              <label className="text-sm font-medium text-neutral-700">Relationship</label>
+              <label className="text-sm font-medium text-brand-dark">Relationship</label>
               <select
                 value={form.relationship}
                 onChange={(e) => updateForm({ relationship: e.target.value })}
@@ -346,7 +346,7 @@ export default function FamilySetup() {
               </select>
             </div>
             <div>
-              <p className="text-xs font-medium text-neutral-500 mb-2">Health needs (optional)</p>
+              <p className="text-xs font-medium text-brand-text mb-2">Health needs (optional)</p>
               <div className="flex flex-wrap gap-2">
                 {HEALTH_OPTIONS.map((opt) => {
                   const active =
@@ -358,7 +358,7 @@ export default function FamilySetup() {
                       type="button"
                       onClick={() => toggleHealth(opt.value)}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
-                        active ? 'bg-olive-500 text-white border-olive-500' : 'bg-beige-50 text-neutral-600 border-beige-300 hover:border-olive-400'
+                        active ? 'bg-brand-light0 text-white border-brand-green' : 'bg-brand-light text-brand-text border-brand-border hover:border-brand-green'
                       }`}
                     >
                       {opt.label}

@@ -322,20 +322,20 @@ export default function MealCorrection() {
   const hasLowConfidence = items.some((i) => i.confidence === 'low' || i.confidence === 'medium');
 
   return (
-    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
+    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#f4f6f4' }}>
       {/* Header */}
       <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="flex items-center justify-center w-10 h-10 rounded-full text-neutral-600 hover:bg-beige-100 flex-shrink-0"
+          className="flex items-center justify-center w-10 h-10 rounded-full text-brand-text hover:bg-brand-light flex-shrink-0"
           style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
           aria-label="Go back"
         >
-          <ArrowLeft className="w-5 h-5" style={{ color: '#5a7c65' }} />
+          <ArrowLeft className="w-5 h-5" style={{ color: '#6ab08c' }} />
         </button>
         <div className="flex-1">
-          <h1 className="font-serif text-lg font-bold" style={{ color: '#2c3e2d' }}>
+          <h1 className="font-serif text-lg font-bold" style={{ color: '#143628' }}>
             Review Detected Items
           </h1>
           <p className="text-xs" style={{ color: '#7a8c7e' }}>
@@ -373,7 +373,7 @@ export default function MealCorrection() {
             type="button"
             onClick={() => setShowCorrectionInput(true)}
             className="mt-3 ml-7 text-sm font-medium underline"
-            style={{ color: '#5a7c65' }}
+            style={{ color: '#6ab08c' }}
           >
             Answer with voice or text →
           </button>
@@ -383,10 +383,10 @@ export default function MealCorrection() {
       {/* Detected Items */}
       <main className="flex-1 px-5 pb-6 overflow-y-auto space-y-3">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-sm font-medium" style={{ color: '#2c3e2d' }}>
+          <p className="text-sm font-medium" style={{ color: '#143628' }}>
             {items.length} item{items.length !== 1 ? 's' : ''} detected
           </p>
-          <p className="text-sm font-semibold" style={{ color: '#5a7c65' }}>
+          <p className="text-sm font-semibold" style={{ color: '#6ab08c' }}>
             {totalCals} cal total
           </p>
         </div>
@@ -401,7 +401,7 @@ export default function MealCorrection() {
               className="rounded-2xl p-4"
               style={{
                 backgroundColor: '#ffffff',
-                border: `1px solid ${editingId === item.id ? '#5a7c65' : '#e8e2d8'}`,
+                border: `1px solid ${editingId === item.id ? '#6ab08c' : '#e8e2d8'}`,
                 boxShadow: '0 2px 8px rgba(90, 70, 50, 0.06)',
               }}
             >
@@ -415,7 +415,7 @@ export default function MealCorrection() {
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
                       className="w-full mt-1 px-3 py-2.5 rounded-xl text-sm"
-                      style={{ backgroundColor: '#faf8f3', border: '1px solid #e8e2d8', color: '#2c3e2d' }}
+                      style={{ backgroundColor: '#f4f6f4', border: '1px solid #e8e2d8', color: '#143628' }}
                     />
                   </div>
                   <div>
@@ -425,7 +425,7 @@ export default function MealCorrection() {
                       value={editPortion}
                       onChange={(e) => setEditPortion(e.target.value)}
                       className="w-full mt-1 px-3 py-2.5 rounded-xl text-sm"
-                      style={{ backgroundColor: '#faf8f3', border: '1px solid #e8e2d8', color: '#2c3e2d' }}
+                      style={{ backgroundColor: '#f4f6f4', border: '1px solid #e8e2d8', color: '#143628' }}
                     />
                   </div>
                   <div className="flex gap-2">
@@ -433,7 +433,7 @@ export default function MealCorrection() {
                       type="button"
                       onClick={() => saveEdit(item.id)}
                       className="flex-1 py-2.5 rounded-full text-sm font-medium text-white flex items-center justify-center gap-1"
-                      style={{ backgroundColor: '#5a7c65' }}
+                      style={{ backgroundColor: '#6ab08c' }}
                     >
                       <Check className="w-4 h-4" /> Save
                     </button>
@@ -454,7 +454,7 @@ export default function MealCorrection() {
                     <div className="flex-1 min-w-0">
                       {/* Name + Confidence badge */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-sm" style={{ color: '#2c3e2d' }}>{item.name}</p>
+                        <p className="font-semibold text-sm" style={{ color: '#143628' }}>{item.name}</p>
                         <span
                           className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                           style={{
@@ -479,13 +479,13 @@ export default function MealCorrection() {
                       )}
                       <div className="flex gap-3 mt-1.5">
                         <span className="text-xs" style={{ color: '#7a8c7e' }}>{item.portion}</span>
-                        <span className="text-xs font-medium" style={{ color: '#5a7c65' }}>{item.calories} cal</span>
+                        <span className="text-xs font-medium" style={{ color: '#6ab08c' }}>{item.calories} cal</span>
                         <span className="text-xs" style={{ color: '#a8c4a0' }}>{item.protein_g}g P</span>
                       </div>
                       {item.isNew && (
                         <span
                           className="inline-block text-[10px] px-2 py-0.5 rounded-full mt-1.5 font-medium"
-                          style={{ backgroundColor: '#f5f0e8', color: '#5a7c65' }}
+                          style={{ backgroundColor: '#f5f0e8', color: '#6ab08c' }}
                         >
                           Manually added
                         </span>
@@ -534,7 +534,7 @@ export default function MealCorrection() {
                       )}
                       {item.alternatives && item.alternatives.length > 0 && (
                         <div>
-                          <p className="text-xs font-medium mb-2" style={{ color: '#2c3e2d' }}>
+                          <p className="text-xs font-medium mb-2" style={{ color: '#143628' }}>
                             Could also be:
                           </p>
                           <div className="flex flex-wrap gap-2">
@@ -546,7 +546,7 @@ export default function MealCorrection() {
                                 className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
                                 style={{
                                   backgroundColor: '#f5f0e8',
-                                  color: '#5a7c65',
+                                  color: '#6ab08c',
                                   border: '1px solid #e8e2d8',
                                 }}
                               >
@@ -576,7 +576,7 @@ export default function MealCorrection() {
         {/* Add Item */}
         {showAddForm ? (
           <div className="rounded-2xl p-4 border-2 border-dashed" style={{ borderColor: '#a8c4a0', backgroundColor: '#ffffff' }}>
-            <p className="text-sm font-medium mb-3" style={{ color: '#2c3e2d' }}>Add a food item</p>
+            <p className="text-sm font-medium mb-3" style={{ color: '#143628' }}>Add a food item</p>
             <div className="space-y-2">
               <input
                 type="text"
@@ -584,7 +584,7 @@ export default function MealCorrection() {
                 onChange={(e) => setNewItemName(e.target.value)}
                 placeholder="Food name (e.g., Curd Rice)"
                 className="w-full px-3 py-2.5 rounded-xl text-sm"
-                style={{ backgroundColor: '#faf8f3', border: '1px solid #e8e2d8', color: '#2c3e2d' }}
+                style={{ backgroundColor: '#f4f6f4', border: '1px solid #e8e2d8', color: '#143628' }}
               />
               <input
                 type="text"
@@ -592,7 +592,7 @@ export default function MealCorrection() {
                 onChange={(e) => setNewItemPortion(e.target.value)}
                 placeholder="Portion (e.g., 1 bowl)"
                 className="w-full px-3 py-2.5 rounded-xl text-sm"
-                style={{ backgroundColor: '#faf8f3', border: '1px solid #e8e2d8', color: '#2c3e2d' }}
+                style={{ backgroundColor: '#f4f6f4', border: '1px solid #e8e2d8', color: '#143628' }}
               />
               <div className="flex gap-2">
                 <button
@@ -600,7 +600,7 @@ export default function MealCorrection() {
                   onClick={addItem}
                   disabled={!newItemName.trim()}
                   className="flex-1 py-2.5 rounded-full text-sm font-medium text-white disabled:opacity-50"
-                  style={{ backgroundColor: '#5a7c65' }}
+                  style={{ backgroundColor: '#6ab08c' }}
                 >
                   Add
                 </button>
@@ -630,7 +630,7 @@ export default function MealCorrection() {
         {/* Voice/Text Correction Section */}
         {(hasLowConfidence || showCorrectionInput) && (
           <div className="rounded-2xl p-4" style={{ backgroundColor: '#f5f0e8', border: '1px solid #e8e2d8' }}>
-            <p className="text-sm font-semibold mb-2" style={{ color: '#2c3e2d' }}>
+            <p className="text-sm font-semibold mb-2" style={{ color: '#143628' }}>
               🗣️ Correct the AI
             </p>
             <p className="text-xs mb-3" style={{ color: '#7a8c7e' }}>
@@ -643,7 +643,7 @@ export default function MealCorrection() {
                 onChange={(e) => setCorrectionText(e.target.value)}
                 placeholder="Type correction or use mic..."
                 className="flex-1 px-3 py-2.5 rounded-xl text-sm"
-                style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', color: '#2c3e2d' }}
+                style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', color: '#143628' }}
                 onKeyDown={(e) => e.key === 'Enter' && handleReAnalyze()}
               />
               <VoiceRecorderButton
@@ -659,7 +659,7 @@ export default function MealCorrection() {
                 onClick={handleReAnalyze}
                 disabled={isReAnalyzing}
                 className="w-full py-2.5 rounded-full text-sm font-medium text-white flex items-center justify-center gap-2 disabled:opacity-60"
-                style={{ backgroundColor: '#5a7c65' }}
+                style={{ backgroundColor: '#6ab08c' }}
               >
                 {isReAnalyzing ? (
                   <>
@@ -683,7 +683,7 @@ export default function MealCorrection() {
             type="button"
             onClick={() => setShowCorrectionInput(true)}
             className="w-full py-2.5 text-sm font-medium"
-            style={{ color: '#5a7c65' }}
+            style={{ color: '#6ab08c' }}
           >
             Something wrong? Correct the AI →
           </button>
@@ -691,20 +691,20 @@ export default function MealCorrection() {
 
         {/* Info note */}
         <div className="p-3 rounded-xl" style={{ backgroundColor: '#f5f0e8' }}>
-          <p className="text-xs" style={{ color: '#5a7c65' }}>
+          <p className="text-xs" style={{ color: '#6ab08c' }}>
             💡 Tap the confidence badge to see why AI identified each dish. Use voice or text to correct mistakes — AI will re-analyze with your input!
           </p>
         </div>
       </main>
 
       {/* Bottom CTA */}
-      <div className="px-5 pb-6 pt-2" style={{ backgroundColor: '#faf8f3' }}>
+      <div className="px-5 pb-6 pt-2" style={{ backgroundColor: '#f4f6f4' }}>
         <button
           type="button"
           onClick={handleContinue}
           disabled={items.length === 0 || isReAnalyzing}
           className="w-full py-3.5 rounded-full font-semibold text-white disabled:opacity-50 transition-colors"
-          style={{ backgroundColor: '#5a7c65' }}
+          style={{ backgroundColor: '#6ab08c' }}
         >
           Looks Good — Continue
         </button>

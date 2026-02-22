@@ -84,7 +84,7 @@ export function VoiceRecorderButton({
             ? 'bg-red-500 animate-pulse shadow-lg shadow-red-500/30' 
             : isLoading
             ? 'bg-amber-500'
-            : 'bg-[#5a7c65] hover:bg-[#4a6c55]'
+            : 'bg-[#6ab08c] hover:bg-[#4a6c55]'
           }
           ${className}
         `}

@@ -37,12 +37,12 @@ export default function Signup() {
         password,
       });
       if (signUpError) throw signUpError;
-      
+
       // Auto-create family for new user
       if (authData.user) {
         const userName = email.trim().split('@')[0]; // "shireenyakub0" from email
         const displayName = userName.charAt(0).toUpperCase() + userName.slice(1);
-        
+
         try {
           // Create family
           const { data: family, error: familyError } = await supabase
@@ -54,7 +54,7 @@ export default function Signup() {
             })
             .select()
             .single();
-          
+
           if (familyError) {
             console.error('Failed to create family:', familyError);
             // Continue anyway - user can create family later
@@ -72,7 +72,7 @@ export default function Signup() {
                 is_primary: true,
                 avatar_color: avatarColors[0],
               });
-            
+
             if (memberError) {
               console.error('Failed to create family member:', memberError);
             } else {
@@ -85,7 +85,7 @@ export default function Signup() {
           // Don't block signup if family creation fails
         }
       }
-      
+
       setSuccess(true);
       // Navigate directly to dashboard (will auto-login after email verification)
       // For now, still redirect to login since email verification is required
@@ -99,21 +99,21 @@ export default function Signup() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ backgroundColor: '#F4F1EA' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-brand-light">
         <div className="text-center">
           <p className="text-[#5C6B4A] font-medium mb-2">Check your email to verify your account.</p>
-          <p className="text-neutral-500 text-sm">Redirecting to sign in…</p>
+          <p className="text-brand-text text-sm">Redirecting to sign in…</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#F4F1EA' }}>
+    <div className="min-h-screen flex flex-col bg-brand-light">
       <div className="pt-6 px-4">
         <Link
           to="/login"
-          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-white border border-brand-border text-brand-text hover:bg-neutral-50"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -127,8 +127,8 @@ export default function Signup() {
           </div>
         </div>
 
-        <h1 className="text-xl font-bold text-neutral-800 text-center mb-1">Create account</h1>
-        <p className="text-neutral-500 text-sm text-center mb-6">
+        <h1 className="text-xl font-bold text-brand-dark text-center mb-1">Create account</h1>
+        <p className="text-brand-text text-sm text-center mb-6">
           Sign up to start your health journey
         </p>
 
@@ -168,7 +168,7 @@ export default function Signup() {
               <button
                 type="button"
                 onClick={() => setShowPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-brand-text"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -194,7 +194,7 @@ export default function Signup() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((p) => !p)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-brand-text"
                 aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
               >
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -209,18 +209,18 @@ export default function Signup() {
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full flex items-center justify-center py-3 rounded-xl bg-[#5C6B4A] hover:bg-[#4A5D3A] active:bg-[#4A5D3A] text-white font-semibold disabled:opacity-70"
+            className="btn-primary w-full flex items-center justify-center py-3 rounded-xl text-white font-semibold disabled:opacity-70"
           >
             {loading ? 'Creating account…' : 'Sign up'}
           </button>
         </form>
       </div>
 
-      <p className="text-center text-sm text-neutral-500 pb-8">
+      <p className="text-center text-sm text-brand-text pb-8">
         Already have an account?{' '}
         <Link
           to="/login"
-          className="font-medium text-[#5C6B4A] hover:text-[#4A5D3A] underline underline-offset-2"
+          className="font-medium text-brand-green hover:text-[#599A7A] underline underline-offset-2"
         >
           Log in
         </Link>

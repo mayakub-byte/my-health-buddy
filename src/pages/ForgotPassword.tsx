@@ -32,11 +32,11 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
+    <div className="min-h-screen bg-brand-light flex flex-col max-w-md mx-auto w-full">
       <div className="pt-6 px-5">
         <Link
           to="/login"
-          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-beige-50 border border-beige-300 text-neutral-600 hover:bg-beige-200 shadow-card"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-brand-light border border-brand-border text-brand-text hover:bg-brand-light shadow-card"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -46,21 +46,21 @@ export default function ForgotPassword() {
       <div className="flex-1 px-5 pt-4 pb-8 w-full">
         <div className="card rounded-2xl p-6 shadow-sm">
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-olive-500 shadow-card">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-light0 shadow-card">
               <Mail className="w-7 h-7 text-white" />
             </div>
           </div>
 
-          <h1 className="font-heading text-2xl font-bold text-olive-800 text-center mb-1">
+          <h1 className="font-heading text-2xl font-bold text-brand-dark text-center mb-1">
             Reset Password
           </h1>
-          <p className="text-neutral-600 text-sm text-center mb-6">
+          <p className="text-brand-text text-sm text-center mb-6">
             Enter your email and we&apos;ll send you a reset link
           </p>
 
           {success ? (
             <div className="text-center py-4">
-              <p className="text-olive-600 font-medium mb-4">
+              <p className="text-brand-text font-medium mb-4">
                 Check your email for reset link
               </p>
               <Link

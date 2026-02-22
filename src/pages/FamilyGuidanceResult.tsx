@@ -201,19 +201,19 @@ export default function FamilyGuidanceResult() {
 
   if (!hasRealData) {
     return (
-      <div className="min-h-screen bg-beige flex flex-col pb-8 max-w-md mx-auto w-full">
+      <div className="min-h-screen bg-brand-light flex flex-col pb-8 max-w-md mx-auto w-full">
         <header className="flex items-center gap-3 px-5 pt-6 pb-4">
           <Link
             to="/dashboard"
-            className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
+            className="flex items-center justify-center w-10 h-10 rounded-full border border-brand-border text-brand-text hover:bg-brand-light shadow-card"
             aria-label="Back to dashboard"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <h1 className="font-heading text-lg font-bold text-olive-800">Meal Analysis</h1>
+          <h1 className="font-heading text-lg font-bold text-brand-dark">Meal Analysis</h1>
         </header>
         <main className="flex-1 px-5 py-6 flex flex-col items-center justify-center">
-          <p className="text-neutral-700 font-medium text-center mb-6">Analysis failed. Please try again.</p>
+          <p className="text-brand-dark font-medium text-center mb-6">Analysis failed. Please try again.</p>
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
@@ -312,11 +312,11 @@ export default function FamilyGuidanceResult() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col pb-8 max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
+    <div className="min-h-screen flex flex-col pb-8 max-w-md mx-auto w-full" style={{ backgroundColor: '#f4f6f4' }}>
       <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         <Link
           to="/dashboard"
-          className="flex items-center justify-center w-10 h-10 rounded-full border text-neutral-600 hover:bg-beige-100 shadow-card"
+          className="flex items-center justify-center w-10 h-10 rounded-full border text-brand-text hover:bg-brand-light shadow-card"
           style={{ borderColor: '#e8e2d8' }}
           aria-label="Back to dashboard"
         >
@@ -351,7 +351,7 @@ export default function FamilyGuidanceResult() {
               <p style={{
                 fontFamily: "'DM Serif Display', Georgia, serif",
                 fontSize: '14px',
-                color: '#5a7c65',
+                color: '#6ab08c',
                 textAlign: 'center',
                 margin: '8px 16px 12px',
                 fontStyle: 'italic',
@@ -364,41 +364,41 @@ export default function FamilyGuidanceResult() {
             {/* Meal Photo + Name */}
             <div className="flex items-center justify-center gap-3 mb-4">
               {imagePreview && (
-                <div className="w-16 h-16 rounded-2xl overflow-hidden border border-beige-300 bg-beige-100 flex-shrink-0">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden border border-brand-border bg-brand-light flex-shrink-0">
                   <img src={imagePreview} alt="Meal" className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="text-left">
-                <h2 className="font-heading font-bold text-olive-800 text-lg">{mealName ?? 'Meal'}</h2>
+                <h2 className="font-heading font-bold text-brand-dark text-lg">{mealName ?? 'Meal'}</h2>
                 {mealNameTelugu && (
-                  <p className="text-sm text-neutral-600 mt-0.5">{mealNameTelugu}</p>
+                  <p className="text-sm text-brand-text mt-0.5">{mealNameTelugu}</p>
                 )}
               </div>
             </div>
 
             {/* Nutrition Summary */}
-            <div className="flex justify-around gap-2 pt-3 border-t border-beige-200 text-sm">
+            <div className="flex justify-around gap-2 pt-3 border-t border-brand-border text-sm">
               <div>
-                <p className="text-neutral-500 text-xs">Calories</p>
-                <p className="font-semibold text-olive-800">{calories ?? 0}</p>
+                <p className="text-brand-text text-xs">Calories</p>
+                <p className="font-semibold text-brand-dark">{calories ?? 0}</p>
               </div>
               <div>
-                <p className="text-neutral-500 text-xs">Protein</p>
-                <p className="font-semibold text-olive-800">{macrosSafe.protein}g</p>
+                <p className="text-brand-text text-xs">Protein</p>
+                <p className="font-semibold text-brand-dark">{macrosSafe.protein}g</p>
               </div>
               <div>
-                <p className="text-neutral-500 text-xs">Carbs</p>
-                <p className="font-semibold text-olive-800">{macrosSafe.carbs}g</p>
+                <p className="text-brand-text text-xs">Carbs</p>
+                <p className="font-semibold text-brand-dark">{macrosSafe.carbs}g</p>
               </div>
               <div>
-                <p className="text-neutral-500 text-xs">Fat</p>
-                <p className="font-semibold text-olive-800">{macrosSafe.fat}g</p>
+                <p className="text-brand-text text-xs">Fat</p>
+                <p className="font-semibold text-brand-dark">{macrosSafe.fat}g</p>
               </div>
             </div>
 
             {/* Traffic Light Reason */}
             {trafficLightReason && (
-              <p className="text-xs text-neutral-600 mt-3 italic">{trafficLightReason}</p>
+              <p className="text-xs text-brand-text mt-3 italic">{trafficLightReason}</p>
             )}
 
             {/* Personalized celebration */}
@@ -423,8 +423,8 @@ export default function FamilyGuidanceResult() {
               </div>
               <ul className="space-y-2">
                 {beforeCookingTips.map((tip, i) => (
-                  <li key={i} className="flex gap-2 text-sm" style={{ color: '#2c3e2d' }}>
-                    <span style={{ color: '#5a7c65' }} className="mt-0.5 flex-shrink-0">•</span>
+                  <li key={i} className="flex gap-2 text-sm" style={{ color: '#143628' }}>
+                    <span style={{ color: '#6ab08c' }} className="mt-0.5 flex-shrink-0">•</span>
                     <span>{tip}</span>
                   </li>
                 ))}
@@ -440,7 +440,7 @@ export default function FamilyGuidanceResult() {
             <div className="space-y-3">
               {claude.family_member_scores.map((ms, idx) => {
                 const matchedMember = members.find((m) => m.name.toLowerCase() === ms.name.toLowerCase());
-                const scoreColor = ms.score >= 70 ? '#5a7c65' : ms.score >= 40 ? '#c4956a' : '#c45c5c';
+                const scoreColor = ms.score >= 70 ? '#6ab08c' : ms.score >= 40 ? '#c4956a' : '#c45c5c';
                 const ageGroupLabel = matchedMember?.age_group ? matchedMember.age_group.charAt(0).toUpperCase() + matchedMember.age_group.slice(1) : '';
                 const conditionsLabel = matchedMember?.health_conditions?.filter((c) => c !== 'none').join(', ') || '';
                 return (
@@ -461,7 +461,7 @@ export default function FamilyGuidanceResult() {
                         size={44}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold" style={{ color: '#2c3e2d' }}>{ms.name}</p>
+                        <p className="font-semibold" style={{ color: '#143628' }}>{ms.name}</p>
                         <p className="text-xs" style={{ color: '#7a8c7e' }}>
                           {[ageGroupLabel, conditionsLabel].filter(Boolean).join(' \u2022 ')}
                         </p>
@@ -505,7 +505,7 @@ export default function FamilyGuidanceResult() {
         {/* Fallback: Generic per_member_guidance (when no family_member_scores) */}
         {!claude?.family_member_scores?.length && perMemberGuidance && members.length > 0 && (
           <section className="mb-5">
-            <h3 className="font-heading font-semibold text-olive-800 mb-3">For Your Family</h3>
+            <h3 className="font-heading font-semibold text-brand-dark mb-3">For Your Family</h3>
             <div className="space-y-3">
               {(state.selectedMembers && state.selectedMembers.length > 0
                 ? members.filter((m) => state.selectedMembers!.includes(m.id))
@@ -525,12 +525,12 @@ export default function FamilyGuidanceResult() {
                 return (
                   <div key={member.id} className={`p-4 rounded-2xl ${colors.bg} ${colors.border} border-2`}>
                     <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-12 h-12 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center text-xl font-bold text-neutral-700 flex-shrink-0`}>
+                      <div className={`w-12 h-12 rounded-full ${colors.bg} ${colors.border} border-2 flex items-center justify-center text-xl font-bold text-brand-dark flex-shrink-0`}>
                         {(member as { avatar?: string }).avatar ?? member.name?.charAt(0)?.toUpperCase() ?? '😊'}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-neutral-800">{member.name}</p>
-                        <p className="text-xs text-neutral-500">
+                        <p className="font-semibold text-brand-dark">{member.name}</p>
+                        <p className="text-xs text-brand-text">
                           {[ageGroupLabel, conditionsLabel].filter(Boolean).join(' • ')}
                         </p>
                       </div>
@@ -541,7 +541,7 @@ export default function FamilyGuidanceResult() {
                     {memberGuidance.tip && (
                       <div className="flex gap-2 mb-2">
                         <span className="text-sm flex-shrink-0">💡</span>
-                        <p className="text-sm text-neutral-700 font-serif">{memberGuidance.tip}</p>
+                        <p className="text-sm text-brand-dark font-serif">{memberGuidance.tip}</p>
                       </div>
                     )}
                     {memberGuidance.avoid && (
@@ -563,11 +563,11 @@ export default function FamilyGuidanceResult() {
         {/* Legacy: Fallback to old format if new format not available */}
         {!perMemberGuidance && selectedMember && guidance.length > 0 && (
           <section className="mb-5">
-            <h3 className="font-heading font-semibold text-olive-800 mb-3">Guidance for {selectedMember.name}</h3>
+            <h3 className="font-heading font-semibold text-brand-dark mb-3">Guidance for {selectedMember.name}</h3>
             <ul className="card p-4 space-y-2">
               {guidance.map((line, i) => (
-                <li key={i} className="flex gap-2 text-sm text-neutral-700">
-                  <span className="text-olive-500 mt-0.5">•</span>
+                <li key={i} className="flex gap-2 text-sm text-brand-dark">
+                  <span className="text-brand-text mt-0.5">•</span>
                   <span>{line}</span>
                 </li>
               ))}
@@ -578,22 +578,22 @@ export default function FamilyGuidanceResult() {
         {/* Legacy: Condition-specific detailed guidance */}
         {detailedGuidance.length > 0 && !perMemberGuidance && (
           <section className="mb-5">
-            <p className="font-heading font-semibold text-olive-800 mb-3">Condition-specific guidance</p>
+            <p className="font-heading font-semibold text-brand-dark mb-3">Condition-specific guidance</p>
             <div className="space-y-3">
               {detailedGuidance.map((d, i) => (
                 <div key={i} className="card p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="font-medium text-neutral-800 capitalize">{d.condition}</span>
+                    <span className="font-medium text-brand-dark capitalize">{d.condition}</span>
                     <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      getScoreColor(d.score) === 'green' ? 'bg-olive-100 text-olive-700' :
+                      getScoreColor(d.score) === 'green' ? 'bg-brand-gray text-brand-dark' :
                       getScoreColor(d.score) === 'orange' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'
                     }`}>
                       {d.score}
                     </span>
                   </div>
-                  <p className="text-sm text-neutral-600 mb-2">{d.explanation}</p>
+                  <p className="text-sm text-brand-text mb-2">{d.explanation}</p>
                   {d.suggestions?.length > 0 && (
-                    <ul className="list-disc list-inside text-sm text-neutral-600 space-y-0.5">
+                    <ul className="list-disc list-inside text-sm text-brand-text space-y-0.5">
                       {d.suggestions.map((s, j) => (
                         <li key={j}>{s}</li>
                       ))}
@@ -624,7 +624,7 @@ export default function FamilyGuidanceResult() {
                   alignItems: 'flex-start',
                 }}>
                   <span style={{ fontSize: 20 }}>🔄</span>
-                  <p className="text-sm" style={{ color: '#2c3e2d', margin: 0 }}>{swap}</p>
+                  <p className="text-sm" style={{ color: '#143628', margin: 0 }}>{swap}</p>
                 </div>
               ))}
             </div>
@@ -635,8 +635,8 @@ export default function FamilyGuidanceResult() {
         {ayurvedicNote && (
           <section className="mb-5">
             <div className="card p-4">
-              <p className="font-heading font-semibold text-olive-800 mb-2">Ayurvedic Note</p>
-              <p className="text-sm text-neutral-700">{ayurvedicNote}</p>
+              <p className="font-heading font-semibold text-brand-dark mb-2">Ayurvedic Note</p>
+              <p className="text-sm text-brand-dark">{ayurvedicNote}</p>
             </div>
           </section>
         )}
@@ -644,10 +644,10 @@ export default function FamilyGuidanceResult() {
         {/* Legacy: Best paired with */}
         {bestPairedWith.length > 0 && !culturallyAppropriateSwaps.length && (
           <section className="mb-5">
-            <p className="font-heading font-semibold text-olive-800 mb-2">Complete your meal</p>
+            <p className="font-heading font-semibold text-brand-dark mb-2">Complete your meal</p>
             <ul className="flex flex-wrap gap-2">
               {bestPairedWith.map((s, i) => (
-                <li key={i} className="px-3 py-1.5 rounded-full bg-olive-50 text-olive-800 text-sm">
+                <li key={i} className="px-3 py-1.5 rounded-full bg-brand-light text-brand-dark text-sm">
                   {s}
                 </li>
               ))}
@@ -668,7 +668,7 @@ export default function FamilyGuidanceResult() {
           )}
           <Link
             to="/dashboard"
-            className="w-full py-3.5 rounded-full border-2 border-olive-500 text-olive-600 font-semibold hover:bg-olive-50 text-center transition-colors"
+            className="w-full py-3.5 rounded-full border-2 border-brand-green text-brand-text font-semibold hover:bg-brand-light text-center transition-colors"
           >
             Scan Another Meal
           </Link>
@@ -680,7 +680,7 @@ export default function FamilyGuidanceResult() {
           target="_blank"
           rel="noopener noreferrer"
           className="block text-center mt-4 mb-2 py-2.5 text-sm transition-opacity hover:opacity-100"
-          style={{ color: '#5a7c65', opacity: 0.8 }}
+          style={{ color: '#6ab08c', opacity: 0.8 }}
         >
           <span role="img" aria-hidden>👨‍⚕️</span> Want personalized guidance? Talk to a nutritionist
         </a>
@@ -690,7 +690,7 @@ export default function FamilyGuidanceResult() {
       {toast && (
         <div
           className={`fixed bottom-24 left-4 right-4 mx-auto max-w-sm text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg animate-fade-in z-50 ${
-            toast.isSuccess ? 'bg-olive-600' : 'bg-neutral-800'
+            toast.isSuccess ? 'bg-brand-green' : 'bg-neutral-800'
           }`}
           role="status"
         >

@@ -7,6 +7,15 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Landing page specific colors
+        brand: {
+          dark: '#143628',      // Dark forest green used for headings and text
+          green: '#6ab08c',     // Sage green used for primary buttons
+          light: '#f4f6f4',     // Off-white/light gray used for section backgrounds
+          gray: '#e4ebe6',      // Grayish-green used for pills and icon backgrounds
+          border: '#e6ece8',    // Light borders
+          text: '#445a4f',      // Medium text color
+        },
         // Arogya — mobile-first 375px, warm cream & olive
         beige: {
           DEFAULT: '#F4F1EA',
@@ -82,8 +91,8 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'card': '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
-        'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06)',
+        'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+        'card-hover': '0 8px 30px -4px rgba(0, 0, 0, 0.1)',
       },
       maxWidth: {
         'mobile': '28rem',

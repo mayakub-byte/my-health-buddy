@@ -75,26 +75,26 @@ export default function PortionSelection() {
   const previewUrl = imagePreview;
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
+    <div className="min-h-screen bg-brand-light flex flex-col max-w-md mx-auto w-full">
       <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         <button
           type="button"
           onClick={() => navigate(backRoute, { state: isTextOnly ? undefined : confirmState })}
-          className="flex items-center justify-center w-10 h-10 rounded-full border border-beige-300 text-neutral-600 hover:bg-beige-100 shadow-card"
+          className="flex items-center justify-center w-10 h-10 rounded-full border border-brand-border text-brand-text hover:bg-brand-light shadow-card"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1">
-          <h1 className="font-heading text-lg font-bold text-olive-800">How much are you feeling today?</h1>
-          <p className="text-neutral-600 text-sm mt-0.5">Choose your preferred portion size.</p>
+          <h1 className="font-heading text-lg font-bold text-brand-dark">How much are you feeling today?</h1>
+          <p className="text-brand-text text-sm mt-0.5">Choose your preferred portion size.</p>
         </div>
       </header>
 
       <main className="flex-1 px-5 py-6 overflow-y-auto">
         {previewUrl && (
           <div className="flex justify-center mb-6">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-beige-300 bg-beige-100 flex-shrink-0 shadow-card">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border border-brand-border bg-brand-light flex-shrink-0 shadow-card">
               <img
                 src={previewUrl}
                 alt="Your meal"
@@ -107,8 +107,8 @@ export default function PortionSelection() {
         {isTextOnly && state.manualText && (
           <div className="flex justify-center mb-6">
             <div className="card p-4 max-w-xs">
-              <p className="text-sm text-neutral-600 mb-1">Meal description:</p>
-              <p className="font-heading font-semibold text-olive-800">{state.manualText}</p>
+              <p className="text-sm text-brand-text mb-1">Meal description:</p>
+              <p className="font-heading font-semibold text-brand-dark">{state.manualText}</p>
             </div>
           </div>
         )}
@@ -121,35 +121,35 @@ export default function PortionSelection() {
               onClick={() => setPortionSize(opt.value)}
               className={`flex flex-col items-center p-4 rounded-2xl border-2 text-center transition-colors card ${
                 portionSize === opt.value
-                  ? 'border-olive-500 bg-olive-50/50 shadow-card'
-                  : 'border-beige-300 hover:border-olive-400'
+                  ? 'border-brand-green bg-brand-light/50 shadow-card'
+                  : 'border-brand-border hover:border-brand-green'
               }`}
             >
               <span className="text-3xl mb-2" aria-hidden>{opt.icon}</span>
-              <span className="font-heading font-semibold text-olive-800 block">{opt.label}</span>
-              <span className="text-xs text-neutral-600 mt-0.5">{opt.sublabel}</span>
+              <span className="font-heading font-semibold text-brand-dark block">{opt.label}</span>
+              <span className="text-xs text-brand-text mt-0.5">{opt.sublabel}</span>
             </button>
           ))}
         </div>
 
         <div className="mb-6">
-          <p className="text-sm font-medium text-neutral-700 mb-2">Number of servings</p>
+          <p className="text-sm font-medium text-brand-dark mb-2">Number of servings</p>
           <div className="flex items-center gap-4">
             <button
               type="button"
               onClick={() => setServings((s) => Math.max(MIN_SERVINGS, s - 1))}
               disabled={servings <= MIN_SERVINGS}
-              className="w-12 h-12 rounded-full border-2 border-beige-300 flex items-center justify-center text-xl font-medium text-neutral-600 hover:bg-beige-100 disabled:opacity-40 disabled:pointer-events-none"
+              className="w-12 h-12 rounded-full border-2 border-brand-border flex items-center justify-center text-xl font-medium text-brand-text hover:bg-brand-light disabled:opacity-40 disabled:pointer-events-none"
               aria-label="Decrease servings"
             >
               <span aria-hidden>−</span>
             </button>
-            <span className="text-lg font-semibold text-olive-800 w-8 text-center">{servings}</span>
+            <span className="text-lg font-semibold text-brand-dark w-8 text-center">{servings}</span>
             <button
               type="button"
               onClick={() => setServings((s) => Math.min(MAX_SERVINGS, s + 1))}
               disabled={servings >= MAX_SERVINGS}
-              className="w-12 h-12 rounded-full border-2 border-beige-300 flex items-center justify-center text-xl font-medium text-neutral-600 hover:bg-beige-100 disabled:opacity-40 disabled:pointer-events-none"
+              className="w-12 h-12 rounded-full border-2 border-brand-border flex items-center justify-center text-xl font-medium text-brand-text hover:bg-brand-light disabled:opacity-40 disabled:pointer-events-none"
               aria-label="Increase servings"
             >
               <span aria-hidden>+</span>

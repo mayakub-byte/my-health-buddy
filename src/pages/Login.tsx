@@ -35,11 +35,11 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col max-w-md mx-auto w-full">
+    <div className="min-h-screen bg-brand-light flex flex-col max-w-md mx-auto w-full">
       <div className="pt-6 px-5">
         <Link
           to="/"
-          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-beige-50 border border-beige-300 text-neutral-600 hover:bg-beige-200 shadow-card"
+          className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-brand-light border border-brand-border text-brand-text hover:bg-brand-light shadow-card"
           aria-label="Go back"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -49,15 +49,15 @@ export default function Login() {
       <div className="flex-1 px-5 pt-4 pb-8 w-full">
         <div className="card rounded-2xl p-6 shadow-sm">
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-olive-500 shadow-card">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand-light0 shadow-card">
               <span className="text-3xl" aria-hidden>🍽️</span>
             </div>
           </div>
 
-          <h1 className="font-serif text-xl font-bold text-olive-800 text-center mb-1">
+          <h1 className="font-serif text-xl font-bold text-brand-dark text-center mb-1">
             Welcome back
           </h1>
-          <p className="text-neutral-500 text-sm text-center mb-6">
+          <p className="text-brand-text text-sm text-center mb-6">
             Sign in to continue your health journey
           </p>
 
@@ -96,7 +96,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((p) => !p)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-brand-text"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -129,9 +129,9 @@ export default function Login() {
         </div>
       </div>
 
-      <p className="text-center text-sm text-neutral-500 pb-8">
+      <p className="text-center text-sm text-brand-text pb-8">
         Don&apos;t have an account?{' '}
-        <Link to="/signup" className="font-medium text-olive-600 hover:text-olive-700 underline underline-offset-2">
+        <Link to="/signup" className="font-medium text-brand-text hover:text-brand-dark underline underline-offset-2">
           Sign up
         </Link>
       </p>

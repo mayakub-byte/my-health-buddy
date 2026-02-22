@@ -71,10 +71,10 @@ export default function BaselineScreen() {
       className="min-h-screen flex flex-col px-5 pt-10 pb-8 max-w-md mx-auto w-full"
       style={{ backgroundColor: '#F4F1EA' }}
     >
-      <h1 className="font-serif text-2xl font-bold text-olive-800 mb-1">
+      <h1 className="font-serif text-2xl font-bold text-brand-dark mb-1">
         Record your baseline
       </h1>
-      <p className="text-neutral-600 text-sm mb-6">
+      <p className="text-brand-text text-sm mb-6">
         We&apos;ll use your voice to personalize your experience. Tap the mic when ready.
       </p>
 
@@ -91,7 +91,7 @@ export default function BaselineScreen() {
         >
           🎤
         </button>
-        <p className="mt-4 text-sm text-neutral-600">
+        <p className="mt-4 text-sm text-brand-text">
           {recording ? 'Recording… Tap to stop' : recorded ? 'Baseline recorded ✓' : 'Tap to record'}
         </p>
         {micError && (

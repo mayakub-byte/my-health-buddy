@@ -4,8 +4,8 @@
 // ============================================
 
 const AVATAR_CONFIG: Record<string, { gradient: string; emoji: string }> = {
-  self: { gradient: 'linear-gradient(135deg, #7c9a82, #5a7c65)', emoji: '🧑' },
-  parent: { gradient: 'linear-gradient(135deg, #7c9a82, #5a7c65)', emoji: '👩' },
+  self: { gradient: 'linear-gradient(135deg, #7c9a82, #6ab08c)', emoji: '🧑' },
+  parent: { gradient: 'linear-gradient(135deg, #7c9a82, #6ab08c)', emoji: '👩' },
   child: { gradient: 'linear-gradient(135deg, #e8c47c, #d4a373)', emoji: '👧' },
   spouse: { gradient: 'linear-gradient(135deg, #8ea4c8, #6b8ab8)', emoji: '👨' },
   grandparent: { gradient: 'linear-gradient(135deg, #c49a82, #a87c65)', emoji: '👴' },

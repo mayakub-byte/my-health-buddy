@@ -65,7 +65,7 @@ function App() {
     if (isSignedIn && !loading && !family && !isCreatingFamily) {
       setIsCreatingFamily(true);
       autoCreateDefaultFamily()
-        .then(() => {})
+        .then(() => { })
         .catch((err) => {
           console.error('Error auto-creating family:', err);
         })
@@ -82,7 +82,7 @@ function App() {
   if (!isSignedIn) {
     return (
       <Router>
-        <div className="min-h-screen bg-beige">
+        <div className="min-h-screen bg-brand-light">
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/goals" element={<GoalsScreen />} />
@@ -91,7 +91,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </Router>
@@ -103,7 +103,7 @@ function App() {
   if (!family) {
     return (
       <Router>
-        <div className="min-h-screen bg-beige">
+        <div className="min-h-screen bg-brand-light">
           <Routes>
             <Route path="/goals" element={<Navigate to="/home" replace />} />
             <Route path="/baseline" element={<Navigate to="/home" replace />} />
@@ -139,13 +139,13 @@ function App() {
 
   return (
     <Router>
-      <div className="min-h-screen bg-beige">
+      <div className="min-h-screen bg-brand-light">
         <Routes>
           <Route path="/goals" element={<Navigate to="/home" replace />} />
           <Route path="/baseline" element={<Navigate to="/home" replace />} />
           <Route path="/complete" element={<Navigate to="/home" replace />} />
           <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/onboarding" element={<Onboarding onComplete={() => {}} />} />
+          <Route path="/onboarding" element={<Onboarding onComplete={() => { }} />} />
           <Route path="/setup" element={<FamilySetup />} />
           <Route path="/home" element={<MealInput />} />
           <Route path="/dashboard" element={<MealInput />} />
@@ -153,7 +153,7 @@ function App() {
           <Route path="/scan/portion" element={<PortionSelection />} />
           <Route path="/scan/loading" element={<AnalysisLoading />} />
           <Route path="/portion-confirm" element={<PortionConfirmation />} />
-            <Route path="/meal-correction" element={<MealCorrection />} />
+          <Route path="/meal-correction" element={<MealCorrection />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/results" element={<FamilyGuidanceResult />} />
           <Route path="/results/analysis" element={<FamilyGuidanceResult />} />

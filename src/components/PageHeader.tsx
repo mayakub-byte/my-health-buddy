@@ -27,12 +27,12 @@ const PageHeader = ({ title, subtitle }: { title: string; subtitle?: string }) =
           className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
         >
-          <span style={{ color: '#5a7c65' }} aria-hidden>←</span>
+          <span style={{ color: '#6ab08c' }} aria-hidden>←</span>
         </button>
       )}
       {isHome && <span className="text-2xl" aria-hidden>🍽️</span>}
       <div className="flex-1">
-        <h1 className="font-serif text-xl font-bold" style={{ color: '#2c3e2d' }}>{title}</h1>
+        <h1 className="font-serif text-xl font-bold" style={{ color: '#143628' }}>{title}</h1>
         {subtitle && <p className="text-xs" style={{ color: '#7a8c7e' }}>{subtitle}</p>}
       </div>
       {!isHome && (
@@ -43,7 +43,7 @@ const PageHeader = ({ title, subtitle }: { title: string; subtitle?: string }) =
           className="w-10 h-10 flex items-center justify-center rounded-full flex-shrink-0"
           style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
         >
-          <span style={{ color: '#5a7c65' }} aria-hidden>🏠</span>
+          <span style={{ color: '#6ab08c' }} aria-hidden>🏠</span>
         </button>
       )}
     </div>

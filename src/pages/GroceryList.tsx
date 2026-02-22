@@ -328,7 +328,7 @@ export default function GroceryList() {
           <div className="py-16 flex flex-col items-center justify-center text-center">
             <div className="text-5xl mb-4 animate-bounce">🛒</div>
             <p className="font-medium" style={{ color: '#2D3319' }}>Generating your smart grocery list...</p>
-            <p className="text-sm text-neutral-500">This takes about 10 seconds</p>
+            <p className="text-sm text-brand-text">This takes about 10 seconds</p>
           </div>
         ) : error === 'no_meals' ? (
           <div className="py-16 flex flex-col items-center justify-center text-center">
@@ -342,7 +342,7 @@ export default function GroceryList() {
         ) : error === 'failed' ? (
           <div className="py-16 flex flex-col items-center justify-center text-center px-4">
             <p className="font-medium mb-2" style={{ color: '#2D3319' }}>Something went wrong. Please try again.</p>
-            {errorDetail && <p className="text-sm text-neutral-500 mb-4 max-w-xs">{errorDetail}</p>}
+            {errorDetail && <p className="text-sm text-brand-text mb-4 max-w-xs">{errorDetail}</p>}
             <button type="button" onClick={fetchGroceryList} className="py-3 px-6 rounded-full font-semibold text-sm text-white" style={{ backgroundColor: '#5C6B4A' }}>
               Retry
             </button>
@@ -350,7 +350,7 @@ export default function GroceryList() {
         ) : groceryData ? (
           <div className="space-y-4 pb-6">
             {/* View Mode Tabs: All / Need to Buy / Already Have */}
-            <div className="flex gap-2 bg-white rounded-full p-1 border border-beige-200">
+            <div className="flex gap-2 bg-white rounded-full p-1 border border-brand-border">
               {([
                 { key: 'all' as ViewMode, label: 'All', count: totalItems },
                 { key: 'need' as ViewMode, label: 'Need to Buy', count: needCount },
@@ -361,7 +361,7 @@ export default function GroceryList() {
                   type="button"
                   onClick={() => setViewMode(tab.key)}
                   className={`flex-1 py-2 px-2 rounded-full text-xs font-medium transition-all ${
-                    viewMode === tab.key ? 'text-white shadow-sm' : 'text-neutral-600'
+                    viewMode === tab.key ? 'text-white shadow-sm' : 'text-brand-text'
                   }`}
                   style={viewMode === tab.key ? { backgroundColor: '#5C6B4A' } : {}}
                 >
@@ -393,7 +393,7 @@ export default function GroceryList() {
                 </div>
                 <ul className="space-y-1.5">
                   {groceryData.smart_tips.map((tip, i) => (
-                    <li key={i} className="text-sm text-neutral-700 flex gap-2">
+                    <li key={i} className="text-sm text-brand-dark flex gap-2">
                       <span className="text-emerald-500">•</span>
                       {tip}
                     </li>
@@ -419,7 +419,7 @@ export default function GroceryList() {
                       <span className="text-xl">{cat.emoji}</span>
                       <span className="font-serif font-semibold" style={{ color: '#2D3319' }}>{cat.category}</span>
                       {catChecked > 0 && (
-                        <span className="text-xs text-neutral-500">({catChecked}/{filtered.length})</span>
+                        <span className="text-xs text-brand-text">({catChecked}/{filtered.length})</span>
                       )}
                     </div>
                     <span className="text-neutral-400">{isExpanded ? '▼' : '▶'}</span>
@@ -449,7 +449,7 @@ export default function GroceryList() {
 
                             {/* Name + Quantity */}
                             <div className="flex-1 min-w-0">
-                              <span className={`text-sm ${isChecked ? 'line-through text-neutral-400' : 'text-neutral-800'}`}>
+                              <span className={`text-sm ${isChecked ? 'line-through text-neutral-400' : 'text-brand-dark'}`}>
                                 {item.name}
                               </span>
                               {isEditing ? (
@@ -458,7 +458,7 @@ export default function GroceryList() {
                                     type="text"
                                     value={editQty}
                                     onChange={(e) => setEditQty(e.target.value)}
-                                    className="text-xs px-2 py-1 rounded-lg border border-beige-300 w-24"
+                                    className="text-xs px-2 py-1 rounded-lg border border-brand-border w-24"
                                     style={{ backgroundColor: '#F4F1EA' }}
                                     autoFocus
                                   />
@@ -472,7 +472,7 @@ export default function GroceryList() {
                                   onClick={() => { setEditingItem(item.name); setEditQty(item.quantity); }}
                                   className="flex items-center gap-1 mt-0.5"
                                 >
-                                  <span className="text-xs text-neutral-500">{item.quantity}</span>
+                                  <span className="text-xs text-brand-text">{item.quantity}</span>
                                   <Edit2 className="w-3 h-3 text-neutral-400" />
                                 </button>
                               )}
@@ -485,7 +485,7 @@ export default function GroceryList() {
                               className={`text-[10px] px-2 py-1 rounded-full border transition-all flex-shrink-0 ${
                                 isHave
                                   ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                                  : 'border-beige-200 text-neutral-500'
+                                  : 'border-brand-border text-brand-text'
                               }`}
                             >
                               {isHave ? '✓ Have' : 'Have it'}
@@ -528,7 +528,7 @@ export default function GroceryList() {
                           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
                             alreadyAdded
                               ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
-                              : 'border-beige-200 text-neutral-600 hover:border-olive-400'
+                              : 'border-brand-border text-brand-text hover:border-brand-green'
                           }`}
                         >
                           {item.emoji} {item.name} {alreadyAdded ? '✓' : ''}
@@ -553,7 +553,7 @@ export default function GroceryList() {
               <button
                 type="button"
                 onClick={handleCopyList}
-                className="flex-1 py-3.5 rounded-full font-semibold border-2 transition-colors hover:bg-olive-50"
+                className="flex-1 py-3.5 rounded-full font-semibold border-2 transition-colors hover:bg-brand-light"
                 style={{ borderColor: '#5C6B4A', color: '#5C6B4A' }}
               >
                 📋 Copy List

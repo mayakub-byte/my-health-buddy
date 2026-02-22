@@ -138,7 +138,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-beige flex flex-col pb-24 max-w-md mx-auto w-full">
+    <div className="min-h-screen bg-brand-light flex flex-col pb-24 max-w-md mx-auto w-full">
       <header className="px-5 pt-6 pb-4">
         <PageHeader title="Settings" />
       </header>
@@ -256,7 +256,7 @@ export default function Settings() {
                               }}
                               className={`px-3 py-1.5 rounded-full text-xs font-medium ${
                                 (editingMember.health_conditions || []).includes(opt.value)
-                                  ? 'bg-[#5a7c65] text-white'
+                                  ? 'bg-[#6ab08c] text-white'
                                   : 'bg-white border border-gray-200 text-gray-600'
                               }`}
                             >
@@ -303,7 +303,7 @@ export default function Settings() {
                                 setEditingMember(null);
                               }
                             }}
-                            className="flex-1 py-2 bg-[#5a7c65] text-white rounded-full text-sm font-medium"
+                            className="flex-1 py-2 bg-[#6ab08c] text-white rounded-full text-sm font-medium"
                           >
                             Save
                           </button>
@@ -341,7 +341,7 @@ export default function Settings() {
                               setCustomConditionText(existingCustomCond || '');
                               setEditingMember({ ...member, health_conditions: conditions });
                             }}
-                            className="px-3 py-1.5 text-xs text-[#5a7c65] border border-[#5a7c65] rounded-full"
+                            className="px-3 py-1.5 text-xs text-[#6ab08c] border border-[#6ab08c] rounded-full"
                             aria-label={`Edit ${member.name}`}
                           >
                             Edit
@@ -383,7 +383,7 @@ export default function Settings() {
 
           <Link
             to="/family"
-            className="block w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow"
+            className="block w-full py-3.5 rounded-full card text-center font-medium text-brand-dark hover:shadow-card-hover transition-shadow"
           >
             Edit family
           </Link>
@@ -415,7 +415,7 @@ export default function Settings() {
           <button
             type="button"
             onClick={() => setShowPrefs(!showPrefs)}
-            className="w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-full card text-center font-medium text-brand-dark hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
           >
             Preferences
             {showPrefs ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -441,7 +441,7 @@ export default function Settings() {
                       }}
                       className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition ${
                         dietPref === opt.key
-                          ? 'bg-[#5a7c65] text-white shadow-sm'
+                          ? 'bg-[#6ab08c] text-white shadow-sm'
                           : 'bg-[#ffffff] border border-gray-200 text-gray-600'
                       }`}
                     >
@@ -464,7 +464,7 @@ export default function Settings() {
                     setReminderOn(newVal);
                     localStorage.setItem('mhb_reminders', String(newVal));
                   }}
-                  className={`relative w-12 h-7 rounded-full transition-colors ${reminderOn ? 'bg-[#5a7c65]' : 'bg-gray-300'}`}
+                  className={`relative w-12 h-7 rounded-full transition-colors ${reminderOn ? 'bg-[#6ab08c]' : 'bg-gray-300'}`}
                 >
                   <div
                     className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow-sm transition-all duration-200 ${reminderOn ? 'left-6' : 'left-1'}`}
@@ -486,7 +486,7 @@ export default function Settings() {
                     localStorage.setItem('mhb_weekly_report', String(newVal));
                   }}
                   className={`relative w-12 h-7 rounded-full transition-colors ${
-                    weeklyReportOn ? 'bg-[#5a7c65]' : 'bg-gray-300'
+                    weeklyReportOn ? 'bg-[#6ab08c]' : 'bg-gray-300'
                   }`}
                 >
                   <div
@@ -514,7 +514,7 @@ export default function Settings() {
                       }}
                       className={`flex-1 py-2.5 rounded-xl text-xs font-medium transition ${
                         units === opt.key
-                          ? 'bg-[#5a7c65] text-white shadow-sm'
+                          ? 'bg-[#6ab08c] text-white shadow-sm'
                           : 'bg-[#ffffff] border border-gray-200 text-gray-600'
                       }`}
                     >
@@ -529,7 +529,7 @@ export default function Settings() {
           <button
             type="button"
             onClick={() => setShowHelp(!showHelp)}
-            className="w-full py-3.5 rounded-full card text-center font-medium text-olive-800 hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-full card text-center font-medium text-brand-dark hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
           >
             Help
             {showHelp ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -568,7 +568,7 @@ export default function Settings() {
         {/* Profile */}
         <section className="mt-6 card px-4 py-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-olive-100 flex items-center justify-center text-lg font-bold text-olive-700 flex-shrink-0">
+            <div className="w-12 h-12 rounded-full bg-brand-gray flex items-center justify-center text-lg font-bold text-brand-dark flex-shrink-0">
               {user?.avatarUrl ? (
                 <img
                   src={user.avatarUrl}
@@ -580,8 +580,8 @@ export default function Settings() {
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="font-semibold text-neutral-800 truncate">{user?.name ?? '…'}</p>
-              <p className="text-sm text-neutral-500 truncate">{user?.email ?? '…'}</p>
+              <p className="font-semibold text-brand-dark truncate">{user?.name ?? '…'}</p>
+              <p className="text-sm text-brand-text truncate">{user?.email ?? '…'}</p>
             </div>
           </div>
         </section>

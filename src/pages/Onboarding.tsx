@@ -141,7 +141,7 @@ export default function Onboarding({ onComplete }: OnboardingProps) {
       <div className="px-6 pt-6 pb-4">
         <div className="flex items-center gap-4 mb-4">
           {step !== 'family' && (
-            <button type="button" onClick={prevStep} className="p-2 -ml-2 text-neutral-600" aria-label="Go back">
+            <button type="button" onClick={prevStep} className="p-2 -ml-2 text-brand-text" aria-label="Go back">
               <ArrowLeft className="w-6 h-6" />
             </button>
           )}
@@ -217,7 +217,7 @@ function ProgressBar({ step }: { step: OnboardingStep }) {
         <div
           key={s}
           className={`h-1.5 flex-1 rounded-full transition-colors ${
-            i <= currentIndex ? 'bg-primary-500' : 'bg-neutral-200'
+            i <= currentIndex ? 'bg-brand-light0' : 'bg-neutral-200'
           }`}
         />
       ))}
@@ -235,10 +235,10 @@ function StepFamily({
 }) {
   return (
     <div>
-      <h1 className="text-2xl font-bold text-neutral-800 mb-2">
+      <h1 className="text-2xl font-bold text-brand-dark mb-2">
         What's your family name?
       </h1>
-      <p className="text-neutral-500 mb-6">
+      <p className="text-brand-text mb-6">
         This helps us personalize your experience
       </p>
 
@@ -271,10 +271,10 @@ function StepMembers({
 }) {
   return (
     <div>
-      <h1 className="text-2xl font-bold text-neutral-800 mb-2">
+      <h1 className="text-2xl font-bold text-brand-dark mb-2">
         Who's in your family?
       </h1>
-      <p className="text-neutral-500 mb-6">
+      <p className="text-brand-text mb-6">
         Add family members who eat together
       </p>
 
@@ -283,10 +283,10 @@ function StepMembers({
           <div key={index} className="card">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-primary-600" />
+                <div className="w-8 h-8 bg-brand-gray rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-brand-text" />
                 </div>
-                <span className="font-medium text-neutral-700">
+                <span className="font-medium text-brand-dark">
                   Member {index + 1}
                 </span>
               </div>
@@ -348,8 +348,8 @@ function StepMembers({
         {members.length < 6 && (
           <button
             onClick={addMember}
-            className="w-full py-3 border-2 border-dashed border-neutral-200 rounded-xl 
-                       text-neutral-500 hover:border-primary-300 hover:text-primary-600
+            className="w-full py-3 border-2 border-dashed border-brand-border rounded-xl 
+                       text-brand-text hover:border-brand-border hover:text-brand-text
                        flex items-center justify-center gap-2 transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -371,17 +371,17 @@ function StepHealth({
 }) {
   return (
     <div>
-      <h1 className="text-2xl font-bold text-neutral-800 mb-2">
+      <h1 className="text-2xl font-bold text-brand-dark mb-2">
         Any health considerations?
       </h1>
-      <p className="text-neutral-500 mb-6">
+      <p className="text-brand-text mb-6">
         This helps us give personalized nutrition advice
       </p>
 
       <div className="space-y-6">
         {members.map((member, memberIndex) => (
           <div key={memberIndex} className="card">
-            <h3 className="font-semibold text-neutral-800 mb-3">
+            <h3 className="font-semibold text-brand-dark mb-3">
               {member.name || `Member ${memberIndex + 1}`}
             </h3>
 
@@ -395,8 +395,8 @@ function StepHealth({
                     className={`px-3 py-2 rounded-full text-sm font-medium transition-colors
                       ${
                         isSelected
-                          ? 'bg-primary-500 text-white'
-                          : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'
+                          ? 'bg-brand-light0 text-white'
+                          : 'bg-neutral-100 text-brand-text hover:bg-neutral-200'
                       }`}
                   >
                     {isSelected && <Check className="w-4 h-4 inline mr-1" />}
@@ -434,20 +434,20 @@ function StepReady({
 }) {
   return (
     <div className="text-center py-8">
-      <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        <Check className="w-10 h-10 text-primary-600" />
+      <div className="w-20 h-20 bg-brand-gray rounded-full flex items-center justify-center mx-auto mb-6">
+        <Check className="w-10 h-10 text-brand-text" />
       </div>
 
-      <h1 className="text-2xl font-bold text-neutral-800 mb-2">
+      <h1 className="text-2xl font-bold text-brand-dark mb-2">
         You're all set! 🎉
       </h1>
-      <p className="text-neutral-500 mb-6">
+      <p className="text-brand-text mb-6">
         {familyName} with {members.length} member{members.length !== 1 ? 's' : ''} is ready
       </p>
 
-      <div className="bg-primary-50 rounded-xl p-4 text-left">
-        <h3 className="font-semibold text-primary-800 mb-2">What's next?</h3>
-        <ul className="text-sm text-primary-700 space-y-1">
+      <div className="bg-brand-light rounded-xl p-4 text-left">
+        <h3 className="font-semibold text-brand-dark mb-2">What's next?</h3>
+        <ul className="text-sm text-brand-dark space-y-1">
           <li>📸 Take a photo of your meal</li>
           <li>🍽️ We'll identify the dishes</li>
           <li>💯 Get personalized health scores</li>

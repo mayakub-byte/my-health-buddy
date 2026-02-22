@@ -36,10 +36,10 @@ export default function Family() {
     <div className="min-h-screen pb-24" style={{ backgroundColor: '#F4F1EA' }}>
       {/* Header */}
       <div className="bg-[#FDFBF7] px-6 py-4 border-b border-neutral-100">
-        <h1 className="text-xl font-bold text-neutral-800">
+        <h1 className="text-xl font-bold text-brand-dark">
           {family?.name || 'Family'}
         </h1>
-        <p className="text-sm text-neutral-500">
+        <p className="text-sm text-brand-text">
           {members.length} member{members.length !== 1 ? 's' : ''}
         </p>
       </div>
@@ -69,8 +69,8 @@ export default function Family() {
         {!showAddForm && members.length < 6 && (
           <button
             onClick={() => setShowAddForm(true)}
-            className="w-full py-4 border-2 border-dashed border-neutral-200 rounded-2xl
-                       text-neutral-500 hover:border-primary-300 hover:text-primary-600
+            className="w-full py-4 border-2 border-dashed border-brand-border rounded-2xl
+                       text-brand-text hover:border-brand-border hover:text-brand-text
                        flex items-center justify-center gap-2 transition-colors"
           >
             <Plus className="w-5 h-5" />
@@ -196,8 +196,8 @@ function MemberCard({
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors
                     ${
                       conditions.includes(condition.value)
-                        ? 'bg-primary-500 text-white'
-                        : 'bg-neutral-100 text-neutral-600'
+                        ? 'bg-brand-light0 text-white'
+                        : 'bg-neutral-100 text-brand-text'
                     }`}
                 >
                   {condition.label}
@@ -246,14 +246,14 @@ function MemberCard({
         {/* Info */}
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-neutral-800">{member.name}</h3>
+            <h3 className="font-semibold text-brand-dark">{member.name}</h3>
             {member.is_primary && (
-              <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full">
+              <span className="text-xs bg-brand-gray text-brand-dark px-2 py-0.5 rounded-full">
                 Primary
               </span>
             )}
           </div>
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-brand-text">
             {member.age ? `${member.age} years` : 'Age not set'}
             {member.role && ` • ${member.role}`}
           </p>
@@ -275,7 +275,7 @@ function MemberCard({
           <button
             type="button"
             onClick={onEdit}
-            className="p-2 text-neutral-400 hover:text-primary-500"
+            className="p-2 text-neutral-400 hover:text-brand-text"
             aria-label="Edit member"
           >
             <Edit2 className="w-5 h-5" />
@@ -338,8 +338,8 @@ function AddMemberForm({
   };
 
   return (
-    <div className="card border-2 border-primary-200">
-      <h3 className="font-semibold text-neutral-800 mb-4">Add Family Member</h3>
+    <div className="card border-2 border-brand-border">
+      <h3 className="font-semibold text-brand-dark mb-4">Add Family Member</h3>
 
       <div className="space-y-4">
         <div className="flex gap-3">
@@ -375,8 +375,8 @@ function AddMemberForm({
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors
                   ${
                     conditions.includes(condition.value)
-                      ? 'bg-primary-500 text-white'
-                      : 'bg-neutral-100 text-neutral-600'
+                      ? 'bg-brand-light0 text-white'
+                      : 'bg-neutral-100 text-brand-text'
                   }`}
               >
                 {condition.label}

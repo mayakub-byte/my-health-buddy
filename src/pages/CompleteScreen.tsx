@@ -52,10 +52,10 @@ export default function CompleteScreen() {
       <div className="w-20 h-20 rounded-full bg-[#5C6B4A]/20 flex items-center justify-center mb-6">
         <span className="text-4xl animate-bounce" aria-hidden>🍽️</span>
       </div>
-      <h1 className="font-serif text-2xl font-bold text-olive-800 mb-2">
+      <h1 className="font-serif text-2xl font-bold text-brand-dark mb-2">
         {status === 'analyzing' ? 'Analyzing your baseline…' : 'Almost ready!'}
       </h1>
-      <p className="text-neutral-600 text-sm text-center">
+      <p className="text-brand-text text-sm text-center">
         {status === 'analyzing'
           ? 'Our AI is personalizing your experience.'
           : 'Redirecting you to get started…'}

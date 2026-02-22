@@ -176,9 +176,9 @@ export default function Upload() {
       {/* Header */}
       <div className="bg-[#FDFBF7] px-6 py-4 border-b border-neutral-100">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-neutral-800">Log Meal</h1>
+          <h1 className="text-xl font-bold text-brand-dark">Log Meal</h1>
           {step !== 'upload' && (
-            <button type="button" onClick={resetUpload} className="text-neutral-500" aria-label="Close and reset upload">
+            <button type="button" onClick={resetUpload} className="text-brand-text" aria-label="Close and reset upload">
               <X className="w-6 h-6" />
             </button>
           )}
@@ -204,15 +204,15 @@ export default function Upload() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="aspect-[4/3] bg-[#FDFBF7] rounded-2xl border-2 border-dashed border-neutral-200 
+              className="aspect-[4/3] bg-[#FDFBF7] rounded-2xl border-2 border-dashed border-brand-border 
                          flex flex-col items-center justify-center cursor-pointer w-full
-                         hover:border-primary-300 hover:bg-primary-50/50 transition-colors"
+                         hover:border-brand-border hover:bg-brand-light/50 transition-colors"
               aria-label="Choose photo or take picture of your meal"
             >
-              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mb-4">
-                <Camera className="w-8 h-8 text-primary-600" />
+              <div className="w-16 h-16 bg-brand-gray rounded-full flex items-center justify-center mb-4">
+                <Camera className="w-8 h-8 text-brand-text" />
               </div>
-              <p className="font-medium text-neutral-700 mb-1">
+              <p className="font-medium text-brand-dark mb-1">
                 Take a photo or upload
               </p>
               <p className="text-sm text-neutral-400">
@@ -240,8 +240,8 @@ export default function Upload() {
                     className={`p-3 rounded-xl text-center transition-colors
                       ${
                         mealType === type.value
-                          ? 'bg-primary-500 text-white'
-                          : 'bg-[#FDFBF7] border border-neutral-200 text-neutral-700'
+                          ? 'bg-brand-light0 text-white'
+                          : 'bg-[#FDFBF7] border border-brand-border text-brand-dark'
                       }`}
                   >
                     <span className="text-xl block mb-1">{type.emoji}</span>
@@ -252,8 +252,8 @@ export default function Upload() {
             </div>
 
             {/* AI Badge */}
-            <div className="flex items-center justify-center gap-2 text-sm text-neutral-500">
-              <Sparkles className="w-4 h-4 text-primary-500" />
+            <div className="flex items-center justify-center gap-2 text-sm text-brand-text">
+              <Sparkles className="w-4 h-4 text-brand-text" />
               <span>Powered by Claude AI • Telugu cuisine expert</span>
             </div>
           </div>
@@ -270,13 +270,13 @@ export default function Upload() {
               />
             )}
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
-              <Sparkles className="w-6 h-6 text-accent-500 animate-pulse" />
+              <Loader2 className="w-8 h-8 text-brand-text animate-spin" />
+              <Sparkles className="w-6 h-6 text-brand-text animate-pulse" />
             </div>
-            <h2 className="text-lg font-semibold text-neutral-800 mb-2">
+            <h2 className="text-lg font-semibold text-brand-dark mb-2">
               AI is analyzing your meal...
             </h2>
-            <p className="text-neutral-500">
+            <p className="text-brand-text">
               Identifying Telugu dishes and calculating nutrition
             </p>
           </div>
@@ -305,18 +305,18 @@ export default function Upload() {
 
             {/* AI Summary */}
             {mealSummary && (
-              <div className="bg-primary-50 rounded-xl p-4 flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-primary-800">{mealSummary}</p>
+              <div className="bg-brand-light rounded-xl p-4 flex items-start gap-3">
+                <Sparkles className="w-5 h-5 text-brand-text flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-brand-dark">{mealSummary}</p>
               </div>
             )}
 
             {/* Identified Dishes */}
             <div>
-              <h2 className="font-semibold text-neutral-800 mb-1">
+              <h2 className="font-semibold text-brand-dark mb-1">
                 Found {dishes.length} dish{dishes.length !== 1 ? 'es' : ''}
               </h2>
-              <p className="text-sm text-neutral-500 mb-4">
+              <p className="text-sm text-brand-text mb-4">
                 Adjust portions or remove incorrect items
               </p>
 
@@ -326,15 +326,15 @@ export default function Upload() {
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <h3 className="font-medium text-neutral-800">
+                          <h3 className="font-medium text-brand-dark">
                             {dish.name}
                           </h3>
-                          <span className="text-xs bg-primary-100 text-primary-700 px-2 py-0.5 rounded-full">
+                          <span className="text-xs bg-brand-gray text-brand-dark px-2 py-0.5 rounded-full">
                             {Math.round(dish.confidence * 100)}% match
                           </span>
                         </div>
                         {dish.name_telugu && (
-                          <p className="text-sm text-neutral-500">
+                          <p className="text-sm text-brand-text">
                             {dish.name_telugu}
                           </p>
                         )}
@@ -356,8 +356,8 @@ export default function Upload() {
                           className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors
                             ${
                               dish.portion === size
-                                ? 'bg-primary-500 text-white'
-                                : 'bg-neutral-100 text-neutral-600'
+                                ? 'bg-brand-light0 text-white'
+                                : 'bg-neutral-100 text-brand-text'
                             }`}
                         >
                           {size.charAt(0).toUpperCase() + size.slice(1)}
@@ -366,7 +366,7 @@ export default function Upload() {
                     </div>
 
                     {/* Nutrition for this dish */}
-                    <div className="flex justify-between text-xs text-neutral-500 rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
+                    <div className="flex justify-between text-xs text-brand-text rounded-lg p-2" style={{ backgroundColor: '#FDFBF7' }}>
                       <span>{dish.nutrition.calories} kcal</span>
                       <span>C: {dish.nutrition.carbs}g</span>
                       <span>P: {dish.nutrition.protein}g</span>
@@ -378,40 +378,40 @@ export default function Upload() {
             </div>
 
             {/* Total Nutrition Summary */}
-            <div className="card bg-primary-50 border-primary-100">
-              <h3 className="font-semibold text-primary-800 mb-3">
+            <div className="card bg-brand-light border-primary-100">
+              <h3 className="font-semibold text-brand-dark mb-3">
                 Total Nutrition
               </h3>
               <div className="grid grid-cols-5 gap-2 text-center">
                 <div>
-                  <p className="text-lg font-bold text-primary-700">
+                  <p className="text-lg font-bold text-brand-dark">
                     {Math.round(calculateTotalNutrition().calories)}
                   </p>
-                  <p className="text-xs text-primary-600">kcal</p>
+                  <p className="text-xs text-brand-text">kcal</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-primary-700">
+                  <p className="text-lg font-bold text-brand-dark">
                     {Math.round(calculateTotalNutrition().carbs)}g
                   </p>
-                  <p className="text-xs text-primary-600">Carbs</p>
+                  <p className="text-xs text-brand-text">Carbs</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-primary-700">
+                  <p className="text-lg font-bold text-brand-dark">
                     {Math.round(calculateTotalNutrition().protein)}g
                   </p>
-                  <p className="text-xs text-primary-600">Protein</p>
+                  <p className="text-xs text-brand-text">Protein</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-primary-700">
+                  <p className="text-lg font-bold text-brand-dark">
                     {Math.round(calculateTotalNutrition().fat)}g
                   </p>
-                  <p className="text-xs text-primary-600">Fat</p>
+                  <p className="text-xs text-brand-text">Fat</p>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-primary-700">
+                  <p className="text-lg font-bold text-brand-dark">
                     {Math.round(calculateTotalNutrition().fiber)}g
                   </p>
-                  <p className="text-xs text-primary-600">Fiber</p>
+                  <p className="text-xs text-brand-text">Fiber</p>
                 </div>
               </div>
             </div>
@@ -431,11 +431,11 @@ export default function Upload() {
         {/* Saving State */}
         {step === 'saving' && (
           <div className="text-center py-12">
-            <Loader2 className="w-12 h-12 text-primary-500 animate-spin mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-neutral-800 mb-2">
+            <Loader2 className="w-12 h-12 text-brand-text animate-spin mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-brand-dark mb-2">
               Saving your meal...
             </h2>
-            <p className="text-neutral-500">
+            <p className="text-brand-text">
               Calculating personalized scores for your family
             </p>
           </div>

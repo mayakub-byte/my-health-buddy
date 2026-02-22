@@ -27,7 +27,7 @@ export default function BottomNav() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 h-16 border-t px-6 safe-area-bottom z-50 flex items-center"
-      style={{ backgroundColor: '#faf8f3', borderColor: 'var(--border-warm, #e8e2d8)' }}
+      style={{ backgroundColor: '#f4f6f4', borderColor: 'var(--border-warm, #e8e2d8)' }}
     >
       <div className="flex justify-around items-center w-full max-w-md mx-auto">
         {NAV_ITEMS.map((item) => {

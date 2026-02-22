@@ -158,7 +158,7 @@ export default function Weekly() {
   const suggestions = gaps.flatMap((gap) => RECIPE_SUGGESTIONS[gap] || []).slice(0, 3);
 
   return (
-    <div className="min-h-screen pb-24 max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
+    <div className="min-h-screen pb-24 max-w-md mx-auto w-full" style={{ backgroundColor: '#f4f6f4' }}>
       <header className="px-4 pt-6 pb-2">
         <PageHeader title="This Week" subtitle="Weekly nutrition snapshot" />
       </header>
@@ -169,9 +169,9 @@ export default function Weekly() {
           <button
             onClick={() => setSelectedMemberFilter(null)}
             className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              selectedMemberFilter === null ? 'text-white' : 'border border-beige-300 text-neutral-600'
+              selectedMemberFilter === null ? 'text-white' : 'border border-brand-border text-brand-text'
             }`}
-            style={selectedMemberFilter === null ? { backgroundColor: '#5a7c65' } : { backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
+            style={selectedMemberFilter === null ? { backgroundColor: '#6ab08c' } : { backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
           >
             All
           </button>
@@ -180,13 +180,13 @@ export default function Weekly() {
               key={m.id}
               onClick={() => setSelectedMemberFilter(m.id)}
               className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                selectedMemberFilter === m.id ? 'text-white' : 'text-neutral-600'
+                selectedMemberFilter === m.id ? 'text-white' : 'text-brand-text'
               }`}
-              style={selectedMemberFilter === m.id ? { backgroundColor: '#5a7c65' } : { backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
+              style={selectedMemberFilter === m.id ? { backgroundColor: '#6ab08c' } : { backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}
             >
               <span
                 className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                style={{ backgroundColor: m.avatar_color || '#5a7c65' }}
+                style={{ backgroundColor: m.avatar_color || '#6ab08c' }}
               >
                 {m.name?.charAt(0)?.toUpperCase()}
               </span>
@@ -200,18 +200,18 @@ export default function Weekly() {
       <section className="px-4 py-3 flex items-center justify-between">
         <button
           type="button" onClick={() => setWeekOffset((o) => o - 1)}
-          className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center hover:bg-olive-50 border border-beige-300 transition-colors"
-          style={{ color: '#5a7c65' }}
+          className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center hover:bg-brand-light border border-brand-border transition-colors"
+          style={{ color: '#6ab08c' }}
           aria-label="Previous week"
         >←</button>
         <div className="text-center">
-          <p className="font-serif font-semibold text-xl" style={{ color: '#2c3e2d' }}>This Week</p>
+          <p className="font-serif font-semibold text-xl" style={{ color: '#143628' }}>This Week</p>
           <p className="text-xs mt-0.5" style={{ color: '#7a8c7e' }}>{weekRangeLabel}</p>
         </div>
         <button
           type="button" onClick={() => setWeekOffset((o) => o + 1)}
-          className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center hover:bg-olive-50 border border-beige-300 transition-colors"
-          style={{ color: '#5a7c65' }}
+          className="w-12 h-12 min-w-[48px] min-h-[48px] rounded-full flex items-center justify-center hover:bg-brand-light border border-brand-border transition-colors"
+          style={{ color: '#6ab08c' }}
           aria-label="Next week"
         >→</button>
       </section>
@@ -224,16 +224,16 @@ export default function Weekly() {
         <main className="text-center py-12 px-4">
           <span className="text-3xl">😕</span>
           <p className="text-gray-600 mt-2">Something went wrong</p>
-          <button type="button" onClick={() => window.location.reload()} className="mt-3 px-4 py-2 text-white rounded-full text-sm" style={{ backgroundColor: '#5a7c65' }}>
+          <button type="button" onClick={() => window.location.reload()} className="mt-3 px-4 py-2 text-white rounded-full text-sm" style={{ backgroundColor: '#6ab08c' }}>
             Try Again
           </button>
         </main>
       ) : totalMeals === 0 ? (
         <main className="px-4 py-8 flex flex-col items-center justify-center text-center">
           <div className="text-5xl mb-4">🍽️</div>
-          <p className="font-serif text-lg font-semibold mb-2" style={{ color: '#2c3e2d' }}>No meals tracked this week yet</p>
+          <p className="font-serif text-lg font-semibold mb-2" style={{ color: '#143628' }}>No meals tracked this week yet</p>
           <p className="text-sm mb-6" style={{ color: '#7a8c7e' }}>Start scanning to see your family&apos;s nutrition progress!</p>
-          <button onClick={() => navigate('/dashboard')} className="w-full max-w-xs py-3.5 rounded-full font-semibold text-white" style={{ backgroundColor: '#5a7c65' }}>
+          <button onClick={() => navigate('/dashboard')} className="w-full max-w-xs py-3.5 rounded-full font-semibold text-white" style={{ backgroundColor: '#6ab08c' }}>
             Scan Your First Meal
           </button>
         </main>
@@ -255,15 +255,15 @@ export default function Weekly() {
             <div className="flex justify-center gap-4 mb-3">
               <div className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-emerald-500" />
-                <span className="text-xs text-neutral-600">{greenCount} green</span>
+                <span className="text-xs text-brand-text">{greenCount} green</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-amber-400" />
-                <span className="text-xs text-neutral-600">{yellowCount} yellow</span>
+                <span className="text-xs text-brand-text">{yellowCount} yellow</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-full bg-red-500" />
-                <span className="text-xs text-neutral-600">{redCount} red</span>
+                <span className="text-xs text-brand-text">{redCount} red</span>
               </div>
             </div>
 
@@ -278,21 +278,21 @@ export default function Weekly() {
 
           {/* SECTION 2: Calorie Trend Bars */}
           <section className="rounded-2xl p-5" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
-            <h2 className="font-serif font-semibold mb-3" style={{ color: '#2c3e2d' }}>Daily Calories</h2>
+            <h2 className="font-serif font-semibold mb-3" style={{ color: '#143628' }}>Daily Calories</h2>
             <div className="flex items-end justify-between gap-1.5" style={{ height: 120 }}>
               {dailyCals.map((cal, i) => {
                 const height = maxDailyCal > 0 ? Math.max(4, (cal / maxDailyCal) * 100) : 4;
                 const isToday = i === new Date().getDay() && weekOffset === 0;
                 return (
                   <div key={i} className="flex flex-col items-center flex-1">
-                    <span className="text-[10px] text-neutral-500 mb-1">
+                    <span className="text-[10px] text-brand-text mb-1">
                       {cal > 0 ? cal : ''}
                     </span>
                     <div
                       className="w-full rounded-t-lg transition-all"
                       style={{
                         height: `${height}%`,
-                        backgroundColor: isToday ? '#5a7c65' : '#a8c4a0',
+                        backgroundColor: isToday ? '#6ab08c' : '#a8c4a0',
                         opacity: cal > 0 ? 1 : 0.3,
                         minHeight: 4,
                       }}
@@ -328,13 +328,13 @@ export default function Weekly() {
           {/* SECTION 4: Quick Stats */}
           <section className="grid grid-cols-2 gap-3">
             <div className="rounded-2xl p-4" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
-              <p className="text-xs font-medium text-neutral-500 mb-1">Avg Calories</p>
-              <p className="text-2xl font-bold" style={{ color: '#2c3e2d' }}>{avgCalories}</p>
+              <p className="text-xs font-medium text-brand-text mb-1">Avg Calories</p>
+              <p className="text-2xl font-bold" style={{ color: '#143628' }}>{avgCalories}</p>
               <p className="text-xs" style={{ color: '#7a8c7e' }}>cal/meal</p>
             </div>
             <div className="rounded-2xl p-4" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
-              <p className="text-xs font-medium text-neutral-500 mb-1">Top Dish</p>
-              <p className="text-sm font-semibold" style={{ color: '#2c3e2d' }}>
+              <p className="text-xs font-medium text-brand-text mb-1">Top Dish</p>
+              <p className="text-sm font-semibold" style={{ color: '#143628' }}>
                 {topDish ? `${topDish.name}` : '—'}
               </p>
               {topDish && (
@@ -345,14 +345,14 @@ export default function Weekly() {
 
           {/* SECTION 5: Daily Meal Grid */}
           <section className="rounded-2xl shadow-sm p-4" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8', boxShadow: '0 2px 12px rgba(90, 70, 50, 0.06)' }}>
-            <h2 className="font-serif font-semibold mb-3" style={{ color: '#2c3e2d' }}>Daily Meals</h2>
+            <h2 className="font-serif font-semibold mb-3" style={{ color: '#143628' }}>Daily Meals</h2>
             <div className="space-y-3">
               {orderedDays.map((day) => {
                 const dayMeals = mealsByDay[day] || [];
                 return (
                   <div key={day} className="flex items-start gap-3 py-2 border-b last:border-0" style={{ borderColor: '#e8e4dc' }}>
                     <div className="w-14 flex-shrink-0">
-                      <p className="text-sm font-semibold" style={{ color: '#2c3e2d' }}>{day}</p>
+                      <p className="text-sm font-semibold" style={{ color: '#143628' }}>{day}</p>
                     </div>
                     <div className="flex-1 min-w-0">
                       {dayMeals.length === 0 ? (
@@ -363,7 +363,7 @@ export default function Weekly() {
                             const light = getTrafficLight(meal.health_score);
                             const dot = light === 'green' ? '🟢' : light === 'yellow' ? '🟡' : '🔴';
                             return (
-                              <span key={meal.id} className="text-sm text-neutral-700">
+                              <span key={meal.id} className="text-sm text-brand-dark">
                                 {dot} {meal.food_name} ({meal.calories ?? 0} cal)
                                 {dayMeals.indexOf(meal) < dayMeals.length - 1 ? ' • ' : ''}
                               </span>
@@ -381,7 +381,7 @@ export default function Weekly() {
           {/* Recipe Suggestions */}
           {suggestions.length > 0 ? (
             <div className="mt-2">
-              <h3 className="font-serif text-lg font-semibold mb-3" style={{ color: '#2c3e2d' }}>Try This Week</h3>
+              <h3 className="font-serif text-lg font-semibold mb-3" style={{ color: '#143628' }}>Try This Week</h3>
               <p className="text-xs mb-3" style={{ color: '#7a8c7e' }}>Based on your family&apos;s nutrition this week</p>
               <div className="space-y-3">
                 {suggestions.map((recipe, i) => (
@@ -389,9 +389,9 @@ export default function Weekly() {
                     <div className="flex items-start gap-3">
                       <span className="text-3xl">{recipe.emoji}</span>
                       <div className="flex-1">
-                        <p className="font-semibold" style={{ color: '#2c3e2d' }}>{recipe.name}</p>
+                        <p className="font-semibold" style={{ color: '#143628' }}>{recipe.name}</p>
                         <p className="text-xs mb-1" style={{ color: '#7a8c7e' }}>{recipe.telugu} • ⏱️ {recipe.prep}</p>
-                        <p className="text-sm" style={{ color: '#5a7c65' }}>{recipe.why}</p>
+                        <p className="text-sm" style={{ color: '#6ab08c' }}>{recipe.why}</p>
                       </div>
                     </div>
                   </div>
@@ -401,20 +401,20 @@ export default function Weekly() {
           ) : gaps.includes('balanced') && meals.length > 0 ? (
             <div className="mt-2 p-4 bg-emerald-50 rounded-2xl text-center">
               <span className="text-3xl">🎉</span>
-              <p className="font-serif mt-2 font-semibold" style={{ color: '#5a7c65' }}>Great balance this week!</p>
+              <p className="font-serif mt-2 font-semibold" style={{ color: '#6ab08c' }}>Great balance this week!</p>
               <p className="text-sm text-gray-600 mt-1">Your family&apos;s nutrition is well-rounded — keep it up!</p>
             </div>
           ) : null}
 
           {/* Action Buttons */}
           <section className="flex flex-col gap-3">
-            <button type="button" onClick={() => navigate('/monthly')} className="w-full py-3.5 rounded-full font-semibold border-2 transition-colors hover:bg-olive-50" style={{ borderColor: '#5a7c65', color: '#5a7c65' }}>
+            <button type="button" onClick={() => navigate('/monthly')} className="w-full py-3.5 rounded-full font-semibold border-2 transition-colors hover:bg-brand-light" style={{ borderColor: '#6ab08c', color: '#6ab08c' }}>
               View Monthly Overview
             </button>
-            <button type="button" onClick={() => navigate('/grocery')} className="w-full py-3.5 rounded-full font-semibold text-white" style={{ backgroundColor: '#5a7c65' }}>
+            <button type="button" onClick={() => navigate('/grocery')} className="w-full py-3.5 rounded-full font-semibold text-white" style={{ backgroundColor: '#6ab08c' }}>
               Generate Grocery List
             </button>
-            <button type="button" onClick={() => navigate('/dashboard')} className="w-full py-3.5 rounded-full font-semibold border-2 transition-colors hover:bg-olive-50" style={{ borderColor: '#5a7c65', color: '#5a7c65' }}>
+            <button type="button" onClick={() => navigate('/dashboard')} className="w-full py-3.5 rounded-full font-semibold border-2 transition-colors hover:bg-brand-light" style={{ borderColor: '#6ab08c', color: '#6ab08c' }}>
               Scan a Meal
             </button>
           </section>

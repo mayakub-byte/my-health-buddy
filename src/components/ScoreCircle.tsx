@@ -67,7 +67,7 @@ export default function ScoreCircle({
   }, [animate, clampedScore, targetOffset]);
 
   const getColor = (s: number) => {
-    if (s >= 70) return { stroke: '#5a7c65', bg: '#e8f0e5', text: '#3d5a47' }; // sage green
+    if (s >= 70) return { stroke: '#6ab08c', bg: '#e8f0e5', text: '#3d5a47' }; // sage green
     if (s >= 40) return { stroke: '#c4956a', bg: '#fdf3eb', text: '#8a6840' }; // warm amber
     return { stroke: '#c45c5c', bg: '#fce8e8', text: '#8b3a3a' }; // warm red
   };
@@ -131,7 +131,7 @@ export default function ScoreCircle({
         </div>
       </div>
       {label && (
-        <p className="text-sm font-semibold mt-2" style={{ color: 'var(--text-main, #2c3e2d)' }}>{label}</p>
+        <p className="text-sm font-semibold mt-2" style={{ color: 'var(--text-main, #143628)' }}>{label}</p>
       )}
       {sublabel && (
         <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted, #7a8c7e)' }}>{sublabel}</p>

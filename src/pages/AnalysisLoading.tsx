@@ -180,13 +180,13 @@ export default function AnalysisLoading() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#faf8f3' }}>
+    <div className="min-h-screen flex flex-col max-w-md mx-auto w-full" style={{ backgroundColor: '#f4f6f4' }}>
       <header className="flex items-center gap-3 px-5 pt-6 pb-4">
         {apiError ? (
           <button
             type="button"
             onClick={() => navigate('/dashboard')}
-            className="flex items-center justify-center w-10 h-10 rounded-full border text-neutral-600 hover:bg-beige-100 shadow-card"
+            className="flex items-center justify-center w-10 h-10 rounded-full border text-brand-text hover:bg-brand-light shadow-card"
             style={{ borderColor: '#e8e2d8' }}
             aria-label="Back to dashboard"
           >
@@ -221,8 +221,8 @@ export default function AnalysisLoading() {
                 <button
                   type="button"
                   onClick={() => navigate('/dashboard')}
-                  className="px-6 py-3 rounded-full border-2 font-semibold hover:bg-olive-50"
-                  style={{ borderColor: '#5a7c65', color: '#5a7c65' }}
+                  className="px-6 py-3 rounded-full border-2 font-semibold hover:bg-brand-light"
+                  style={{ borderColor: '#6ab08c', color: '#6ab08c' }}
                 >
                   Back to Dashboard
                 </button>
@@ -253,7 +253,7 @@ export default function AnalysisLoading() {
             <p style={{
               fontFamily: "'DM Serif Display', Georgia, serif",
               fontSize: 18,
-              color: '#5a7c65',
+              color: '#6ab08c',
               fontStyle: 'italic',
               textAlign: 'center',
             }}>
@@ -274,11 +274,11 @@ export default function AnalysisLoading() {
               <div className="flex items-center gap-3 px-4 py-3 rounded-2xl mt-8 w-full max-w-sm card-warm">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold text-white flex-shrink-0"
-                  style={{ backgroundColor: selectedMember.avatar_color || '#5a7c65' }}
+                  style={{ backgroundColor: selectedMember.avatar_color || '#6ab08c' }}
                 >
                   {selectedMember.name?.charAt(0)?.toUpperCase() || '?'}
                 </div>
-                <span className="font-medium" style={{ color: '#2c3e2d' }}>{selectedMember.name}</span>
+                <span className="font-medium" style={{ color: '#143628' }}>{selectedMember.name}</span>
               </div>
             )}
           </div>
