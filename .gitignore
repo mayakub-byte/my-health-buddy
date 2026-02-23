@@ -14,8 +14,10 @@ dist
 dist-ssr
 *.local
 
-# Netlify local build cache
+# Netlify local build cache and build artifacts
 .netlify
+netlify/functions/*.zip
+netlify/functions/manifest.json
 
 # Claude Code local settings
 .claude
