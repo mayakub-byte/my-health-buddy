@@ -14,6 +14,12 @@ dist
 dist-ssr
 *.local
 
+# Netlify local build cache
+.netlify
+
+# Claude Code local settings
+.claude
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
