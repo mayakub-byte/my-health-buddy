@@ -5,7 +5,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, X } from 'lucide-react';
+import { Camera, X, Mic, Type } from 'lucide-react';
 import { useFamily } from '../hooks/useFamily';
 import PageHeader from '../components/PageHeader';
 import MemberAvatar from '../components/MemberAvatar';
@@ -95,6 +95,7 @@ export default function MealInput() {
   const [showMealModal, setShowMealModal] = useState(false);
   const [selectedTab, setSelectedTab] = useState<MealTime>(getCurrentMealTime());
   const [voiceContext, setVoiceContext] = useState('');
+  const [inputMode, setInputMode] = useState<'none' | 'voice' | 'text'>('none');
 
 
   useEffect(() => {
@@ -274,6 +275,32 @@ export default function MealInput() {
         )}
       </section>
 
+      {/* Profile completion prompt */}
+      {(() => {
+        const pm = members.find((m) => m.is_primary);
+        const needsProfile = pm && pm.age === 25 && (!pm.health_conditions || pm.health_conditions.length === 0) && !localStorage.getItem('mhb_profile_completed');
+        return needsProfile ? (
+          <section className="px-5 mb-4">
+            <div className="p-4 rounded-2xl border-2 border-dashed" style={{ borderColor: '#6ab08c', backgroundColor: '#f5f0e8' }}>
+              <p className="font-semibold text-sm" style={{ color: '#143628' }}>
+                Complete your profile for personalized advice
+              </p>
+              <p className="text-xs mt-1" style={{ color: '#7a8c7e' }}>
+                Add your health conditions so we can give better meal guidance
+              </p>
+              <button
+                type="button"
+                onClick={() => navigate('/complete-profile')}
+                className="mt-2 px-4 py-2 rounded-full text-sm font-medium text-white"
+                style={{ backgroundColor: '#6ab08c' }}
+              >
+                Complete Profile
+              </button>
+            </div>
+          </section>
+        ) : null;
+      })()}
+
       {/* Meal time pills */}
       <section className="px-5 mb-4">
         <div className="flex gap-2">
@@ -299,61 +326,120 @@ export default function MealInput() {
       </header>
 
       <main className="flex-1 px-5">
-        <div className="relative">
-          <label htmlFor="meal-description" className="sr-only">Describe your meal</label>
-          <input
-            id="meal-description"
-            type="text"
-            value={manualText}
-            onChange={(e) => setManualText(e.target.value)}
-            placeholder="Tell us about your culinary creation..."
-            className="input-field w-full rounded-full py-3.5 pr-12"
-            aria-label="Describe your meal"
-          />
-          {/* Voice Input Button */}
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <VoiceRecorderButton
-              size="md"
-              showDuration={false}
-              onTranscript={(text) => setManualText((prev) => prev ? `${prev} ${text}` : text)}
-              onError={(err) => setToast(err)}
-            />
-          </div>
-        </div>
+        {/* Hidden file input for camera */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFileChange}
+        />
 
-        <div className="flex gap-3 mt-3">
-          <button
-            type="button"
-            onClick={() => setShowMealModal(true)}
-            className="flex-1 py-3 rounded-full border-2 border-brand-border bg-brand-light text-brand-text font-medium hover:border-brand-green hover:bg-brand-light/50 transition-colors"
-          >
-            Choose common meal
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            className="hidden"
-            onChange={handleFileChange}
-          />
+        {/* Three input method cards */}
+        <p className="text-xs font-medium mb-2" style={{ color: '#7a8c7e' }}>How would you like to log?</p>
+        <div className="grid grid-cols-3 gap-3">
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="flex-1 py-3 rounded-full border-2 border-brand-border bg-brand-light text-brand-text font-medium hover:border-brand-green hover:bg-brand-light/50 transition-colors flex items-center justify-center gap-2"
+            className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all"
+            style={{
+              borderColor: imagePreview ? '#6ab08c' : '#e8e2d8',
+              backgroundColor: imagePreview ? '#e8f0e5' : '#ffffff',
+            }}
           >
-            <Camera className="w-5 h-5" />
-            Add photo (optional)
+            <Camera className="w-7 h-7" style={{ color: '#6ab08c' }} />
+            <span className="text-xs font-medium" style={{ color: '#143628' }}>Snap meal</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setInputMode(inputMode === 'voice' ? 'none' : 'voice')}
+            className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all"
+            style={{
+              borderColor: inputMode === 'voice' ? '#6ab08c' : '#e8e2d8',
+              backgroundColor: inputMode === 'voice' ? '#e8f0e5' : '#ffffff',
+            }}
+          >
+            <Mic className="w-7 h-7" style={{ color: '#6ab08c' }} />
+            <span className="text-xs font-medium" style={{ color: '#143628' }}>Say it</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setInputMode(inputMode === 'text' ? 'none' : 'text')}
+            className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all"
+            style={{
+              borderColor: inputMode === 'text' || manualText.trim() ? '#6ab08c' : '#e8e2d8',
+              backgroundColor: inputMode === 'text' || manualText.trim() ? '#e8f0e5' : '#ffffff',
+            }}
+          >
+            <Type className="w-7 h-7" style={{ color: '#6ab08c' }} />
+            <span className="text-xs font-medium" style={{ color: '#143628' }}>Type it</span>
           </button>
         </div>
 
+        {/* Voice input area */}
+        {inputMode === 'voice' && (
+          <div className="mt-3 p-4 rounded-2xl border border-dashed flex flex-col items-center gap-2" style={{ borderColor: '#a8c4a0', backgroundColor: '#f5f0e8' }}>
+            <p className="text-xs" style={{ color: '#3d5a47' }}>Tap the mic and describe your meal</p>
+            <VoiceRecorderButton
+              size="lg"
+              showDuration
+              onTranscript={(text) => {
+                setManualText((prev) => prev ? `${prev} ${text}` : text);
+                setInputMode('none');
+              }}
+              onError={(err) => setToast(err)}
+            />
+            {manualText && (
+              <p className="text-xs italic mt-1" style={{ color: '#666' }}>&quot;{manualText}&quot;</p>
+            )}
+          </div>
+        )}
+
+        {/* Text input area */}
+        {(inputMode === 'text' || manualText.trim()) && (
+          <div className="mt-3 relative">
+            <label htmlFor="meal-description" className="sr-only">Describe your meal</label>
+            <input
+              id="meal-description"
+              type="text"
+              value={manualText}
+              onChange={(e) => setManualText(e.target.value)}
+              placeholder="Tell us about your culinary creation..."
+              className="input-field w-full rounded-full py-3.5 pr-12"
+              aria-label="Describe your meal"
+              autoFocus={inputMode === 'text'}
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <VoiceRecorderButton
+                size="md"
+                showDuration={false}
+                onTranscript={(text) => setManualText((prev) => prev ? `${prev} ${text}` : text)}
+                onError={(err) => setToast(err)}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Common meal button */}
+        <button
+          type="button"
+          onClick={() => setShowMealModal(true)}
+          className="w-full mt-3 py-3 rounded-full border-2 border-brand-border bg-white text-brand-text font-medium hover:border-brand-green transition-colors"
+        >
+          Or choose a common meal
+        </button>
+
+        {/* Image preview */}
         {imagePreview && (
           <div className="mt-4 rounded-2xl overflow-hidden border border-brand-border shadow-card aspect-[4/3] max-h-48">
             <img src={imagePreview} alt="Your meal" className="w-full h-full object-cover" />
           </div>
         )}
 
-        {/* Voice Context — optional clarification for AI */}
+        {/* Voice Context — always visible when photo or text exists */}
         {(imagePreview || manualText.trim()) && (
           <div className="mt-3 p-3 rounded-xl border border-dashed" style={{ borderColor: '#a8c4a0', backgroundColor: '#f5f0e8' }}>
             <p className="text-xs mb-2" style={{ color: '#3d5a47' }}>

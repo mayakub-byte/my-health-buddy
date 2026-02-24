@@ -85,6 +85,12 @@ export default function Weekly() {
   const [toast, setToast] = useState<string | null>(null);
   const [selectedMemberFilter, setSelectedMemberFilter] = useState<string | null>(null);
 
+  // Meal plan state
+  const [mealPlan, setMealPlan] = useState<any>(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
+  const [showPlan, setShowPlan] = useState(false);
+
   const now = new Date();
   const weekStart = new Date(now);
   weekStart.setDate(now.getDate() - now.getDay() + weekOffset * 7);
@@ -118,6 +124,50 @@ export default function Weekly() {
       setFetchError(err instanceof Error ? err.message : 'Failed to load');
       setAllMeals([]);
     } finally { setLoading(false); }
+  };
+
+  const generateMealPlan = async () => {
+    setPlanLoading(true);
+    setPlanError(null);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setPlanError('Not signed in'); return; }
+
+      const rangeStart = new Date();
+      rangeStart.setDate(rangeStart.getDate() - 14);
+      const { data: recentMeals } = await supabase
+        .from('meal_history')
+        .select('food_name')
+        .eq('user_id', user.id)
+        .gte('created_at', rangeStart.toISOString())
+        .order('created_at', { ascending: false });
+
+      const mealNamesList = recentMeals?.map((m) => m.food_name).filter(Boolean) || [];
+      const memberProfiles = members.map((m) => ({
+        name: m.name,
+        age: m.age || 25,
+        conditions: m.health_conditions || [],
+      }));
+      const dietPref = localStorage.getItem('mhb_diet_pref') || 'all';
+
+      const { data, error: fnError } = await supabase.functions.invoke('dynamic-processor', {
+        body: {
+          type: 'meal_plan',
+          mealNames: mealNamesList,
+          memberCount: members.length || 4,
+          memberProfiles,
+          dietaryPreference: dietPref,
+        },
+      });
+
+      if (fnError) throw fnError;
+      setMealPlan(data);
+      setShowPlan(true);
+    } catch (err) {
+      setPlanError(err instanceof Error ? err.message : 'Failed to generate meal plan');
+    } finally {
+      setPlanLoading(false);
+    }
   };
 
   const meals = selectedMemberFilter
@@ -406,8 +456,75 @@ export default function Weekly() {
             </div>
           ) : null}
 
+          {/* Meal Plan Section */}
+          {showPlan && mealPlan?.meal_plan && (
+            <section className="rounded-2xl p-4" style={{ backgroundColor: '#ffffff', border: '1px solid #e8e2d8' }}>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-serif font-semibold" style={{ color: '#143628' }}>Your Meal Plan</h2>
+                <button type="button" onClick={() => setShowPlan(false)} className="text-xs" style={{ color: '#7a8c7e' }}>Hide</button>
+              </div>
+              {mealPlan.weekly_summary && (
+                <p className="text-sm mb-3" style={{ color: '#7a8c7e' }}>{mealPlan.weekly_summary}</p>
+              )}
+              <div className="space-y-4">
+                {mealPlan.meal_plan.map((day: any) => (
+                  <div key={day.day} className="border-b pb-3 last:border-0" style={{ borderColor: '#e8e4dc' }}>
+                    <p className="font-semibold text-sm mb-2" style={{ color: '#143628' }}>{day.day}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['breakfast', 'lunch', 'snack', 'dinner'] as const).map((meal) => {
+                        const item = day[meal];
+                        if (!item) return null;
+                        return (
+                          <div key={meal} className="p-2 rounded-xl" style={{ backgroundColor: '#f5f0e8' }}>
+                            <p className="text-[10px] uppercase font-medium" style={{ color: '#7a8c7e' }}>{meal}</p>
+                            <p className="text-xs font-semibold" style={{ color: '#143628' }}>{item.name}</p>
+                            {item.name_telugu && <p className="text-[10px]" style={{ color: '#7a8c7e' }}>{item.name_telugu}</p>}
+                            <p className="text-[10px]" style={{ color: '#6ab08c' }}>{item.calories} cal</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {mealPlan.health_notes && mealPlan.health_notes.length > 0 && (
+                <div className="mt-3 p-3 rounded-xl bg-emerald-50">
+                  <p className="text-xs font-semibold text-emerald-700 mb-1">Health Notes</p>
+                  {mealPlan.health_notes.map((note: string, i: number) => (
+                    <p key={i} className="text-xs text-emerald-600">* {note}</p>
+                  ))}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={generateMealPlan}
+                disabled={planLoading}
+                className="w-full mt-3 py-2.5 rounded-full text-sm font-medium border-2 transition-colors"
+                style={{ borderColor: '#6ab08c', color: '#6ab08c' }}
+              >
+                {planLoading ? 'Regenerating...' : 'Regenerate Plan'}
+              </button>
+            </section>
+          )}
+
+          {planError && (
+            <div className="p-3 rounded-xl bg-red-50 border border-red-200">
+              <p className="text-sm text-red-700">{planError}</p>
+              <button type="button" onClick={generateMealPlan} className="mt-2 text-xs text-red-600 underline">Try again</button>
+            </div>
+          )}
+
           {/* Action Buttons */}
           <section className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={generateMealPlan}
+              disabled={planLoading}
+              className="w-full py-3.5 rounded-full font-semibold text-white"
+              style={{ backgroundColor: '#5C6B4A' }}
+            >
+              {planLoading ? 'Generating Meal Plan...' : 'Generate Weekly Meal Plan'}
+            </button>
             <button type="button" onClick={() => navigate('/monthly')} className="w-full py-3.5 rounded-full font-semibold border-2 transition-colors hover:bg-brand-light" style={{ borderColor: '#6ab08c', color: '#6ab08c' }}>
               View Monthly Overview
             </button>

@@ -34,6 +34,7 @@ import ProgressScreen from './pages/ProgressScreen';
 import ProfileScreen from './pages/ProfileScreen';
 import GroceryList from './pages/GroceryList';
 import Settings from './pages/Settings';
+import ProfileCompletion from './pages/ProfileCompletion';
 
 // Components
 import BottomNav from './components/BottomNav';
@@ -147,6 +148,7 @@ function App() {
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/onboarding" element={<Onboarding onComplete={() => { }} />} />
           <Route path="/setup" element={<FamilySetup />} />
+          <Route path="/complete-profile" element={<ProfileCompletion />} />
           <Route path="/home" element={<MealInput />} />
           <Route path="/dashboard" element={<MealInput />} />
           <Route path="/scan/confirm" element={<PhotoConfirmation />} />

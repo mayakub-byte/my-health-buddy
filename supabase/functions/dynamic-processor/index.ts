@@ -349,7 +349,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { type, image_base64, media_type, mealDescription, portion, mealNames, memberCount, memberProfiles, voiceContext, foodProfile } = body;
+    const { type, image_base64, media_type, mealDescription, portion, mealNames, memberCount, memberProfiles, voiceContext, foodProfile, dietaryPreference } = body;
 
     // Grocery list generation
     if (type === 'grocery') {
@@ -427,6 +427,72 @@ Respond ONLY with this JSON (no other text, no markdown):
           max_tokens: 2000,
           system: JSON_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: groceryPrompt }],
+        }),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error('Claude API error:', response.status, errText);
+        throw new Error(`Claude API error: ${response.status}`);
+      }
+      const data = await response.json();
+      const textContent = data.content.find((c: any) => c.type === 'text');
+      if (!textContent?.text) throw new Error('No text in Claude response');
+      const parsed = extractJSON(textContent.text);
+      return new Response(JSON.stringify(parsed), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Weekly meal plan generation
+    if (type === 'meal_plan') {
+      const memberBlock = memberProfiles && Array.isArray(memberProfiles) && memberProfiles.length > 0
+        ? '\nFamily members:\n' + memberProfiles.map((m: any) =>
+            `- ${m.name}: age ${m.age}, conditions: ${(m.conditions || []).join(', ') || 'none'}`
+          ).join('\n')
+        : '';
+      const recentMealsBlock = mealNames && Array.isArray(mealNames) && mealNames.length > 0
+        ? `\nRecent meals eaten: ${mealNames.slice(0, 20).join(', ')}`
+        : '';
+      const dietBlock = dietaryPreference ? `\nDietary preference: ${dietaryPreference}` : '';
+
+      const mealPlanPrompt = `You are a Telugu family nutrition planner. Generate a practical 7-day meal plan for a family in Hyderabad.
+${recentMealsBlock}
+Family size: ${memberCount || 4} members${memberBlock}${dietBlock}
+
+RULES:
+- Use Telugu/South Indian cuisine primarily (idli, dosa, rice, dal, roti, curries, etc.)
+- Account for health conditions (low-sugar for diabetics, low-salt for hypertension, etc.)
+- Include variety — don't repeat the same dish across days
+- Suggest practical, home-cookable meals
+- Include Telugu names where applicable
+- Balance nutrition across the day
+
+Respond ONLY with this JSON (no other text, no markdown):
+{
+  "meal_plan": [
+    {
+      "day": "Monday",
+      "breakfast": { "name": "Pesarattu & Upma", "name_telugu": "పెసరట్టు & ఉప్మా", "calories": 280, "health_note": "Rich in protein" },
+      "lunch": { "name": "Rice, Dal & Palakura", "name_telugu": "అన్నం, పప్పు & పాలకూర", "calories": 450, "health_note": "Iron-rich greens" },
+      "snack": { "name": "Fruit Chaat", "name_telugu": "ఫ్రూట్ చాట్", "calories": 120, "health_note": "Natural sugars" },
+      "dinner": { "name": "Roti & Mixed Veg Curry", "name_telugu": "రోటీ & మిక్స్ వెజ్ కర్రీ", "calories": 380, "health_note": "Light dinner" }
+    }
+  ],
+  "weekly_summary": "Brief note about the plan's nutritional balance",
+  "health_notes": ["Specific note for family members with conditions"]
+}`;
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_API_KEY!,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 3000,
+          system: JSON_SYSTEM_PROMPT,
+          messages: [{ role: 'user', content: mealPlanPrompt }],
         }),
       });
       if (!response.ok) {
