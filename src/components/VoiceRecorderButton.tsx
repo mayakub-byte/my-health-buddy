@@ -38,6 +38,8 @@ export function VoiceRecorderButton({
   onTranscript,
   onError,
   maxDuration = 60,
+  silenceTimeout,
+  silenceThreshold,
 }: VoiceRecorderButtonProps) {
   const {
     startRecording,
@@ -46,7 +48,7 @@ export function VoiceRecorderButton({
     isTranscribing,
     duration,
     error,
-  } = useVoiceRecorder({ onTranscript, onError, maxDuration });
+  } = useVoiceRecorder({ onTranscript, onError, maxDuration, silenceTimeout, silenceThreshold });
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

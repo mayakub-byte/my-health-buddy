@@ -546,7 +546,7 @@ export default function MealInput() {
 
       {toast && (
         <div
-          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg z-50"
+          className="fixed bottom-24 left-4 right-4 mx-auto max-w-sm bg-neutral-800 text-white text-sm font-medium py-3 px-4 rounded-xl text-center shadow-lg z-[80]"
           role="status"
         >
           {toast}
@@ -557,7 +557,7 @@ export default function MealInput() {
       {showMealModal && (
         <>
           <div
-            className="fixed inset-0 bg-black/40 z-40"
+            className="fixed inset-0 bg-black/40 z-[60]"
             role="button"
             tabIndex={0}
             aria-label="Close modal"
@@ -569,7 +569,7 @@ export default function MealInput() {
               }
             }}
           />
-          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-light rounded-t-3xl shadow-2xl z-50 max-h-[70vh] overflow-y-auto animate-slide-up">
+          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-light rounded-t-3xl shadow-2xl z-[70] max-h-[70vh] overflow-y-auto animate-slide-up">
             <div className="sticky top-0 bg-brand-light border-b border-brand-border px-5 py-4 flex items-center justify-between z-10">
               <h2 className="font-heading text-lg font-bold text-brand-dark">Choose a Telugu Meal</h2>
               <button
