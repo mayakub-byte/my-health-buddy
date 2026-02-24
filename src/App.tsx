@@ -51,16 +51,26 @@ function App() {
   const [isCreatingFamily, setIsCreatingFamily] = useState(false);
 
   useEffect(() => {
+    // Safety timeout — never hang on loading screen for more than 8s
+    const safetyTimeout = setTimeout(() => {
+      setIsSignedIn((prev) => prev === null ? false : prev);
+    }, 8000);
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      clearTimeout(safetyTimeout);
       setIsSignedIn(!!session?.user);
     }).catch((err) => {
+      clearTimeout(safetyTimeout);
       console.error('getSession failed:', err);
       setIsSignedIn(false);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsSignedIn(!!session?.user);
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Auto-create family if user is signed in but has no family

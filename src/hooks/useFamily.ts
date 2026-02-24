@@ -41,6 +41,21 @@ export function useFamily() {
     try {
       setLoading(true);
 
+      // Safety timeout — don't hang forever if Supabase is unreachable
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Family load timed out')), 10000)
+      );
+
+      await Promise.race([loadFamilyInner(), timeout]);
+    } catch (err) {
+      console.error('Error loading family:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load family');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFamilyInner = async () => {
       let familyId: string | null = localStorage.getItem(FAMILY_STORAGE_KEY);
 
       if (familyId) {
@@ -87,12 +102,6 @@ export function useFamily() {
           if (!membersError) setMembers(membersData || []);
         }
       }
-    } catch (err) {
-      console.error('Error loading family:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load family');
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Create new family - returns { family, error } so UI can show specific error
