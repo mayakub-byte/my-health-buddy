@@ -231,8 +231,12 @@ export default function MealInput() {
 
   return (
     <div className="min-h-screen flex flex-col pb-24 max-w-md mx-auto w-full" style={{ backgroundColor: '#f4f6f4' }}>
-      {/* Who's eating? — ABOVE heading */}
-      <section className="px-5 pt-6 mb-4">
+      <header className="px-5 pt-6 pb-3">
+        <PageHeader title={greeting} subtitle={today} />
+      </header>
+
+      {/* Who's eating? */}
+      <section className="px-5 mb-4">
         <p className="text-sm font-medium mb-2" style={{ color: '#7a8c7e' }}>Who&apos;s eating?</p>
         <div className="flex overflow-x-auto gap-3 pb-2 scrollbar-hide -mx-5 px-5">
           {members.map((member) => (
@@ -321,10 +325,6 @@ export default function MealInput() {
         </div>
       </section>
 
-      <header className="px-5 pb-3">
-        <PageHeader title={greeting} subtitle={today} />
-      </header>
-
       <main className="flex-1 px-5">
         {/* Hidden file input for camera */}
         <input
@@ -386,6 +386,7 @@ export default function MealInput() {
             <VoiceRecorderButton
               size="lg"
               showDuration
+              silenceTimeout={3}
               onTranscript={(text) => {
                 setManualText((prev) => prev ? `${prev} ${text}` : text);
                 setInputMode('none');
@@ -400,7 +401,7 @@ export default function MealInput() {
 
         {/* Text input area */}
         {(inputMode === 'text' || manualText.trim()) && (
-          <div className="mt-3 relative">
+          <div className="mt-3">
             <label htmlFor="meal-description" className="sr-only">Describe your meal</label>
             <input
               id="meal-description"
@@ -408,18 +409,10 @@ export default function MealInput() {
               value={manualText}
               onChange={(e) => setManualText(e.target.value)}
               placeholder="Tell us about your culinary creation..."
-              className="input-field w-full rounded-full py-3.5 pr-12"
+              className="input-field w-full rounded-full py-3.5"
               aria-label="Describe your meal"
               autoFocus={inputMode === 'text'}
             />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2">
-              <VoiceRecorderButton
-                size="md"
-                showDuration={false}
-                onTranscript={(text) => setManualText((prev) => prev ? `${prev} ${text}` : text)}
-                onError={(err) => setToast(err)}
-              />
-            </div>
           </div>
         )}
 
@@ -457,6 +450,7 @@ export default function MealInput() {
               <VoiceRecorderButton
                 size="md"
                 showDuration={false}
+                silenceTimeout={3}
                 onTranscript={(text) => setVoiceContext((prev) => prev ? `${prev} ${text}` : text)}
                 onError={(err) => console.error('Voice error:', err)}
               />

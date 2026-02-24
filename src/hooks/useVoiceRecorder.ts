@@ -12,6 +12,10 @@ const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 export interface UseVoiceRecorderOptions {
   /** Max recording duration in seconds (default: 60) */
   maxDuration?: number;
+  /** Seconds of continuous silence after speech to auto-stop (default: 3) */
+  silenceTimeout?: number;
+  /** RMS volume threshold below which counts as silence (default: 0.015) */
+  silenceThreshold?: number;
   /** Called when transcript is ready */
   onTranscript?: (text: string) => void;
   /** Called on any error */
@@ -40,7 +44,13 @@ export interface UseVoiceRecorderReturn {
 }
 
 export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoiceRecorderReturn {
-  const { maxDuration = 60, onTranscript, onError } = options;
+  const {
+    maxDuration = 60,
+    silenceTimeout = 3,
+    silenceThreshold = 0.015,
+    onTranscript,
+    onError,
+  } = options;
 
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -54,7 +64,28 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const durationRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Silence detection refs
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const animFrameRef = useRef<number | null>(null);
+  const speechDetectedRef = useRef(false);
+  const silentSinceRef = useRef<number | null>(null);
+  // Guard: prevent stopRecording from being called multiple times
+  const stoppingRef = useRef(false);
+
   const cleanup = useCallback(() => {
+    // Stop silence monitoring
+    if (animFrameRef.current != null) {
+      cancelAnimationFrame(animFrameRef.current);
+      animFrameRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current = null;
+    }
+    speechDetectedRef.current = false;
+    silentSinceRef.current = null;
+    stoppingRef.current = false;
+
     // Stop all tracks
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
@@ -99,14 +130,17 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
       setError(null);
       setDuration(0);
       audioChunksRef.current = [];
+      speechDetectedRef.current = false;
+      silentSinceRef.current = null;
+      stoppingRef.current = false;
 
       // Request microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           sampleRate: 16000,
-        } 
+        }
       });
       streamRef.current = stream;
 
@@ -141,13 +175,65 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
         }
       }, maxDuration * 1000);
 
+      // ---- Silence detection via Web Audio API ----
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      source.connect(analyser);
+
+      const dataArray = new Float32Array(analyser.fftSize);
+      const recordingStartTime = Date.now();
+
+      const monitorSilence = () => {
+        // Bail if no longer recording
+        if (!mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') {
+          return;
+        }
+
+        analyser.getFloatTimeDomainData(dataArray);
+
+        // Calculate RMS volume
+        let sumSquares = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sumSquares += dataArray[i] * dataArray[i];
+        }
+        const rms = Math.sqrt(sumSquares / dataArray.length);
+
+        const now = Date.now();
+        const elapsed = now - recordingStartTime;
+
+        if (rms > silenceThreshold) {
+          // Voice detected
+          speechDetectedRef.current = true;
+          silentSinceRef.current = null;
+        } else if (speechDetectedRef.current && elapsed > 1000) {
+          // Silence after speech was detected (and at least 1s has elapsed)
+          if (silentSinceRef.current === null) {
+            silentSinceRef.current = now;
+          } else if (now - silentSinceRef.current > silenceTimeout * 1000) {
+            // Sustained silence — auto-stop
+            if (!stoppingRef.current) {
+              stoppingRef.current = true;
+              stopRecording();
+            }
+            return; // Don't schedule next frame
+          }
+        }
+
+        animFrameRef.current = requestAnimationFrame(monitorSilence);
+      };
+
+      animFrameRef.current = requestAnimationFrame(monitorSilence);
+
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to start recording';
       setError(message);
       onError?.(message);
       cleanup();
     }
-  }, [maxDuration, onError, cleanup]);
+  }, [maxDuration, silenceTimeout, silenceThreshold, onError, cleanup]);
 
   const stopRecording = useCallback(async (): Promise<string | null> => {
     return new Promise((resolve) => {
@@ -161,8 +247,8 @@ export function useVoiceRecorder(options: UseVoiceRecorderOptions = {}): UseVoic
         setIsTranscribing(true);
 
         try {
-          const audioBlob = new Blob(audioChunksRef.current, { 
-            type: mediaRecorderRef.current?.mimeType || 'audio/webm' 
+          const audioBlob = new Blob(audioChunksRef.current, {
+            type: mediaRecorderRef.current?.mimeType || 'audio/webm'
           });
 
           // Skip if recording too short (less than 0.5 seconds of audio)
