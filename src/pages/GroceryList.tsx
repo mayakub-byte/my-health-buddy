@@ -7,8 +7,12 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { CheckSquare, Square, Edit2, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { fetchWithRetry } from '../lib/fetchWithRetry';
 import PageHeader from '../components/PageHeader';
 import { useFamily } from '../hooks/useFamily';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 const GROCERY_CHECKED_KEY = 'mhb_grocery_checked';
 const GROCERY_HAVE_KEY = 'mhb_grocery_have';
@@ -216,18 +220,26 @@ export default function GroceryList() {
       const mealNames = meals?.map((m: { food_name?: string }) => m.food_name ?? 'Unknown meal').filter(Boolean) ?? [];
       if (mealNames.length === 0) { setError('no_meals'); setLoading(false); return; }
       const memberCount = memberCountRef.current;
-      const { data, error: fnError } = await supabase.functions.invoke('dynamic-processor', {
-        body: { type: 'grocery', mealNames, memberCount },
-      });
-      if (fnError) {
-        setErrorDetail(fnError.message || String(fnError));
+      const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
+      const res = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ type: 'grocery', mealNames, memberCount }),
+      }, { timeout: 60000, maxRetries: 1 });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({ error: res.statusText }));
+        setErrorDetail((errBody as { error?: string }).error || `API error: ${res.status}`);
         setGroceryData(buildFallbackGroceryList(mealNames));
         setExpandedCategories(['Ingredients for your meals']);
         setError(null);
         setLoading(false);
         return;
       }
-      const parsed = data as GroceryData;
+      const parsed = await res.json() as GroceryData;
       if (parsed?.grocery_list) {
         setGroceryData(parsed);
         setExpandedCategories(parsed.grocery_list.map((c) => c.category));

@@ -6,7 +6,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { fetchWithRetry } from '../lib/fetchWithRetry';
 import { useFamily } from '../hooks/useFamily';
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 import PageHeader from '../components/PageHeader';
 import ScoreCircle from '../components/ScoreCircle';
 import {
@@ -150,29 +154,27 @@ export default function Weekly() {
       }));
       const dietPref = localStorage.getItem('mhb_diet_pref') || 'all';
 
-      const { data, error: fnError } = await supabase.functions.invoke('dynamic-processor', {
-        body: {
+      const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
+      const res = await fetchWithRetry(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
           type: 'meal_plan',
           mealNames: mealNamesList,
           memberCount: members.length || 4,
           memberProfiles,
           dietaryPreference: dietPref,
-        },
-      });
+        }),
+      }, { timeout: 60000, maxRetries: 1 });
 
-      if (fnError) {
-        // Extract actual error message from edge function response
-        let detail = fnError.message;
-        try {
-          const ctx = (fnError as any).context;
-          if (ctx && typeof ctx.json === 'function') {
-            const body = await ctx.json();
-            if (body?.error) detail = body.error;
-          }
-        } catch (_) { /* use default message */ }
-        throw new Error(detail);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: res.statusText }));
+        throw new Error((err as { error?: string }).error || `API error: ${res.status}`);
       }
-      if (!data) throw new Error('No data returned from meal plan API');
+      const data = await res.json();
       setMealPlan(data);
       setShowPlan(true);
     } catch (err) {

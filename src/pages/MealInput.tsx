@@ -569,30 +569,30 @@ export default function MealInput() {
               }
             }}
           />
-          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-light rounded-t-3xl shadow-2xl z-[70] max-h-[70vh] overflow-y-auto animate-slide-up pb-20">
-            <div className="sticky top-0 bg-brand-light border-b border-brand-border px-5 py-4 flex items-center justify-between z-10">
-              <h2 className="font-heading text-lg font-bold text-brand-dark">Choose a Telugu Meal</h2>
+          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-light rounded-t-2xl shadow-2xl z-[70] max-h-[60vh] overflow-y-auto animate-slide-up pb-16">
+            <div className="sticky top-0 bg-brand-light border-b border-brand-border px-4 py-2.5 flex items-center justify-between z-10">
+              <h2 className="font-heading text-base font-bold text-brand-dark">Choose a Telugu Meal</h2>
               <button
                 type="button"
                 onClick={() => setShowMealModal(false)}
-                className="p-2 rounded-full hover:bg-brand-light transition-colors min-w-[48px] min-h-[48px] flex items-center justify-center"
+                className="p-1.5 rounded-full hover:bg-brand-light transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                 aria-label="Close"
               >
-                <X className="w-5 h-5 text-brand-text" />
+                <X className="w-4 h-4 text-brand-text" />
               </button>
             </div>
 
             {/* Tabs */}
-            <div className="sticky top-[73px] bg-brand-light border-b border-brand-border px-5 py-2 flex gap-2 overflow-x-auto z-10">
+            <div className="sticky top-[49px] bg-brand-light border-b border-brand-border px-4 py-1.5 flex gap-1.5 overflow-x-auto z-10">
               {(['breakfast', 'lunch', 'dinner', 'snacks'] as MealTime[]).map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => setSelectedTab(tab)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full font-medium text-sm transition-colors min-h-[48px] ${
+                  className={`flex-shrink-0 px-3 py-1 rounded-full font-medium text-xs transition-colors min-h-[32px] ${
                     selectedTab === tab
                       ? 'bg-brand-light0 text-white'
-                      : 'bg-brand-light text-brand-text hover:bg-brand-light'
+                      : 'bg-white text-brand-text'
                   }`}
                 >
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -601,20 +601,20 @@ export default function MealInput() {
             </div>
 
             {/* Meals Grid */}
-            <div className="p-5">
-              <div className="grid grid-cols-2 gap-3">
+            <div className="p-3">
+              <div className="grid grid-cols-2 gap-2">
                 {TELUGU_MEALS[selectedTab].map((meal) => (
                   <button
                     key={meal.name}
                     type="button"
                     onClick={() => handleSelectMeal(meal.name)}
-                    className="card text-left p-4 hover:shadow-card-hover transition-shadow min-h-[48px]"
+                    className="bg-white rounded-xl border border-brand-border text-left p-2.5 hover:shadow-sm transition-shadow"
                   >
-                    <div className="flex items-start gap-2">
-                      <span className="text-2xl flex-shrink-0">{meal.emoji}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-lg flex-shrink-0">{meal.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-brand-dark mb-0.5">{meal.name}</p>
-                        <p className="text-xs text-brand-text">{meal.telugu}</p>
+                        <p className="text-xs font-semibold text-brand-dark leading-tight">{meal.name}</p>
+                        <p className="text-[11px] text-brand-text leading-tight">{meal.telugu}</p>
                       </div>
                     </div>
                   </button>
