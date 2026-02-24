@@ -11,6 +11,7 @@ export default {
         brand: {
           dark: '#143628',      // Dark forest green used for headings and text
           green: '#6ab08c',     // Sage green used for primary buttons
+          light0: '#6ab08c',    // Active/selected state background (sage green)
           light: '#f4f6f4',     // Off-white/light gray used for section backgrounds
           gray: '#e4ebe6',      // Grayish-green used for pills and icon backgrounds
           border: '#e6ece8',    // Light borders
