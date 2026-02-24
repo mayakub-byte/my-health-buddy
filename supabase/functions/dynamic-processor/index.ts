@@ -425,6 +425,7 @@ Respond ONLY with this JSON (no other text, no markdown):
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 2000,
+          temperature: 0,
           system: JSON_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: groceryPrompt }],
         }),
@@ -490,7 +491,8 @@ Respond ONLY with this JSON (no other text, no markdown):
         },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 3000,
+          max_tokens: 4096,
+          temperature: 0,
           system: JSON_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: mealPlanPrompt }],
         }),
