@@ -569,7 +569,7 @@ export default function MealInput() {
               }
             }}
           />
-          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-light rounded-t-3xl shadow-2xl z-[70] max-h-[70vh] overflow-y-auto animate-slide-up">
+          <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-brand-light rounded-t-3xl shadow-2xl z-[70] max-h-[70vh] overflow-y-auto animate-slide-up pb-20">
             <div className="sticky top-0 bg-brand-light border-b border-brand-border px-5 py-4 flex items-center justify-between z-10">
               <h2 className="font-heading text-lg font-bold text-brand-dark">Choose a Telugu Meal</h2>
               <button

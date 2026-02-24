@@ -160,7 +160,19 @@ export default function Weekly() {
         },
       });
 
-      if (fnError) throw fnError;
+      if (fnError) {
+        // Extract actual error message from edge function response
+        let detail = fnError.message;
+        try {
+          const ctx = (fnError as any).context;
+          if (ctx && typeof ctx.json === 'function') {
+            const body = await ctx.json();
+            if (body?.error) detail = body.error;
+          }
+        } catch (_) { /* use default message */ }
+        throw new Error(detail);
+      }
+      if (!data) throw new Error('No data returned from meal plan API');
       setMealPlan(data);
       setShowPlan(true);
     } catch (err) {
