@@ -3,38 +3,40 @@
 // ============================================
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabase';
 
-// Pages
+// Eager imports — critical path (auth + main dashboard)
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import ForgotPassword from './pages/ForgotPassword';
-import GoalsScreen from './pages/GoalsScreen';
-import BaselineScreen from './pages/BaselineScreen';
-import CompleteScreen from './pages/CompleteScreen';
-import NotFound from './pages/NotFound';
-import Onboarding from './pages/Onboarding';
-import FamilySetup from './pages/FamilySetup';
 import MealInput from './pages/MealInput';
-import Upload from './pages/Upload';
-import Results from './pages/Results';
-import FamilyGuidanceResult from './pages/FamilyGuidanceResult';
-import Family from './pages/Family';
-import MealHistory from './pages/MealHistory';
-import PhotoConfirmation from './pages/PhotoConfirmation';
-import PortionSelection from './pages/PortionSelection';
-import AnalysisLoading from './pages/AnalysisLoading';
-import Weekly from './pages/Weekly';
-import MonthlyOverview from './pages/MonthlyOverview';
-import PortionConfirmation from './pages/PortionConfirmation';
-import MealCorrection from './pages/MealCorrection';
-import ProgressScreen from './pages/ProgressScreen';
-import ProfileScreen from './pages/ProfileScreen';
-import GroceryList from './pages/GroceryList';
-import Settings from './pages/Settings';
-import ProfileCompletion from './pages/ProfileCompletion';
+import NotFound from './pages/NotFound';
+
+// Lazy imports — loaded on demand when user navigates
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const GoalsScreen = lazy(() => import('./pages/GoalsScreen'));
+const BaselineScreen = lazy(() => import('./pages/BaselineScreen'));
+const CompleteScreen = lazy(() => import('./pages/CompleteScreen'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const FamilySetup = lazy(() => import('./pages/FamilySetup'));
+const Upload = lazy(() => import('./pages/Upload'));
+const Results = lazy(() => import('./pages/Results'));
+const FamilyGuidanceResult = lazy(() => import('./pages/FamilyGuidanceResult'));
+const Family = lazy(() => import('./pages/Family'));
+const MealHistory = lazy(() => import('./pages/MealHistory'));
+const PhotoConfirmation = lazy(() => import('./pages/PhotoConfirmation'));
+const PortionSelection = lazy(() => import('./pages/PortionSelection'));
+const AnalysisLoading = lazy(() => import('./pages/AnalysisLoading'));
+const Weekly = lazy(() => import('./pages/Weekly'));
+const MonthlyOverview = lazy(() => import('./pages/MonthlyOverview'));
+const PortionConfirmation = lazy(() => import('./pages/PortionConfirmation'));
+const MealCorrection = lazy(() => import('./pages/MealCorrection'));
+const ProgressScreen = lazy(() => import('./pages/ProgressScreen'));
+const ProfileScreen = lazy(() => import('./pages/ProfileScreen'));
+const GroceryList = lazy(() => import('./pages/GroceryList'));
+const Settings = lazy(() => import('./pages/Settings'));
+const ProfileCompletion = lazy(() => import('./pages/ProfileCompletion'));
 
 // Components
 import BottomNav from './components/BottomNav';
@@ -84,16 +86,18 @@ function App() {
     return (
       <Router>
         <div className="min-h-screen bg-brand-light">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/goals" element={<GoalsScreen />} />
-            <Route path="/baseline" element={<BaselineScreen />} />
-            <Route path="/complete" element={<CompleteScreen />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/goals" element={<GoalsScreen />} />
+              <Route path="/baseline" element={<BaselineScreen />} />
+              <Route path="/complete" element={<CompleteScreen />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </div>
       </Router>
     );
@@ -105,13 +109,55 @@ function App() {
     return (
       <Router>
         <div className="min-h-screen bg-brand-light">
+          <Suspense fallback={<LoadingScreen />}>
+            <Routes>
+              <Route path="/goals" element={<Navigate to="/home" replace />} />
+              <Route path="/baseline" element={<Navigate to="/home" replace />} />
+              <Route path="/complete" element={<Navigate to="/home" replace />} />
+              <Route path="/setup" element={<FamilySetup />} />
+              <Route path="/dashboard" element={<MealInput />} />
+              <Route path="/home" element={<MealInput />} />
+              <Route path="/scan/confirm" element={<PhotoConfirmation />} />
+              <Route path="/scan/portion" element={<PortionSelection />} />
+              <Route path="/scan/loading" element={<AnalysisLoading />} />
+              <Route path="/portion-confirm" element={<PortionConfirmation />} />
+              <Route path="/meal-correction" element={<MealCorrection />} />
+              <Route path="/upload" element={<Upload />} />
+              <Route path="/results" element={<FamilyGuidanceResult />} />
+              <Route path="/results/analysis" element={<FamilyGuidanceResult />} />
+              <Route path="/results/:mealId" element={<Results />} />
+              <Route path="/family" element={<Family />} />
+              <Route path="/history" element={<MealHistory />} />
+              <Route path="/weekly" element={<Weekly />} />
+              <Route path="/monthly" element={<MonthlyOverview />} />
+              <Route path="/progress" element={<ProgressScreen />} />
+              <Route path="/profile" element={<ProfileScreen />} />
+              <Route path="/grocery" element={<GroceryList />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/" element={<Navigate to="/home" replace />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+          <BottomNav />
+        </div>
+      </Router>
+    );
+  }
+
+  return (
+    <Router>
+      <div className="min-h-screen bg-brand-light">
+        <Suspense fallback={<LoadingScreen />}>
           <Routes>
             <Route path="/goals" element={<Navigate to="/home" replace />} />
             <Route path="/baseline" element={<Navigate to="/home" replace />} />
             <Route path="/complete" element={<Navigate to="/home" replace />} />
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/onboarding" element={<Onboarding onComplete={() => { }} />} />
             <Route path="/setup" element={<FamilySetup />} />
-            <Route path="/dashboard" element={<MealInput />} />
+            <Route path="/complete-profile" element={<ProfileCompletion />} />
             <Route path="/home" element={<MealInput />} />
+            <Route path="/dashboard" element={<MealInput />} />
             <Route path="/scan/confirm" element={<PhotoConfirmation />} />
             <Route path="/scan/portion" element={<PortionSelection />} />
             <Route path="/scan/loading" element={<AnalysisLoading />} />
@@ -129,49 +175,11 @@ function App() {
             <Route path="/profile" element={<ProfileScreen />} />
             <Route path="/grocery" element={<GroceryList />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/login" element={<Navigate to="/home" replace />} />
+            <Route path="/signup" element={<Navigate to="/home" replace />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <BottomNav />
-        </div>
-      </Router>
-    );
-  }
-
-  return (
-    <Router>
-      <div className="min-h-screen bg-brand-light">
-        <Routes>
-          <Route path="/goals" element={<Navigate to="/home" replace />} />
-          <Route path="/baseline" element={<Navigate to="/home" replace />} />
-          <Route path="/complete" element={<Navigate to="/home" replace />} />
-          <Route path="/" element={<Navigate to="/home" replace />} />
-          <Route path="/onboarding" element={<Onboarding onComplete={() => { }} />} />
-          <Route path="/setup" element={<FamilySetup />} />
-          <Route path="/complete-profile" element={<ProfileCompletion />} />
-          <Route path="/home" element={<MealInput />} />
-          <Route path="/dashboard" element={<MealInput />} />
-          <Route path="/scan/confirm" element={<PhotoConfirmation />} />
-          <Route path="/scan/portion" element={<PortionSelection />} />
-          <Route path="/scan/loading" element={<AnalysisLoading />} />
-          <Route path="/portion-confirm" element={<PortionConfirmation />} />
-          <Route path="/meal-correction" element={<MealCorrection />} />
-          <Route path="/upload" element={<Upload />} />
-          <Route path="/results" element={<FamilyGuidanceResult />} />
-          <Route path="/results/analysis" element={<FamilyGuidanceResult />} />
-          <Route path="/results/:mealId" element={<Results />} />
-          <Route path="/family" element={<Family />} />
-          <Route path="/history" element={<MealHistory />} />
-          <Route path="/weekly" element={<Weekly />} />
-          <Route path="/monthly" element={<MonthlyOverview />} />
-          <Route path="/progress" element={<ProgressScreen />} />
-          <Route path="/profile" element={<ProfileScreen />} />
-          <Route path="/grocery" element={<GroceryList />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/login" element={<Navigate to="/home" replace />} />
-          <Route path="/signup" element={<Navigate to="/home" replace />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        </Suspense>
         <BottomNav />
       </div>
     </Router>

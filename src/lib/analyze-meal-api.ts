@@ -2,6 +2,7 @@
 // API key is kept server-side (CLAUDE_API_KEY in Supabase Edge Function secrets).
 
 import { resizeImage } from './claude-vision';
+import { fetchWithRetry } from './fetchWithRetry';
 import type { MealAnalysisResponse } from '../types/meal-analysis';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -28,7 +29,7 @@ export async function analyzeMealImage(
   foodProfile?: FoodProfile,
 ): Promise<MealAnalysisResponse> {
   const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -58,7 +59,7 @@ export async function analyzeMealText(
   foodProfile?: FoodProfile,
 ): Promise<MealAnalysisResponse> {
   const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -88,7 +89,7 @@ export async function reAnalyzeWithCorrection(
   mediaType?: string,
 ): Promise<MealAnalysisResponse> {
   const url = `${SUPABASE_URL}/functions/v1/dynamic-processor`;
-  const res = await fetch(url, {
+  const res = await fetchWithRetry(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
