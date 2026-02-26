@@ -29,6 +29,7 @@ export interface FamilyMember {
   dietary_preferences: DietaryPreference[];
   is_primary: boolean;
   avatar_color: string;
+  avatar_url?: string;
   created_at: string;
 }
 

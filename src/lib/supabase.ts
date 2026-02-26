@@ -41,3 +41,25 @@ export const uploadFile = async (
 
   return getPublicUrl(bucket, data.path);
 };
+
+// Upload avatar image (upsert-capable, overwrites existing)
+export const uploadAvatar = async (
+  familyId: string,
+  memberId: string,
+  file: File
+): Promise<string | null> => {
+  const path = `${familyId}/${memberId}`;
+  const { data, error } = await supabase.storage
+    .from('avatars')
+    .upload(path, file, {
+      cacheControl: '3600',
+      upsert: true,
+    });
+
+  if (error) {
+    console.error('Avatar upload error:', error);
+    return null;
+  }
+
+  return getPublicUrl('avatars', data.path);
+};
