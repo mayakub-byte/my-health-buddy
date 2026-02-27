@@ -22,7 +22,6 @@ export default function ResetPassword() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
   const [sessionReady, setSessionReady] = useState(false);
 
   // Supabase sends user here with access_token in URL hash
@@ -56,27 +55,13 @@ export default function ResetPassword() {
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      setSuccess(true);
-      setTimeout(() => navigate('/login', { replace: true }), 2500);
+      // Navigate immediately — user is already authenticated after reset
+      navigate('/home', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reset password.');
     } finally {
       setLoading(false);
     }
-  }
-
-  if (success) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 bg-brand-light">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-green-100 mb-4">
-            <Check className="w-7 h-7 text-green-600" />
-          </div>
-          <p className="text-[#5C6B4A] font-medium mb-2">Password updated successfully!</p>
-          <p className="text-brand-text text-sm">Redirecting to sign in...</p>
-        </div>
-      </div>
-    );
   }
 
   if (!sessionReady) {
