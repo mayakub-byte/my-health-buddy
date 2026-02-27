@@ -210,7 +210,7 @@ function MemberCard({
                 type="text"
                 value={customCondition}
                 onChange={(e) => setCustomCondition(e.target.value)}
-                placeholder="Type your condition (e.g., thyroid, uric acid)"
+                placeholder="Type your condition (e.g., PCOS, uric acid)"
                 className="input-field mt-2 w-full"
               />
             )}
@@ -389,7 +389,7 @@ function AddMemberForm({
               type="text"
               value={customCondition}
               onChange={(e) => setCustomCondition(e.target.value)}
-              placeholder="Type your condition (e.g., thyroid, uric acid)"
+              placeholder="Type your condition (e.g., PCOS, uric acid)"
               className="input-field mt-2 w-full"
             />
           )}
