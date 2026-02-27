@@ -17,10 +17,28 @@ const AVATAR_CONFIG: Record<string, { gradient: string; emoji: string }> = {
 interface MemberAvatarProps {
   name: string;
   relationship?: string | null;
+  avatarUrl?: string | null;
   size?: number;
 }
 
-export default function MemberAvatar({ name, relationship, size = 44 }: MemberAvatarProps) {
+export default function MemberAvatar({ name, relationship, avatarUrl, size = 44 }: MemberAvatarProps) {
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          boxShadow: '0 2px 8px rgba(90, 70, 50, 0.15)',
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
+
   const key = (relationship ?? 'member').toLowerCase();
   const config = AVATAR_CONFIG[key] ||
     { gradient: 'linear-gradient(135deg, #a8c4a0, #7c9a82)', emoji: name[0]?.toUpperCase() || '?' };

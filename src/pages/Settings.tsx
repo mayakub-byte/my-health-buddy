@@ -1,39 +1,15 @@
 // ============================================
 // MY HEALTH BUDDY - Settings
-// Mobile-first settings screen
+// Clean profile-first layout matching mockup
 // ============================================
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
+import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useFamily } from '../hooks/useFamily';
-import type { HealthCondition } from '../types';
 
 const APP_VERSION = '1.0.0';
-
-function getAgeGroup(dob: string | null | undefined): 'toddler' | 'child' | 'teen' | 'adult' | 'senior' {
-  if (!dob) return 'adult';
-  const today = new Date();
-  const birth = new Date(dob);
-  const age = Math.floor((today.getTime() - birth.getTime()) / 31557600000);
-  if (age < 3) return 'toddler';
-  if (age < 13) return 'child';
-  if (age < 18) return 'teen';
-  if (age < 60) return 'adult';
-  return 'senior';
-}
-
-const HEALTH_OPTIONS: { label: string; value: HealthCondition }[] = [
-  { label: 'Diabetes', value: 'diabetes' },
-  { label: 'Hypertension', value: 'bp' },
-  { label: 'Cholesterol', value: 'cholesterol' },
-  { label: 'Thyroid', value: 'thyroid' },
-  { label: 'Weight Management', value: 'weight_management' },
-  { label: 'Others', value: 'others' },
-  { label: 'None', value: 'none' },
-];
 
 const FAQS = [
   {
@@ -46,7 +22,7 @@ const FAQS = [
   },
   {
     q: 'Can I edit my family members?',
-    a: 'Yes! Go to Settings → Edit Family to add, remove, or update family member details including health conditions.',
+    a: 'Yes! Go to Settings → Edit Family Profiles to add, remove, or update family member details including health conditions.',
   },
   {
     q: 'What is the Smart Grocery List?',
@@ -62,28 +38,12 @@ const FAQS = [
   },
 ];
 
-interface FamilyMemberRow {
-  id: string;
-  name: string;
-  dob?: string | null;
-  relationship?: string | null;
-  role?: string | null;
-  health_conditions?: HealthCondition[] | null;
-  avatar_color?: string;
-  is_primary?: boolean;
-  created_at?: string;
-}
-
 export default function Settings() {
   const navigate = useNavigate();
   const { family } = useFamily();
   const [user, setUser] = useState<{ email?: string; name?: string; avatarUrl?: string } | null>(null);
   const [showPrefs, setShowPrefs] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
-  const [showFamily, setShowFamily] = useState(false);
-  const [familyMembers, setFamilyMembers] = useState<FamilyMemberRow[]>([]);
-  const [editingMember, setEditingMember] = useState<FamilyMemberRow | null>(null);
-  const [customConditionText, setCustomConditionText] = useState('');
   const [dietPref, setDietPref] = useState(() => localStorage.getItem('mhb_diet_pref') || 'all');
   const [reminderOn, setReminderOn] = useState(() => localStorage.getItem('mhb_reminders') === 'true');
   const [weeklyReportOn, setWeeklyReportOn] = useState(
@@ -91,18 +51,18 @@ export default function Settings() {
   );
   const [units, setUnits] = useState(() => localStorage.getItem('mhb_units') || 'metric');
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [memberCount, setMemberCount] = useState(0);
 
   useEffect(() => {
-    const fetchMembers = async () => {
+    const fetchMemberCount = async () => {
       if (!family?.id) return;
-      const { data } = await supabase
+      const { count } = await supabase
         .from('family_members')
-        .select('*')
-        .eq('family_id', family.id)
-        .order('created_at', { ascending: true });
-      setFamilyMembers((data as FamilyMemberRow[]) || []);
+        .select('*', { count: 'exact', head: true })
+        .eq('family_id', family.id);
+      setMemberCount(count ?? 0);
     };
-    fetchMembers();
+    fetchMemberCount();
   }, [family?.id]);
 
   useEffect(() => {
@@ -137,292 +97,124 @@ export default function Settings() {
     }
   };
 
+  const displayName = user?.name ?? '...';
+  const displayEmail = user?.email ?? '...';
+  const initial = (displayName.charAt(0) || 'U').toUpperCase();
+
   return (
     <div className="min-h-screen bg-brand-light flex flex-col pb-24 max-w-md mx-auto w-full">
-      <header className="px-5 pt-6 pb-4">
-        <PageHeader title="Settings" />
-      </header>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-5 pt-6 pb-4">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-[#e8e2d8] flex-shrink-0"
+          aria-label="Go back"
+        >
+          <ArrowLeft className="w-5 h-5 text-[#6ab08c]" />
+        </button>
+        <h1 className="font-serif text-xl font-bold text-brand-dark">Settings</h1>
+      </div>
 
       <main className="flex-1 overflow-y-auto px-5">
-        <div className="space-y-3">
-          {/* Family Members */}
-          <button
-            type="button"
-            onClick={() => setShowFamily(!showFamily)}
-            className="w-full flex items-center justify-between p-4 bg-[#ffffff] rounded-xl border border-gray-100"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-xl" aria-hidden>👨‍👩‍👧‍👦</span>
-              <div className="text-left">
-                <p className="text-sm font-medium text-gray-700">Family Members</p>
-                <p className="text-xs text-gray-500">{familyMembers.length} members</p>
-              </div>
+        {/* Profile Card */}
+        <div className="bg-white rounded-2xl p-4 border border-[#eae7e0] mb-4">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold text-white flex-shrink-0"
+              style={{ backgroundColor: '#6ab08c' }}
+            >
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt=""
+                  className="w-full h-full rounded-full object-cover"
+                />
+              ) : (
+                initial
+              )}
             </div>
-            <span className="text-gray-400 text-xs" aria-hidden>{showFamily ? '▼' : '▶'}</span>
-          </button>
-
-          {showFamily && (
-            <div className="mt-2 space-y-2 mb-3">
-              {familyMembers.map((member) => {
-                const age = member.dob
-                  ? Math.floor((new Date().getTime() - new Date(member.dob).getTime()) / 31557600000)
-                  : null;
-                const isEditing = editingMember?.id === member.id;
-                const relationshipDisplay = member.relationship || member.role || 'Member';
-                const healthDisplay =
-                  (member.health_conditions?.length ?? 0) > 0 &&
-                  member.health_conditions?.[0] !== 'none'
-                    ? (member.health_conditions ?? [])
-                        .map((c) => HEALTH_OPTIONS.find((h) => h.value === c)?.label ?? c)
-                        .join(', ')
-                    : '';
-                return (
-                  <div key={member.id} className="p-4 bg-[#ffffff] rounded-xl border border-gray-100">
-                    {isEditing ? (
-                      <div className="space-y-3">
-                        <input
-                          value={editingMember.name}
-                          onChange={(e) =>
-                            setEditingMember({ ...editingMember, name: e.target.value })
-                          }
-                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                          placeholder="Name"
-                          aria-label="Member name"
-                        />
-                        <input
-                          type="date"
-                          value={editingMember.dob || ''}
-                          onChange={(e) =>
-                            setEditingMember({ ...editingMember, dob: e.target.value || null })
-                          }
-                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                          aria-label="Date of birth"
-                          max={new Date().toISOString().split('T')[0]}
-                        />
-                        <select
-                          value={editingMember.relationship || ''}
-                          onChange={(e) =>
-                            setEditingMember({ ...editingMember, relationship: e.target.value })
-                          }
-                          className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm"
-                          aria-label="Relationship"
-                        >
-                          <option value="">Relationship</option>
-                          <option value="Self">Self</option>
-                          <option value="Spouse">Spouse</option>
-                          <option value="Child">Child</option>
-                          <option value="Parent">Parent</option>
-                          <option value="Grandparent">Grandparent</option>
-                          <option value="Sibling">Sibling</option>
-                          <option value="Other">Other</option>
-                        </select>
-
-                        <p className="text-xs text-gray-500">Health needs:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {HEALTH_OPTIONS.map((opt) => (
-                            <button
-                              key={opt.value}
-                              type="button"
-                              onClick={() => {
-                                const current = editingMember.health_conditions || [];
-                                if (opt.value === 'none') {
-                                  setEditingMember({
-                                    ...editingMember,
-                                    health_conditions: ['none'],
-                                  });
-                                  setCustomConditionText('');
-                                } else if (opt.value === 'others') {
-                                  if (current.includes('others')) {
-                                    setEditingMember({
-                                      ...editingMember,
-                                      health_conditions: current.filter((c) => c !== 'others'),
-                                    });
-                                    setCustomConditionText('');
-                                  } else {
-                                    setEditingMember({
-                                      ...editingMember,
-                                      health_conditions: [...current.filter((c) => c !== 'none'), 'others'],
-                                    });
-                                  }
-                                } else {
-                                  const filtered = current.filter((c) => c !== 'none');
-                                  setEditingMember({
-                                    ...editingMember,
-                                    health_conditions: filtered.includes(opt.value)
-                                      ? filtered.filter((c) => c !== opt.value)
-                                      : [...filtered, opt.value],
-                                  });
-                                }
-                              }}
-                              className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                                (editingMember.health_conditions || []).includes(opt.value)
-                                  ? 'bg-[#6ab08c] text-white'
-                                  : 'bg-white border border-gray-200 text-gray-600'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                        {(editingMember.health_conditions || []).includes('others') && (
-                          <input
-                            type="text"
-                            value={customConditionText}
-                            onChange={(e) => setCustomConditionText(e.target.value)}
-                            placeholder="Type your condition..."
-                            className="w-full px-3 py-2 mt-2 rounded-lg border border-gray-200 text-sm"
-                          />
-                        )}
-
-                        <div className="flex gap-2 mt-2">
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              // Build final health conditions with custom condition
-                              const finalConditions = (editingMember.health_conditions ?? [])
-                                .filter((c) => c !== 'others');
-                              if ((editingMember.health_conditions ?? []).includes('others') && customConditionText.trim()) {
-                                finalConditions.push(customConditionText.trim());
-                              }
-                              const { error } = await supabase
-                                .from('family_members')
-                                .update({
-                                  name: editingMember.name,
-                                  dob: editingMember.dob || null,
-                                  age_group: getAgeGroup(editingMember.dob),
-                                  relationship: editingMember.relationship || null,
-                                  health_conditions: finalConditions,
-                                })
-                                .eq('id', member.id);
-                              if (!error) {
-                                setFamilyMembers((prev) =>
-                                  prev.map((m) =>
-                                    m.id === member.id ? { ...m, ...editingMember } : m
-                                  )
-                                );
-                                setEditingMember(null);
-                              }
-                            }}
-                            className="flex-1 py-2 bg-[#6ab08c] text-white rounded-full text-sm font-medium"
-                          >
-                            Save
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setEditingMember(null)}
-                            className="flex-1 py-2 border border-gray-300 text-gray-600 rounded-full text-sm"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl" aria-hidden>😊</span>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800">{member.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {relationshipDisplay}
-                              {age != null ? ` • ${age} yrs` : ''}
-                              {healthDisplay ? ` • ${healthDisplay}` : ''}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const knownVals = ['diabetes', 'pre_diabetic', 'bp', 'cholesterol', 'weight_management', 'thyroid', 'none', 'others'];
-                              const existingCustomCond = (member.health_conditions || []).find((c) => !knownVals.includes(c));
-                              const conditions = existingCustomCond
-                                ? [...(member.health_conditions || []).filter((c) => c !== existingCustomCond), 'others']
-                                : member.health_conditions || [];
-                              setCustomConditionText(existingCustomCond || '');
-                              setEditingMember({ ...member, health_conditions: conditions });
-                            }}
-                            className="px-3 py-1.5 text-xs text-[#6ab08c] border border-[#6ab08c] rounded-full"
-                            aria-label={`Edit ${member.name}`}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              if (window.confirm(`Remove ${member.name}?`)) {
-                                const { error } = await supabase
-                                  .from('family_members')
-                                  .delete()
-                                  .eq('id', member.id);
-                                if (!error) {
-                                  setFamilyMembers((prev) => prev.filter((m) => m.id !== member.id));
-                                }
-                              }
-                            }}
-                            className="px-3 py-1.5 text-xs text-red-500 border border-red-300 rounded-full"
-                            aria-label={`Remove ${member.name}`}
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={() => navigate('/family', { state: { addMember: true } })}
-                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 font-medium"
-              >
-                + Add Family Member
-              </button>
-            </div>
-          )}
-
-          <Link
-            to="/family"
-            className="block w-full py-3.5 rounded-full card text-center font-medium text-brand-dark hover:shadow-card-hover transition-shadow"
-          >
-            Edit family
-          </Link>
-
-          {/* Ask Nutritionist — MHP Link */}
-          <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #2d6a4f 0%, #40916c 100%)' }}>
-            <div className="p-4">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl" role="img" aria-hidden>👨‍⚕️</span>
-                <div>
-                  <h3 className="text-white font-semibold text-base m-0">Talk to a Nutritionist</h3>
-                  <p className="text-white/80 text-xs mt-0.5">
-                    Get 1-on-1 expert consultation from My Health Passport
-                  </p>
-                </div>
-              </div>
-              <a
-                href="https://www.myhealthpassport.in/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block mt-3 py-2.5 px-4 bg-white rounded-lg text-center font-semibold text-sm no-underline"
-                style={{ color: '#2d6a4f' }}
-              >
-                Ask a Nutritionist →
-              </a>
+            <div className="min-w-0 flex-1">
+              <p className="font-semibold text-brand-dark text-base truncate">{displayName}</p>
+              <p className="text-sm text-[#7a8c7e] truncate">{displayEmail}</p>
             </div>
           </div>
+        </div>
 
+        {/* Navigation rows */}
+        <div className="space-y-2 mb-4">
+          {/* Edit Family Profiles → /setup */}
+          <button
+            type="button"
+            onClick={() => navigate('/setup')}
+            className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-[#eae7e0] hover:bg-[#faf9f6] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl" aria-hidden>👨‍👩‍👧</span>
+              <div className="text-left">
+                <p className="text-sm font-medium text-gray-700">Edit Family Profiles</p>
+                <p className="text-xs text-gray-500">{memberCount} member{memberCount !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </button>
+
+          {/* Personal Information (placeholder) */}
+          <button
+            type="button"
+            className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-[#eae7e0] hover:bg-[#faf9f6] transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl" aria-hidden>👤</span>
+              <div className="text-left">
+                <p className="text-sm font-medium text-gray-700">Personal Information</p>
+                <p className="text-xs text-gray-500">Name, email, preferences</p>
+              </div>
+            </div>
+            <ChevronRight className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Ask Nutritionist */}
+        <div className="rounded-xl overflow-hidden mb-4" style={{ background: 'linear-gradient(135deg, #2d6a4f 0%, #40916c 100%)' }}>
+          <div className="p-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl" role="img" aria-hidden>👨‍⚕️</span>
+              <div>
+                <h3 className="text-white font-semibold text-base m-0">Talk to a Nutritionist</h3>
+                <p className="text-white/80 text-xs mt-0.5">
+                  Get 1-on-1 expert consultation from My Health Passport
+                </p>
+              </div>
+            </div>
+            <a
+              href="https://www.myhealthpassport.in/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block mt-3 py-2.5 px-4 bg-white rounded-lg text-center font-semibold text-sm no-underline"
+              style={{ color: '#2d6a4f' }}
+            >
+              Ask a Nutritionist →
+            </a>
+          </div>
+        </div>
+
+        {/* Expandable Sections */}
+        <div className="space-y-2">
+          {/* Preferences */}
           <button
             type="button"
             onClick={() => setShowPrefs(!showPrefs)}
-            className="w-full py-3.5 rounded-full card text-center font-medium text-brand-dark hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-[#eae7e0] hover:bg-[#faf9f6] transition-colors"
           >
-            Preferences
-            {showPrefs ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <div className="flex items-center gap-3">
+              <span className="text-xl" aria-hidden>⚙️</span>
+              <p className="text-sm font-medium text-gray-700">Preferences</p>
+            </div>
+            {showPrefs ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
           </button>
 
           {showPrefs && (
-            <div className="space-y-5 p-4 bg-[#ffffff] rounded-xl mt-2 mb-3">
+            <div className="space-y-5 p-4 bg-white rounded-xl border border-[#eae7e0]">
               {/* Dietary Preference */}
               <div>
                 <p className="text-sm font-medium text-gray-700 mb-2">Dietary Preference</p>
@@ -526,21 +318,25 @@ export default function Settings() {
             </div>
           )}
 
+          {/* Help */}
           <button
             type="button"
             onClick={() => setShowHelp(!showHelp)}
-            className="w-full py-3.5 rounded-full card text-center font-medium text-brand-dark hover:shadow-card-hover transition-shadow flex items-center justify-center gap-2"
+            className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-[#eae7e0] hover:bg-[#faf9f6] transition-colors"
           >
-            Help
-            {showHelp ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            <div className="flex items-center gap-3">
+              <span className="text-xl" aria-hidden>❓</span>
+              <p className="text-sm font-medium text-gray-700">Help</p>
+            </div>
+            {showHelp ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
           </button>
 
           {showHelp && (
-            <div className="space-y-2 mt-2 mb-3">
+            <div className="space-y-2">
               {FAQS.map((faq, i) => (
                 <div
                   key={i}
-                  className="bg-[#ffffff] rounded-xl overflow-hidden border border-gray-100"
+                  className="bg-white rounded-xl overflow-hidden border border-[#eae7e0]"
                 >
                   <button
                     type="button"
@@ -565,27 +361,7 @@ export default function Settings() {
           )}
         </div>
 
-        {/* Profile */}
-        <section className="mt-6 card px-4 py-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-brand-gray flex items-center justify-center text-lg font-bold text-brand-dark flex-shrink-0">
-              {user?.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt=""
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                (user?.name?.charAt(0) ?? 'U').toUpperCase()
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-brand-dark truncate">{user?.name ?? '…'}</p>
-              <p className="text-sm text-brand-text truncate">{user?.email ?? '…'}</p>
-            </div>
-          </div>
-        </section>
-
+        {/* Sign Out */}
         <div className="mt-6">
           <button
             type="button"
@@ -596,6 +372,7 @@ export default function Settings() {
           </button>
         </div>
 
+        {/* Version */}
         <div className="text-center py-6 mt-4">
           <p className="text-xs text-gray-400">Arogya — My Health Buddy</p>
           <p className="text-xs text-gray-300">v{APP_VERSION} • AIGF Cohort 5, Group 3</p>
