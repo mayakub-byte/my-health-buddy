@@ -5,8 +5,15 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Mail, Lock, Eye, EyeOff, Check, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import {
+  validatePassword,
+  isPasswordValid,
+  getPasswordStrength,
+  STRENGTH_CONFIG,
+  PASSWORD_RULES_LABELS,
+} from '../lib/passwordValidation';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -26,8 +33,8 @@ export default function Signup() {
       setError('Passwords do not match.');
       return;
     }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
+    if (!isPasswordValid(password)) {
+      setError('Password does not meet all requirements.');
       return;
     }
     setLoading(true);
@@ -158,12 +165,12 @@ export default function Signup() {
                 id="signup-password"
                 type={showPassword ? 'text' : 'password'}
                 autoComplete="new-password"
-                placeholder="Password (min 6 characters)"
+                placeholder="Password (min 8 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input-field pl-10 pr-11"
                 required
-                minLength={6}
+                minLength={8}
               />
               <button
                 type="button"
@@ -174,6 +181,43 @@ export default function Signup() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
+            {password && (() => {
+              const strength = getPasswordStrength(password);
+              const config = STRENGTH_CONFIG[strength];
+              const rules = validatePassword(password);
+              return (
+                <div className="mt-2 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 bg-neutral-200 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-300"
+                        style={{
+                          width: strength === 'weak' ? '33%' : strength === 'fair' ? '66%' : '100%',
+                          backgroundColor: config.color,
+                        }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium" style={{ color: config.color }}>
+                      {config.label}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 gap-0.5">
+                    {PASSWORD_RULES_LABELS.map(({ key, label }) => (
+                      <div key={key} className="flex items-center gap-1.5">
+                        {rules[key] ? (
+                          <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                        ) : (
+                          <X className="w-3.5 h-3.5 text-neutral-300 flex-shrink-0" />
+                        )}
+                        <span className={`text-xs ${rules[key] ? 'text-green-600' : 'text-neutral-400'}`}>
+                          {label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <div>
@@ -189,7 +233,7 @@ export default function Signup() {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="input-field pl-10 pr-11"
                 required
-                minLength={6}
+                minLength={8}
               />
               <button
                 type="button"

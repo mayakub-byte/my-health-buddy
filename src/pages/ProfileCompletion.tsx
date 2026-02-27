@@ -12,10 +12,12 @@ import type { HealthCondition, FamilyMember } from '../types';
 
 const HEALTH_CONDITIONS: { value: HealthCondition; label: string }[] = [
   { value: 'diabetes', label: 'Diabetes' },
-  { value: 'bp', label: 'Hypertension' },
+  { value: 'pre_diabetic', label: 'Pre-diabetic' },
+  { value: 'bp', label: 'High BP' },
   { value: 'cholesterol', label: 'Cholesterol' },
   { value: 'thyroid', label: 'Thyroid' },
   { value: 'weight_management', label: 'Weight Management' },
+  { value: 'others', label: 'Others' },
   { value: 'none', label: 'None' },
 ];
 
@@ -53,21 +55,37 @@ export default function ProfileCompletion() {
   const [name, setName] = useState(primaryMember?.name || '');
   const [dob, setDob] = useState(primaryMember?.dob || '');
   const [role, setRole] = useState<FamilyMember['role'] | ''>(primaryMember?.role || '');
-  const [conditions, setConditions] = useState<HealthCondition[]>(
-    primaryMember?.health_conditions || []
-  );
+  const [conditions, setConditions] = useState<HealthCondition[]>(() => {
+    const existing = primaryMember?.health_conditions || [];
+    // If there's a custom condition stored, map it back to 'others' for the UI
+    const knownValues = ['diabetes', 'pre_diabetic', 'bp', 'cholesterol', 'weight_management', 'thyroid', 'none', 'others'];
+    const customCondition = existing.find((c) => !knownValues.includes(c));
+    if (customCondition) return [...existing.filter((c) => c !== customCondition), 'others'];
+    return existing;
+  });
+  const [otherConditionText, setOtherConditionText] = useState(() => {
+    const existing = primaryMember?.health_conditions || [];
+    const knownValues = ['diabetes', 'pre_diabetic', 'bp', 'cholesterol', 'weight_management', 'thyroid', 'none', 'others'];
+    return existing.find((c) => !knownValues.includes(c)) || '';
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const toggleCondition = (condition: HealthCondition) => {
     if (condition === 'none') {
       setConditions(['none']);
+      setOtherConditionText('');
     } else {
       setConditions((prev) => {
         const filtered = prev.filter((c) => c !== 'none');
-        return filtered.includes(condition)
+        const toggled = filtered.includes(condition)
           ? filtered.filter((c) => c !== condition)
           : [...filtered, condition];
+        // Clear other text if 'others' is deselected
+        if (condition === 'others' && filtered.includes('others')) {
+          setOtherConditionText('');
+        }
+        return toggled;
       });
     }
   };
@@ -79,9 +97,14 @@ export default function ProfileCompletion() {
     setSaving(true);
     setError(null);
 
+    // Replace 'others' with the actual custom text if provided
+    const finalConditions = conditions.map((c) =>
+      c === 'others' && otherConditionText.trim() ? otherConditionText.trim() as HealthCondition : c
+    );
+
     const updates: Partial<FamilyMember> = {
       name: name.trim(),
-      health_conditions: conditions,
+      health_conditions: finalConditions,
     };
     if (dob) {
       updates.dob = dob;
@@ -192,6 +215,15 @@ export default function ProfileCompletion() {
                 );
               })}
             </div>
+            {conditions.includes('others') && (
+              <input
+                type="text"
+                value={otherConditionText}
+                onChange={(e) => setOtherConditionText(e.target.value)}
+                placeholder="Type your condition (e.g., PCOS, uric acid)"
+                className="input-field mt-3 text-sm"
+              />
+            )}
           </div>
 
           {error && (

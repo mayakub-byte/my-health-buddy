@@ -14,7 +14,8 @@ const HEALTH_CONDITIONS: { value: HealthCondition; label: string }[] = [
   { value: 'pre_diabetic', label: 'Pre-diabetic' },
   { value: 'bp', label: 'High BP' },
   { value: 'cholesterol', label: 'Cholesterol' },
-  { value: 'weight_management', label: 'Weight' },
+  { value: 'thyroid', label: 'Thyroid' },
+  { value: 'weight_management', label: 'Weight Management' },
   { value: 'others', label: 'Others' },
   { value: 'none', label: 'None' },
 ];

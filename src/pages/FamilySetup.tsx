@@ -16,15 +16,21 @@ const RELATIONSHIP_OPTIONS = [
   { value: 'parent', label: 'Parent' },
   { value: 'grandparent', label: 'Grandparent' },
   { value: 'sibling', label: 'Sibling' },
+  { value: 'uncle', label: 'Uncle' },
+  { value: 'aunt', label: 'Aunt' },
+  { value: 'cousin', label: 'Cousin' },
+  { value: 'in-law', label: 'In-law' },
   { value: 'other', label: 'Other' },
 ] as const;
 
 const HEALTH_OPTIONS: { value: HealthCondition; label: string }[] = [
   { value: 'diabetes', label: 'Diabetes' },
-  { value: 'bp', label: 'Hypertension' },
+  { value: 'pre_diabetic', label: 'Pre-diabetic' },
+  { value: 'bp', label: 'High BP' },
   { value: 'cholesterol', label: 'Cholesterol' },
   { value: 'thyroid', label: 'Thyroid' },
   { value: 'weight_management', label: 'Weight Management' },
+  { value: 'others', label: 'Others' },
   { value: 'none', label: 'None' },
 ];
 
@@ -36,6 +42,7 @@ interface FamilyMemberForm {
   dob: string;
   relationship: string;
   healthConditions: HealthCondition[];
+  otherHealthText: string;
 }
 
 interface SavedMember {
@@ -50,6 +57,7 @@ const initialForm: FamilyMemberForm = {
   dob: '',
   relationship: '',
   healthConditions: [],
+  otherHealthText: '',
 };
 
 function getAgeGroup(dob: string | null | undefined): 'toddler' | 'child' | 'teen' | 'adult' | 'senior' {
@@ -79,6 +87,10 @@ function mapRoleToBackend(rel: string): 'father' | 'mother' | 'son' | 'daughter'
     parent: 'father',
     grandparent: 'grandfather',
     sibling: 'other',
+    uncle: 'other',
+    aunt: 'other',
+    cousin: 'other',
+    'in-law': 'other',
     other: 'other',
   };
   return m[rel] || 'other';
@@ -106,23 +118,22 @@ export default function FamilySetup() {
   const toggleHealth = (condition: HealthCondition) => {
     const current = form.healthConditions;
     if (condition === 'none') {
-      updateForm({ healthConditions: ['none'] });
+      updateForm({ healthConditions: ['none'], otherHealthText: '' });
       return;
     }
     const next = current.includes(condition)
       ? current.filter((c) => c !== condition)
       : [...current.filter((c) => c !== 'none'), condition];
-    updateForm({ healthConditions: next });
+    // Clear other text if 'others' is deselected
+    if (condition === 'others' && current.includes('others')) {
+      updateForm({ healthConditions: next, otherHealthText: '' });
+    } else {
+      updateForm({ healthConditions: next });
+    }
   };
 
   const clearForm = () => {
-    setForm({
-      avatarEmoji: '😊',
-      name: '',
-      dob: '',
-      relationship: '',
-      healthConditions: [],
-    });
+    setForm({ ...initialForm });
   };
 
   const saveAndAddAnother = async () => {
@@ -139,7 +150,11 @@ export default function FamilySetup() {
       age: getAge(form.dob || null) ?? undefined,
       role: mapRoleToBackend(form.relationship),
       relationship: form.relationship || undefined,
-      health_conditions: form.healthConditions.length ? form.healthConditions : ['none'],
+      health_conditions: form.healthConditions.length
+        ? form.healthConditions.map((c) =>
+            c === 'others' && form.otherHealthText.trim() ? form.otherHealthText.trim() as HealthCondition : c
+          )
+        : ['none'],
     };
     if (!family) {
       const result = await createFamily('My Family', [payload]);
@@ -176,7 +191,11 @@ export default function FamilySetup() {
         age: getAge(form.dob || null) ?? undefined,
         role: mapRoleToBackend(form.relationship),
         relationship: form.relationship || undefined,
-        health_conditions: form.healthConditions.length ? form.healthConditions : ['none'],
+        health_conditions: form.healthConditions.length
+        ? form.healthConditions.map((c) =>
+            c === 'others' && form.otherHealthText.trim() ? form.otherHealthText.trim() as HealthCondition : c
+          )
+        : ['none'],
       };
       if (!family) {
         const result = await createFamily('My Family', [payload]);
@@ -366,6 +385,15 @@ export default function FamilySetup() {
                   );
                 })}
               </div>
+              {form.healthConditions.includes('others') && (
+                <input
+                  type="text"
+                  value={form.otherHealthText}
+                  onChange={(e) => updateForm({ otherHealthText: e.target.value })}
+                  placeholder="Type your condition (e.g., PCOS, uric acid)"
+                  className="input-field mt-2 text-sm"
+                />
+              )}
             </div>
           </div>
         </div>
