@@ -52,7 +52,7 @@ export const uploadAvatar = async (
   const { data, error } = await supabase.storage
     .from('avatars')
     .upload(path, file, {
-      cacheControl: '3600',
+      cacheControl: '60',
       upsert: true,
     });
 
@@ -61,5 +61,7 @@ export const uploadAvatar = async (
     return null;
   }
 
-  return getPublicUrl('avatars', data.path);
+  // Add cache-buster so browser shows updated image immediately
+  const url = getPublicUrl('avatars', data.path);
+  return url ? `${url}?t=${Date.now()}` : null;
 };
