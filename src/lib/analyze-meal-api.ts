@@ -43,7 +43,7 @@ export async function analyzeMealImage(
       voiceContext: voiceContext ?? '',
       foodProfile: foodProfile ?? undefined,
     }),
-  });
+  }, { timeout: 60000, maxRetries: 1 });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error || 'Analysis failed');
@@ -73,7 +73,7 @@ export async function analyzeMealText(
       voiceContext: voiceContext ?? '',
       foodProfile: foodProfile ?? undefined,
     }),
-  });
+  }, { timeout: 60000, maxRetries: 1 });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error || 'Analysis failed');
@@ -103,7 +103,7 @@ export async function reAnalyzeWithCorrection(
       media_type: mediaType ?? undefined,
       memberProfiles: memberProfiles ?? [],
     }),
-  });
+  }, { timeout: 60000, maxRetries: 1 });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error((err as { error?: string }).error || 'Correction analysis failed');

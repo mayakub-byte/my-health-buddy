@@ -8,6 +8,70 @@ const corsHeaders = {
 
 const CLAUDE_API_KEY = Deno.env.get('CLAUDE_API_KEY');
 
+// Retry helper for transient Claude API errors (429, 529, 503)
+// Falls back to Haiku if primary model is persistently overloaded
+const FALLBACK_MODEL = 'claude-3-5-haiku-20241022';
+
+async function callClaudeWithRetry(
+  body: Record<string, unknown>,
+  maxRetries = 2,
+): Promise<Response> {
+  const RETRYABLE = [429, 529, 503];
+  let lastStatus = 0;
+
+  // Try primary model with retries
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': CLAUDE_API_KEY!,
+        'anthropic-version': '2023-06-01',
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (response.ok) return response;
+    lastStatus = response.status;
+
+    if (RETRYABLE.includes(response.status) && attempt < maxRetries) {
+      const delay = 2000 * Math.pow(2, attempt); // 2s, 4s
+      console.log(`Claude API ${response.status}, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})`);
+      await new Promise((r) => setTimeout(r, delay));
+      continue;
+    }
+
+    // Non-retryable error — fail immediately
+    if (!RETRYABLE.includes(response.status)) {
+      const errText = await response.text();
+      console.error('Claude API error:', response.status, errText);
+      throw new Error(`Claude API error: ${response.status}`);
+    }
+  }
+
+  // All retries exhausted with transient error — try fallback model
+  console.log(`Primary model failed after ${maxRetries + 1} attempts (${lastStatus}), trying fallback: ${FALLBACK_MODEL}`);
+  const fallbackBody = { ...body, model: FALLBACK_MODEL };
+  const fallbackResponse = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': CLAUDE_API_KEY!,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify(fallbackBody),
+  });
+
+  if (fallbackResponse.ok) {
+    console.log('Fallback model succeeded');
+    return fallbackResponse;
+  }
+
+  const errText = await fallbackResponse.text();
+  console.error('Fallback model also failed:', fallbackResponse.status, errText);
+  throw new Error(`Claude API error: ${fallbackResponse.status} (primary and fallback both failed)`);
+}
+
 const JSON_SYSTEM_PROMPT = 'You are a food recognition API. Respond with ONLY valid JSON. No text before or after the JSON object. No markdown backticks. No explanation. No commentary. Just the raw JSON object starting with { and ending with }.';
 
 // Robust JSON extraction — handles text before/after JSON, markdown fences, etc.
@@ -415,26 +479,13 @@ Respond ONLY with this JSON (no other text, no markdown):
     "Stock up on pesalu (moong dal) — great for quick pesarattu breakfasts"
   ]
 }`;
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_API_KEY!,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
+      const response = await callClaudeWithRetry({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 2000,
           temperature: 0,
           system: JSON_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: groceryPrompt }],
-        }),
       });
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error('Claude API error:', response.status, errText);
-        throw new Error(`Claude API error: ${response.status}`);
-      }
       const data = await response.json();
       const textContent = data.content.find((c: any) => c.type === 'text');
       if (!textContent?.text) throw new Error('No text in Claude response');
@@ -482,26 +533,13 @@ Respond ONLY with this JSON (no other text, no markdown):
   "weekly_summary": "Brief note about the plan's nutritional balance",
   "health_notes": ["Specific note for family members with conditions"]
 }`;
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_API_KEY!,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
+      const response = await callClaudeWithRetry({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
           temperature: 0,
           system: JSON_SYSTEM_PROMPT,
           messages: [{ role: 'user', content: mealPlanPrompt }],
-        }),
       });
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error('Claude API error:', response.status, errText);
-        throw new Error(`Claude API error: ${response.status}`);
-      }
       const data = await response.json();
       const textContent = data.content.find((c: any) => c.type === 'text');
       if (!textContent?.text) throw new Error('No text in Claude response');
@@ -525,30 +563,13 @@ Portion size: ${portion || 'medium'}
 
 Respond with the same JSON structure as image analysis. Use your knowledge of Telugu cuisine and nutrition to estimate calories, macros, and provide guidance.`;
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
+      const response = await callClaudeWithRetry({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
           temperature: 0,
           system: JSON_SYSTEM_PROMPT,
-          messages: [{
-            role: 'user',
-            content: textPrompt
-          }]
-        })
+          messages: [{ role: 'user', content: textPrompt }],
       });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error('Claude API error:', response.status, errText);
-        throw new Error(`Claude API error: ${response.status}`);
-      }
 
       const data = await response.json();
       const textContent = data.content.find((c: any) => c.type === 'text');
@@ -583,26 +604,13 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
       }
       messageContent.push({ type: 'text', text: fullCorrectionPrompt });
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': CLAUDE_API_KEY,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
+      const response = await callClaudeWithRetry({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 4096,
           temperature: 0,
           system: JSON_SYSTEM_PROMPT,
-          messages: [{ role: 'user', content: messageContent }]
-        })
+          messages: [{ role: 'user', content: messageContent }],
       });
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error('Claude correction API error:', response.status, errText);
-        throw new Error(`Claude API error: ${response.status}`);
-      }
       const data = await response.json();
       const textContent = data.content.find((c: any) => c.type === 'text');
       if (!textContent?.text) throw new Error('No text in Claude response');
@@ -619,14 +627,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
 
     const fullImagePrompt = `${FOOD_RECOGNITION_PROMPT}${buildMemberBlock(memberProfiles)}${buildFoodProfileBlock(foodProfile)}${buildVoiceBlock(voiceContext)}`;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': CLAUDE_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
+    const response = await callClaudeWithRetry({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 4096,
         temperature: 0,
@@ -641,14 +642,7 @@ Respond with the same JSON structure as image analysis. Use your knowledge of Te
             { type: 'text', text: fullImagePrompt }
           ]
         }]
-      })
     });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Claude API error:', response.status, errText);
-      throw new Error(`Claude API error: ${response.status}`);
-    }
 
     const data = await response.json();
     const textContent = data.content.find((c: any) => c.type === 'text');
