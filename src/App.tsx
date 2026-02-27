@@ -126,6 +126,7 @@ function App() {
               <Route path="/goals" element={<Navigate to="/home" replace />} />
               <Route path="/baseline" element={<Navigate to="/home" replace />} />
               <Route path="/complete" element={<Navigate to="/home" replace />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/setup" element={<FamilySetup />} />
               <Route path="/dashboard" element={<MealInput />} />
               <Route path="/home" element={<MealInput />} />
@@ -166,6 +167,7 @@ function App() {
             <Route path="/complete" element={<Navigate to="/home" replace />} />
             <Route path="/" element={<Navigate to="/home" replace />} />
             <Route path="/onboarding" element={<Onboarding onComplete={() => { }} />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/setup" element={<FamilySetup />} />
             <Route path="/complete-profile" element={<ProfileCompletion />} />
             <Route path="/home" element={<MealInput />} />
